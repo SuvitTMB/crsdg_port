@@ -362,10 +362,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         await window.FirebaseSync.resetAllMembersRegistrationInCloud();
                         console.log('[Admin] Reset all member registrations in Firebase crsdg_member');
                     }
-                    if (typeof window.FirebaseSync.clearAllUserInvestmentsFromCloud === 'function') {
-                        await window.FirebaseSync.clearAllUserInvestmentsFromCloud();
-                        console.log('[Admin] Cleared all user investments from Firebase');
-                    }
                 } catch (err) {
                     console.error('[Admin] Error resetting registrations in Firebase:', err);
                 }
@@ -4587,12 +4583,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Cross-tab storage update listener for winners, members, prizes
+    // Cross-tab storage update listener for winners, members, prizes, players, investments
     window.addEventListener('storage', (e) => {
         if (e.key === 'crsdg_winners' || e.key === 'crsdg_member' || e.key === 'crsdg_reward' || e.key === 'crsdg_reward_sync_state') {
             renderWinners();
             renderPrizes();
             renderParticipants();
+            renderStats();
+        }
+        if (e.key === 'crsdg_all_user_investments' || e.key === 'crsdg_player' || e.key === 'crsdg_vote_open' || e.key === 'crsdg_vote_budget') {
+            renderPlayers();
             renderStats();
         }
     });
@@ -4602,12 +4602,14 @@ document.addEventListener('DOMContentLoaded', () => {
         renderWinners();
         renderPrizes();
         renderStats();
+        renderPlayers();
     });
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
             renderWinners();
             renderPrizes();
             renderStats();
+            renderPlayers();
         }
     });
 
@@ -4904,17 +4906,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const teamsList = (typeof state.getPlayers === 'function') ? state.getPlayers() : [];
         const members = state.getMembers();
 
-        // 1. Update Top Stats
+        // 1. Update Top Stats & Process Live Team Investment Totals
         const totalTeams = teamsList.length;
         let totalCaptainsCount = 0;
+
+        // ประมวลผลยอดเงินลงทุนและจำนวนผู้ให้เงินตามข้อมูลจริงที่เข้ามาในระบบแบบ Real-time
+        const allUserInv = (typeof state.getAllUserInvestments === 'function') ? state.getAllUserInvestments() : {};
+        const teamAmounts = {};
+        const teamVoters = {};
         let totalVoteMoney = 0;
-        let totalVoters = 0;
+
+        Object.keys(allUserInv).forEach(uId => {
+            const uInv = allUserInv[uId];
+            if (uInv && typeof uInv === 'object') {
+                Object.keys(uInv).forEach(tId => {
+                    const amt = parseFloat(uInv[tId]) || 0;
+                    if (amt > 0) {
+                        teamAmounts[tId] = (teamAmounts[tId] || 0) + amt;
+                        teamVoters[tId] = (teamVoters[tId] || 0) + 1;
+                        totalVoteMoney += amt;
+                    }
+                });
+            }
+        });
 
         teamsList.forEach(t => {
             const mList = t.members || [];
             totalCaptainsCount += mList.filter(m => m.isCaptain).length;
-            totalVoteMoney += (parseFloat(t.voteAmount) || 0);
-            totalVoters += (parseInt(t.voterCount, 10) || 0);
         });
 
         // สมาชิกทั้งหมด: คือ จำนวนพนักงานที่ลงทะเบียนใน crsdg_member
@@ -5010,8 +5028,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     teamPhotoHtml = `<div class="team-group-photo-thumb placeholder" title="ยังไม่มีรูปภาพทีมรวม">🛡️</div>`;
                 }
 
-                const formattedMoney = (parseFloat(t.voteAmount) || 0).toLocaleString();
-                const voterCountStr = (parseInt(t.voterCount, 10) || 0) + ' คน';
+                const actualMoney = teamAmounts[t.id] !== undefined ? teamAmounts[t.id] : (parseFloat(t.voteAmount) || 0);
+                const formattedMoney = actualMoney.toLocaleString();
+                const actualVoters = teamVoters[t.id] !== undefined ? teamVoters[t.id] : (parseInt(t.voterCount, 10) || 0);
+                const voterCountStr = actualVoters + ' คน';
                 const isTeamOpen = (t.voteStatus !== 'closed');
 
                 return `
@@ -5751,19 +5771,52 @@ document.addEventListener('DOMContentLoaded', () => {
         const cancelResetPlayerVotesBtn = document.getElementById('cancelResetPlayerVotesBtn');
         const confirmResetPlayerVotesBtn = document.getElementById('confirmResetPlayerVotesBtn');
         const resetPlayerVotesHighlightText = document.getElementById('resetPlayerVotesHighlightText');
+        const inputConfirmResetVotesText = document.getElementById('inputConfirmResetVotesText');
+
+        const updateResetConfirmButtonState = () => {
+            if (!confirmResetPlayerVotesBtn) return;
+            const typed = inputConfirmResetVotesText ? inputConfirmResetVotesText.value.trim().toLowerCase() : '';
+            if (typed === 'reset') {
+                confirmResetPlayerVotesBtn.disabled = false;
+                confirmResetPlayerVotesBtn.style.opacity = '1';
+                confirmResetPlayerVotesBtn.style.cursor = 'pointer';
+            } else {
+                confirmResetPlayerVotesBtn.disabled = true;
+                confirmResetPlayerVotesBtn.style.opacity = '0.45';
+                confirmResetPlayerVotesBtn.style.cursor = 'not-allowed';
+            }
+        };
+
+        if (inputConfirmResetVotesText) {
+            inputConfirmResetVotesText.addEventListener('input', updateResetConfirmButtonState);
+            inputConfirmResetVotesText.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !confirmResetPlayerVotesBtn.disabled) {
+                    confirmResetPlayerVotesBtn.click();
+                }
+            });
+        }
 
         if (btnOpenResetPlayerVotesModal && confirmResetPlayerVotesModal) {
             btnOpenResetPlayerVotesModal.addEventListener('click', () => {
                 const players = state.getPlayers();
                 if (resetPlayerVotesHighlightText) {
-                    resetPlayerVotesHighlightText.textContent = `พบทั้งหมด ${players.length} ทีมแข่งขันในตาราง crsdg_player`;
+                    resetPlayerVotesHighlightText.textContent = `พบทั้งหมด ${players.length} ทีมแข่งขันในระบบ (จะถูกรีเซ็ตเงินโหวตและเงินลงทุนเป็น 0 ทั้งหมด)`;
                 }
+                if (inputConfirmResetVotesText) {
+                    inputConfirmResetVotesText.value = '';
+                }
+                updateResetConfirmButtonState();
                 confirmResetPlayerVotesModal.style.display = 'flex';
+                if (inputConfirmResetVotesText) {
+                    setTimeout(() => inputConfirmResetVotesText.focus(), 60);
+                }
                 if (sound) sound.playClick();
             });
 
             const hideResetVotesModal = () => {
                 confirmResetPlayerVotesModal.style.display = 'none';
+                if (inputConfirmResetVotesText) inputConfirmResetVotesText.value = '';
+                updateResetConfirmButtonState();
                 if (sound) sound.playClick();
             };
 
@@ -5772,6 +5825,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (confirmResetPlayerVotesBtn) {
                 confirmResetPlayerVotesBtn.addEventListener('click', async () => {
+                    const typed = inputConfirmResetVotesText ? inputConfirmResetVotesText.value.trim().toLowerCase() : '';
+                    if (typed !== 'reset') {
+                        alert('กรุณาพิมพ์คำว่า "Reset" ในช่องข้อความเพื่อยืนยัน');
+                        if (inputConfirmResetVotesText) inputConfirmResetVotesText.focus();
+                        return;
+                    }
+
+                    confirmResetPlayerVotesBtn.disabled = true;
+                    confirmResetPlayerVotesBtn.textContent = '⏳ กำลัง Reset...';
+
                     const res = state.resetAllPlayerVotes();
                     if (window.FirebaseSync && typeof window.FirebaseSync.clearAllUserInvestmentsFromCloud === 'function') {
                         try {
@@ -5780,13 +5843,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.warn('[Admin] Cloud clear error:', e);
                         }
                     }
-                    confirmResetPlayerVotesModal.style.display = 'none';
+
+                    confirmResetPlayerVotesBtn.textContent = '🔄 ยืนยันการ Reset การโหวตเป็น 0';
+                    hideResetVotesModal();
                     renderPlayers();
                     if (playerEditId && playerEditId.value) {
                         selectPlayerForEdit(playerEditId.value, false);
                     }
                     if (sound) sound.playSuccess();
-                    alert(`รีเซ็ตเงินโหวต (บาท) และผู้ให้เงินของทีมแข่งขันทั้งหมด (${res.count} ทีม) เป็น 0 ทั้งในระบบและ Cloud Firestore เรียบร้อยแล้ว`);
+                    showToast(`รีเซ็ตเงินโหวตทุกทีม (${res.count} ทีม) และเงินลงทุนของผู้ใช้งานทุกคนเป็น 0 เรียบร้อยแล้ว 💰`);
                 });
             }
         }

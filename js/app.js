@@ -268,6 +268,23 @@
           return;
         }
 
+        // เมื่อมีการแจ้งเตือน Reset เงินโหวต (INVESTMENTS_RESET) หรือการอัปเดตเงินลงทุนข้ามเครื่อง (INVESTMENTS_UPDATED)
+        if (msg.type === 'INVESTMENTS_RESET' || (msg.type === 'INVESTMENTS_UPDATED' && msg.reset)) {
+          if (activeTab === 'vote' && currentEmployee) {
+            renderVoteTab(currentEmployee);
+            return;
+          }
+        } else if (msg.type === 'INVESTMENTS_UPDATED') {
+          // หากเปิดใช้งาน 2 เครื่องด้วยรหัสพนักงานเดียวกัน และมีการปรับพอร์ตจากอีกเครื่อง ให้ซิงค์พอร์ตทันที
+          if (activeTab === 'vote' && currentEmployee) {
+            const isUserInteracting = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
+            if (!isUserInteracting) {
+              renderVoteTab(currentEmployee);
+              return;
+            }
+          }
+        }
+
         // Event filtering: only re-render if relevant to current activeTab
         const msgType = String(msg.type || '');
         let isRelevant = false;
@@ -1263,6 +1280,11 @@
           window.showTeamInvestOpenedModal(data);
         }
       } catch (err) { }
+    }
+    if (e.key === 'crsdg_all_user_investments' || e.key === 'crsdg_player' || e.key === 'crsdg_vote_open' || e.key === 'crsdg_vote_budget' || e.key === 'crsdg_last_reset_votes_ts') {
+      if (activeTab === 'vote' && currentEmployee) {
+        renderVoteTab(currentEmployee);
+      }
     }
   });
 
