@@ -2385,7 +2385,7 @@
          LIGHTBOX: RESET PLAYER VOTES CONFIRMATION MODAL (crsdg_player)
          ======================================================== -->
     <div class="modal-overlay" id="confirmResetPlayerVotesModal" style="display: none;">
-        <div class="admin-card modal-card-box warning-box" style="max-width: 480px; width: 92%;">
+        <div class="admin-card modal-card-box warning-box" style="max-width: 500px; width: 92%;">
             <div class="admin-card-header">
                 <div class="lightbox-header-title">
                     <span class="lightbox-icon" style="color: #ef4444;">🔄</span>
@@ -2399,23 +2399,32 @@
                     <div class="warning-icon-large">💰</div>
                     <div class="warning-text-group">
                         <div class="warning-main-heading" style="color: #fca5a5;">
-                            รีเซ็ต <strong>เงินโหวต (บาท)</strong> และ <strong>ผู้ให้เงิน</strong> ทั้งหมด
+                            รีเซ็ต <strong>เงินโหวตทุกทีม</strong> และ <strong>เงินลงทุนของผู้ใช้งาน</strong> ทั้งหมด
                         </div>
                         <div class="warning-count-highlight" id="resetPlayerVotesHighlightText">
-                            ทุกทีมในตาราง crsdg_player จะมีค่าเป็น 0
+                            ยอดเงินโหวตทุกทีมและเงินลงทุนของผู้ใช้งานทุกคนจะถูกปรับเป็น 0 บาท
                         </div>
                     </div>
                 </div>
-                <div class="delete-warning-notice" style="margin-top: 12px;">
-                    <p>ระบบจะทำการรีเซ็ต <strong>เงินโหวต (บาท)</strong> และ <strong>จำนวนผู้ให้เงิน (คน)</strong>
-                        ของทุกทีมแข่งขันในตาราง <code>crsdg_player</code> ให้กลับเป็น <strong>0</strong> ทั้งหมด
-                        โดยรายชื่อทีมและสมาชิกจะยังคงอยู่ครบถ้วน</p>
+                <div class="delete-warning-notice" style="margin-top: 14px; font-size: 0.9rem; line-height: 1.6; color: #cbd5e1;">
+                    <p>ระบบจะทำการรีเซ็ต <strong>เงินโหวต (บาท)</strong> และ <strong>จำนวนผู้ให้เงิน</strong> ของทุกทีมแข่งขันในระบบให้กลับเป็น <strong>0</strong> ทั้งหมด พร้อมทั้งรีเซ็ตข้อมูลเงินลงทุนของผู้ร่วมงานทุกคนให้กลับเป็น <strong>0 บาท</strong> ทุกทีม (คืนงบประมาณเต็มจำนวน)</p>
+                    <p style="margin-top: 12px; color: #f87171; font-weight: 600;">
+                        ⚠️ เพื่อความปลอดภัย กรุณาพิมพ์คำว่า <span style="background: rgba(239, 68, 68, 0.2); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.4); color: #fff;">Reset</span> ในช่องด้านล่างเพื่อเปิดปุ่มยืนยัน:
+                    </p>
+                    <div style="margin-top: 12px;">
+                        <input type="text" id="inputConfirmResetVotesText" class="admin-input"
+                            placeholder="พิมพ์คำว่า Reset เพื่อยืนยัน"
+                            autocomplete="off"
+                            style="width: 100%; padding: 10px 14px; font-size: 1.05rem; border-radius: 8px; border: 1.5px solid rgba(239, 68, 68, 0.5); background: rgba(15, 23, 42, 0.85); color: #fff; text-align: center; font-weight: 700; letter-spacing: 1px;">
+                    </div>
                 </div>
             </div>
             <div class="modal-actions-bar">
                 <button type="button" class="btn-secondary" id="cancelResetPlayerVotesBtn">ยกเลิก</button>
-                <button type="button" class="btn-danger" id="confirmResetPlayerVotesBtn">🔄 ยืนยันการ Reset เป็น
-                    0</button>
+                <button type="button" class="btn-danger" id="confirmResetPlayerVotesBtn" disabled
+                    style="opacity: 0.45; cursor: not-allowed; transition: all 0.2s ease;">
+                    🔄 ยืนยันการ Reset การโหวตเป็น 0
+                </button>
             </div>
         </div>
     </div>
