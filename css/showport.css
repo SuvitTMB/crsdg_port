@@ -1,0 +1,951 @@
+/* ========================================================
+   SHOWPORT.CSS - นักลงทุน AI แดชบอร์ดสรุปผลพอร์ตการลงทุน (showport.html)
+   ======================================================== */
+
+.showport-main-wrapper {
+    width: 100%;
+    max-width: 1720px;
+    margin: 0 auto;
+    padding: 16px 24px 40px;
+    box-sizing: border-box;
+}
+
+/* ========================================================
+   ROW: 2 COLUMNS (50% LEFT / 50% RIGHT) - SIDE-BY-SIDE COMPARISON
+   ======================================================== */
+.showport-compare-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+    margin-top: 18px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+    .showport-compare-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.compare-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* ========================================================
+   TEAM PICKER CARD: ปุ่มแสดง ทีมที่ 1 - ทีมสุดท้าย (ไม่ต้องแสดงชื่อทีม)
+   ======================================================== */
+.team-picker-card {
+    background: rgba(15, 23, 42, 0.78);
+    border: 1px solid rgba(59, 130, 246, 0.28);
+    border-radius: 16px;
+    padding: 14px 18px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.team-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.team-picker-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.col-indicator-badge {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+}
+
+.col-indicator-badge.badge-blue {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    color: #bfdbfe;
+    border: 1px solid rgba(96, 165, 250, 0.4);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+.col-indicator-badge.badge-purple {
+    background: linear-gradient(135deg, #581c87 0%, #7c3aed 100%);
+    color: #f3e8ff;
+    border: 1px solid rgba(192, 132, 252, 0.4);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35);
+}
+
+.team-picker-sub {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.team-picker-meta {
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
+.team-picker-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-team-pick {
+    padding: 8px 16px;
+    border-radius: 10px;
+    background: rgba(30, 41, 59, 0.85);
+    border: 1.5px solid rgba(100, 116, 139, 0.35);
+    color: #cbd5e1;
+    font-family: 'Kanit', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+    white-space: nowrap;
+}
+
+.btn-team-pick:hover {
+    background: rgba(51, 65, 85, 0.95);
+    border-color: #60a5fa;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+/* Active Button Default (Blue Theme for Normal Team) */
+.btn-team-pick.active {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    border-color: #93c5fd;
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.55), 0 0 12px rgba(59, 130, 246, 0.35);
+    transform: translateY(-2px);
+}
+
+/* Active Button for Higher Fund Team (Purple Theme) */
+.compare-col.theme-higher-purple .btn-team-pick.active {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    border-color: #d8b4fe;
+    color: #ffffff;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.65), 0 0 14px rgba(192, 132, 252, 0.4);
+    transform: translateY(-2px);
+}
+
+/* ========================================================
+   TEAM HERO BOX: รูปภาพ, ชื่อทีม, และกล่องหัวหน้าทีม
+   ======================================================== */
+.team-hero-box {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(59, 130, 246, 0.28);
+    border-radius: 18px;
+    padding: 20px 24px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.team-hero-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.team-ep-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.45);
+    color: #60a5fa;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.team-status-pill {
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 400;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.team-status-pill.open {
+    background: rgba(16, 185, 129, 0.18);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+}
+
+.team-status-pill.closed {
+    background: rgba(239, 68, 68, 0.18);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #f87171;
+}
+
+.team-hero-center {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.team-hero-photo-wrap {
+    width: 130px;
+    height: 130px;
+    border-radius: 18px;
+    background: #0f172a;
+    border: 2px solid rgba(59, 130, 246, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 18px rgba(59, 130, 246, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.team-hero-photo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.team-hero-photo-fallback {
+    font-size: 3.5rem;
+    line-height: 1;
+}
+
+.team-hero-meta {
+    flex: 1 1 0;
+    min-width: 0;
+    width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+/* ชื่อทีม หากยาวเกินให้ตัดชื่อเป็น ... ไม่ล้นกรอบ */
+.team-hero-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin: 0;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    width: 100%;
+    display: block;
+    box-sizing: border-box;
+}
+
+/* กล่องหัวหน้าทีม (ใต้ชื่อทีม) */
+.team-captain-card {
+    border-radius: 14px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    min-width: 0;
+}
+
+.captain-badge-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+}
+
+.captain-crown-icon {
+    font-size: 0.95rem;
+    filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6));
+}
+
+.captain-badge-text {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #fbbf24;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.captain-profile-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.captain-avatar-img {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(245, 158, 11, 0.65);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    flex-shrink: 0;
+}
+
+.captain-avatar-fallback {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(51, 65, 85, 0.9);
+    border: 2px solid rgba(245, 158, 11, 0.65);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.captain-info-wrap {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.captain-name-text {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.captain-dept {
+    font-size: 0.78rem;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ========================================================
+   THEME STYLES: เงื่อนไขสีพื้นตามผลการเปรียบเทียบเงินลงทุน
+   - ทีมที่มีเงินลงทุนมากกว่าอีกทีม: แสดงสีพื้นเป็นสีม่วง (.theme-higher-purple)
+   - ทีมที่แพ้ (เงินลงทุนน้อยกว่า): แสดงสีพื้นปกติที่แสดงผลอยู่ (.theme-normal-default หรือ default)
+   ======================================================== */
+
+/* --- 1. สไตล์สีพื้นปกติ (Normal Default Theme - น้ำเงินเข้ม Sapphire/Sky Blue) --- */
+.compare-col .team-picker-card,
+.compare-col.theme-normal-default .team-picker-card {
+    background: linear-gradient(145deg, rgba(16, 37, 72, 0.9) 0%, rgba(10, 22, 45, 0.94) 100%);
+    border: 1.5px solid rgba(59, 130, 246, 0.38);
+    box-shadow: 0 10px 30px rgba(15, 35, 75, 0.45);
+}
+
+.compare-col .team-hero-box,
+.compare-col.theme-normal-default .team-hero-box {
+    background: linear-gradient(145deg, rgba(16, 37, 72, 0.9) 0%, rgba(10, 22, 45, 0.94) 100%);
+    border: 1.5px solid rgba(59, 130, 246, 0.38);
+    box-shadow: 0 10px 32px rgba(15, 35, 75, 0.45);
+}
+
+.compare-col .team-hero-photo-wrap,
+.compare-col.theme-normal-default .team-hero-photo-wrap {
+    border-color: rgba(96, 165, 250, 0.5);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.35);
+}
+
+.compare-col .team-ep-pill,
+.compare-col.theme-normal-default .team-ep-pill {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.45);
+    color: #60a5fa;
+}
+
+.compare-col .col-indicator-badge,
+.compare-col.theme-normal-default .col-indicator-badge {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    color: #bfdbfe;
+    border: 1px solid rgba(96, 165, 250, 0.4);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+.compare-col .team-captain-card,
+.compare-col.theme-normal-default .team-captain-card {
+    background: linear-gradient(135deg, rgba(30, 58, 102, 0.55) 0%, rgba(15, 23, 42, 0.8) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.38);
+    box-shadow: 0 4px 14px rgba(10, 25, 55, 0.3);
+}
+
+.compare-col .captain-dept,
+.compare-col.theme-normal-default .captain-dept {
+    color: #93c5fd;
+}
+
+.compare-col .gauges-card-section,
+.compare-col.theme-normal-default .gauges-card-section {
+    background: linear-gradient(145deg, rgba(16, 37, 72, 0.9) 0%, rgba(10, 22, 45, 0.94) 100%);
+    border: 1.5px solid rgba(59, 130, 246, 0.35);
+    box-shadow: 0 10px 32px rgba(15, 35, 75, 0.45);
+}
+
+.compare-col .gauges-section-title,
+.compare-col.theme-normal-default .gauges-section-title {
+    color: #93c5fd;
+}
+
+.compare-col .gauge-col-card,
+.compare-col.theme-normal-default .gauge-col-card {
+    background: rgba(15, 28, 55, 0.5);
+    border-color: rgba(59, 130, 246, 0.18);
+}
+
+.compare-col .fund-source-card-section,
+.compare-col.theme-normal-default .fund-source-card-section {
+    background: linear-gradient(145deg, rgba(16, 37, 72, 0.9) 0%, rgba(10, 22, 45, 0.94) 100%);
+    border: 1.5px solid rgba(59, 130, 246, 0.35);
+    box-shadow: 0 10px 32px rgba(15, 35, 75, 0.45);
+}
+
+.compare-col .fund-source-title,
+.compare-col.theme-normal-default .fund-source-title {
+    color: #93c5fd;
+}
+
+.compare-col .tile-voters,
+.compare-col.theme-normal-default .tile-voters {
+    border-color: rgba(59, 130, 246, 0.35);
+    background: linear-gradient(135deg, rgba(30, 58, 95, 0.35) 0%, rgba(15, 23, 42, 0.8) 100%);
+}
+
+.compare-col .tile-voters .stat-tile-symbol,
+.compare-col.theme-normal-default .tile-voters .stat-tile-symbol {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #60a5fa;
+}
+
+.compare-col .tile-voters .stat-tile-value,
+.compare-col.theme-normal-default .tile-voters .stat-tile-value {
+    color: #38bdf8;
+}
+
+/* --- 2. สไตล์สีพื้นสีม่วง สำหรับทีมที่มีเงินลงทุนมากกว่าอีกทีม (.theme-higher-purple) --- */
+.compare-col.theme-higher-purple .team-picker-card {
+    background: linear-gradient(145deg, rgba(58, 18, 92, 0.92) 0%, rgba(24, 10, 44, 0.95) 100%);
+    border: 1.5px solid rgba(192, 132, 252, 0.55);
+    box-shadow: 0 10px 35px rgba(60, 15, 95, 0.6), 0 0 25px rgba(168, 85, 247, 0.35);
+}
+
+.compare-col.theme-higher-purple .team-hero-box {
+    background: linear-gradient(145deg, rgba(58, 18, 92, 0.92) 0%, rgba(24, 10, 44, 0.95) 100%);
+    border: 1.5px solid rgba(192, 132, 252, 0.55);
+    box-shadow: 0 10px 35px rgba(60, 15, 95, 0.6), 0 0 25px rgba(168, 85, 247, 0.35);
+}
+
+.compare-col.theme-higher-purple .team-hero-photo-wrap {
+    border-color: rgba(216, 180, 254, 0.65);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 24px rgba(168, 85, 247, 0.45);
+}
+
+.compare-col.theme-higher-purple .team-ep-pill {
+    background: rgba(168, 85, 247, 0.25);
+    border: 1px solid rgba(192, 132, 252, 0.55);
+    color: #e9d5ff;
+}
+
+.compare-col.theme-higher-purple .col-indicator-badge {
+    background: linear-gradient(135deg, #581c87 0%, #7c3aed 100%);
+    color: #f3e8ff;
+    border: 1px solid rgba(192, 132, 252, 0.55);
+    box-shadow: 0 2px 10px rgba(124, 58, 237, 0.45);
+}
+
+.compare-col.theme-higher-purple .team-captain-card {
+    background: linear-gradient(135deg, rgba(88, 28, 135, 0.6) 0%, rgba(30, 10, 55, 0.85) 100%);
+    border: 1px solid rgba(192, 132, 252, 0.45);
+    box-shadow: 0 4px 16px rgba(35, 10, 60, 0.4);
+}
+
+.compare-col.theme-higher-purple .captain-dept {
+    color: #d8b4fe;
+}
+
+.compare-col.theme-higher-purple .tile-voters {
+    border-color: rgba(168, 85, 247, 0.45);
+    background: linear-gradient(135deg, rgba(88, 28, 135, 0.45) 0%, rgba(24, 10, 45, 0.85) 100%);
+}
+
+.compare-col.theme-higher-purple .tile-voters .stat-tile-symbol {
+    background: rgba(168, 85, 247, 0.25);
+    border: 1px solid rgba(168, 85, 247, 0.5);
+    color: #d8b4fe;
+}
+
+.compare-col.theme-higher-purple .tile-voters .stat-tile-value {
+    color: #d8b4fe;
+}
+
+.compare-col.theme-higher-purple .gauges-card-section {
+    background: linear-gradient(145deg, rgba(58, 18, 92, 0.92) 0%, rgba(24, 10, 44, 0.95) 100%);
+    border: 1.5px solid rgba(168, 85, 247, 0.35);
+    box-shadow: 0 10px 32px rgba(60, 15, 95, 0.5);
+}
+
+.compare-col.theme-higher-purple .gauges-section-title {
+    color: #e9d5ff;
+}
+
+.compare-col.theme-higher-purple .gauge-col-card {
+    background: rgba(38, 15, 62, 0.55);
+    border-color: rgba(168, 85, 247, 0.25);
+}
+
+.compare-col.theme-higher-purple .fund-source-card-section {
+    background: linear-gradient(145deg, rgba(58, 18, 92, 0.92) 0%, rgba(24, 10, 44, 0.95) 100%);
+    border: 1.5px solid rgba(168, 85, 247, 0.35);
+    box-shadow: 0 10px 32px rgba(60, 15, 95, 0.5);
+}
+
+.compare-col.theme-higher-purple .fund-source-title {
+    color: #e9d5ff;
+}
+
+/* ป้ายกำกับทีมที่มียอดเงินลงทุนมากกว่า */
+.winner-crown-tag {
+    background: rgba(245, 158, 11, 0.25);
+    border: 1px solid rgba(245, 158, 11, 0.6);
+    color: #fde047;
+    padding: 1px 7px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    margin-left: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    vertical-align: middle;
+}
+
+/* ========================================================
+   ROW 4: ส่วนแสดงที่มาของเงินทุน สรุปตาม Group (มากไปน้อย)
+   ======================================================== */
+.fund-source-card-section {
+    border-radius: 18px;
+    padding: 18px 20px 20px;
+    backdrop-filter: blur(12px);
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.fund-source-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fund-source-title {
+    font-size: 0.95rem;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fund-source-count-badge {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 400;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+}
+
+.fund-source-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 290px;
+    overflow-y: auto;
+    padding-right: 4px;
+    scrollbar-width: thin;
+}
+
+.fund-source-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.fund-source-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+}
+
+.fund-source-item {
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    transition: all 0.2s ease;
+}
+
+.fund-source-item:hover {
+    background: rgba(30, 41, 59, 0.65);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.fund-source-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.fund-source-group-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+
+.fund-source-rank-badge {
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.fund-source-rank-badge.rank-1 {
+    background: rgba(245, 158, 11, 0.25);
+    border: 1px solid rgba(245, 158, 11, 0.55);
+    color: #fde047;
+}
+
+.fund-source-rank-badge.rank-2 {
+    background: rgba(148, 163, 184, 0.25);
+    border: 1px solid rgba(148, 163, 184, 0.55);
+    color: #f1f5f9;
+}
+
+.fund-source-rank-badge.rank-3 {
+    background: rgba(180, 83, 9, 0.25);
+    border: 1px solid rgba(180, 83, 9, 0.55);
+    color: #fed7aa;
+}
+
+.fund-source-rank-badge.rank-default {
+    background: rgba(51, 65, 85, 0.5);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+    color: #94a3b8;
+}
+
+.fund-source-group-name {
+    font-size: 0.88rem;
+    font-weight: 400;
+    color: #f8fafc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fund-source-voters-tag {
+    font-size: 0.74rem;
+    color: #94a3b8;
+    background: rgba(30, 41, 59, 0.7);
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+}
+
+.fund-source-amount-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.fund-source-amount-baht {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #34d399;
+}
+
+.fund-source-pct-pill {
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.18);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #93c5fd;
+}
+
+.compare-col.theme-higher-purple .fund-source-pct-pill {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(168, 85, 247, 0.45);
+    color: #e9d5ff;
+}
+
+.fund-source-progress-track {
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    position: relative;
+}
+
+.fund-source-progress-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%);
+    transition: width 0.4s ease;
+}
+
+.compare-col.theme-higher-purple .fund-source-progress-bar {
+    background: linear-gradient(90deg, #7c3aed 0%, #c084fc 100%);
+}
+
+.fund-source-empty {
+    text-align: center;
+    padding: 30px 14px;
+    color: #64748b;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* Row 2: จำนวนผู้ลงทุน และ จำนวนเงินลงทุน */
+.team-stats-2grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.team-stat-tile {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.team-stat-tile.tile-voters {
+    border-color: rgba(59, 130, 246, 0.35);
+    background: linear-gradient(135deg, rgba(30, 58, 95, 0.35) 0%, rgba(15, 23, 42, 0.8) 100%);
+}
+
+.team-stat-tile.tile-fund {
+    border-color: rgba(16, 185, 129, 0.35);
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.35) 0%, rgba(15, 23, 42, 0.8) 100%);
+}
+
+.stat-tile-symbol {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem;
+    flex-shrink: 0;
+}
+
+.tile-voters .stat-tile-symbol {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #60a5fa;
+}
+
+.tile-fund .stat-tile-symbol {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+}
+
+.stat-tile-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.stat-tile-heading {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.stat-tile-value {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #f8fafc;
+    line-height: 1.2;
+}
+
+.tile-voters .stat-tile-value {
+    color: #38bdf8;
+}
+
+.tile-fund .stat-tile-value {
+    color: #34d399;
+}
+
+.stat-tile-sub {
+    font-size: 0.72rem;
+    color: #cbd5e1;
+    margin-top: 2px;
+}
+
+/* Row 3: กราฟตามรูปที่ 2 (3 Gauge Rings: ดัชนีลำเอียง, ดัชนีเงินลงทุน, ดัชนีผู้ลงทุน) */
+.gauges-card-section {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 18px 20px 22px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+}
+
+.gauges-section-title {
+    font-size: 0.92rem;
+    font-weight: 400;
+    color: #93c5fd;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gauges-3grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+.gauge-col-card {
+    background: rgba(30, 41, 59, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 20px 14px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.gauge-col-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(59, 130, 246, 0.35);
+}
+
+.gauge-circle-wrap {
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+    margin-bottom: 14px;
+}
+
+/* Conic gradient rings matching Image 2 */
+.gauge-circle-wrap.circle-amber {
+    background: conic-gradient(#f59e0b var(--gauge-deg, 0deg), #1e293b 0deg);
+}
+
+.gauge-circle-wrap.circle-blue {
+    background: conic-gradient(#38bdf8 var(--gauge-deg, 0deg), #1e293b 0deg);
+}
+
+.gauge-circle-wrap.circle-purple {
+    background: conic-gradient(#c084fc var(--gauge-deg, 0deg), #1e293b 0deg);
+}
+
+.gauge-inner-core {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: #0b1329;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+}
+
+.gauge-inner-core.text-amber {
+    color: #fbbf24;
+}
+
+.gauge-inner-core.text-blue {
+    color: #38bdf8;
+}
+
+.gauge-inner-core.text-purple {
+    color: #c084fc;
+}
+
+.gauge-title-text {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #f8fafc;
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+}
+
+.gauge-sub-text {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    font-weight: 500;
+}

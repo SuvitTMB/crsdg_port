@@ -1,0 +1,3713 @@
+/* ========================================================
+   CRSDG New Year 2027 - AI Investor Game Dashboard (investment.html)
+   Ultra-modern Presentation & Real-time Live Screen Styles
+   ======================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+  --invest-bg: #070d1e;
+  --invest-bg-elevated: #0f172a;
+  --invest-card-bg: rgba(15, 23, 42, 0.75);
+  --invest-card-border: rgba(255, 255, 255, 0.09);
+  --invest-primary: #0056ff;
+  --invest-primary-glow: rgba(0, 86, 255, 0.4);
+  --invest-cyan: #38bdf8;
+  --invest-gold: #f59e0b;
+  --invest-gold-glow: rgba(245, 158, 11, 0.4);
+  --invest-green: #10b981;
+  --invest-purple: #8b5cf6;
+  --invest-text: #ffffff;
+  --invest-text-sub: #94a3b8;
+  --invest-text-muted: #64748b;
+  --invest-font: 'Kanit', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--invest-font);
+  background: var(--invest-bg);
+  background-image:
+    radial-gradient(circle at 15% 15%, rgba(0, 86, 255, 0.18) 0%, transparent 45%),
+    radial-gradient(circle at 85% 25%, rgba(139, 92, 246, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 50% 90%, rgba(245, 158, 11, 0.12) 0%, transparent 50%),
+    linear-gradient(180deg, #070d1e 0%, #0b132b 50%, #0a0f1d 100%);
+  background-attachment: fixed;
+  color: var(--invest-text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  padding: 16px 20px 40px 20px;
+}
+
+/* Light Mode Overrides */
+body.light-mode {
+  --invest-bg: #f1f5f9;
+  --invest-bg-elevated: #ffffff;
+  --invest-card-bg: rgba(255, 255, 255, 0.9);
+  --invest-card-border: rgba(0, 0, 0, 0.08);
+  --invest-text: #0f172a;
+  --invest-text-sub: #475569;
+  --invest-text-muted: #64748b;
+  background: #f8fafc;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(0, 86, 255, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 40%);
+  color: var(--invest-text);
+}
+
+/* Container */
+.invest-container {
+  max-width: 1540px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 95px;
+  /* เว้นระยะเพื่อไม่ให้แถบ Fixed ด้านล่างบังเนื้อหา */
+}
+
+/* ========================================================
+   ROW 1: แถวบน แสดงเมนูต่างๆ (TOP NAVBAR)
+   ======================================================== */
+.invest-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 12px 20px;
+  background: var(--invest-card-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--invest-card-border);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0056ff 0%, #38bdf8 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 14px var(--invest-primary-glow);
+  flex-shrink: 0;
+}
+
+.brand-text-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: #ffffff;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body.light-mode .brand-title {
+  color: #0f172a;
+}
+
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: investPulse 1.5s infinite;
+}
+
+@keyframes investPulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+}
+
+.brand-sub {
+  font-size: 0.8rem;
+  color: var(--invest-text-sub);
+  margin-top: 2px;
+}
+
+.top-bar-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nav-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--invest-text);
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-decoration: none;
+  font-family: var(--invest-font);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.nav-link-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+body.light-mode .nav-link-btn {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+body.light-mode .nav-link-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.nav-link-btn.btn-active-highlight {
+  background: linear-gradient(135deg, #0056ff 0%, #2563eb 100%);
+  border-color: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 2px 10px var(--invest-primary-glow);
+}
+
+.icon-btn-ctrl {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--invest-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-btn-ctrl:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(1.08);
+}
+
+/* ========================================================
+   ROW 2: แถวที่ 2 แสดงกล่อง 5 กล่อง (KPI CARDS GRID)
+   ======================================================== */
+.invest-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 1200px) {
+  .invest-kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .invest-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .invest-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.invest-kpi-card {
+  background: var(--invest-card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--invest-card-border);
+  border-radius: 18px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.invest-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+}
+
+.invest-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 4px;
+}
+
+.card-theme-blue::before {
+  background: #38bdf8;
+}
+
+.card-theme-gold::before {
+  background: #f59e0b;
+}
+
+.card-theme-green::before {
+  background: #10b981;
+}
+
+.card-theme-purple::before {
+  background: #8b5cf6;
+}
+
+.card-theme-cyan::before {
+  background: #06b6d4;
+}
+
+.kpi-icon-wrap {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.card-theme-blue .kpi-icon-wrap {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}
+
+.card-theme-gold .kpi-icon-wrap {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.card-theme-green .kpi-icon-wrap {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.card-theme-purple .kpi-icon-wrap {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+}
+
+.card-theme-cyan .kpi-icon-wrap {
+  background: rgba(6, 182, 212, 0.15);
+  color: #06b6d4;
+}
+
+.kpi-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.kpi-label {
+  font-size: 0.78rem;
+  color: var(--invest-text-sub);
+  font-weight: 500;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.kpi-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.card-theme-blue .kpi-value {
+  color: #38bdf8;
+}
+
+.card-theme-gold .kpi-value {
+  color: #fbbf24;
+}
+
+.card-theme-green .kpi-value {
+  color: #34d399;
+}
+
+.card-theme-purple .kpi-value {
+  color: #c084fc;
+}
+
+.card-theme-cyan .kpi-value {
+  color: #22d3ee;
+}
+
+.kpi-unit {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--invest-text-sub);
+}
+
+.kpi-sub-hint {
+  font-size: 0.7rem;
+  color: var(--invest-text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ========================================================
+   ROW 3: แถวล่าง 2 คอลัมน์ กว้าง 40% (ซ้าย) / 60% (ขวา)
+   ======================================================== */
+.invest-main-split {
+  display: grid;
+  grid-template-columns: 35fr 65fr;
+  /* ซ้าย 35% ขวา 65% ตามคำสั่ง */
+  gap: 20px;
+  align-items: stretch;
+  transition: all 0.3s ease;
+}
+
+/* เมื่ออยู่ในปุ่มปิดการแสดงผล ไม่แสดงแถวด้านขวา และปรับคอลัมน์ซ้ายให้อยู่กึ่งกลาง */
+.invest-main-split.is-no-selection {
+  grid-template-columns: 1fr;
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* เมื่ออยู่ในโหมดสรุปผล: ปรับความกว้าง 100% แสดงผลเต็มหน้าจอ */
+.invest-main-split.is-summary-mode {
+  display: block;
+  grid-template-columns: 1fr;
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+}
+
+.invest-main-split.is-summary-mode #investLeftPanel,
+.invest-main-split.is-summary-mode #investRightPanel {
+  display: none !important;
+}
+
+.invest-main-split.is-summary-mode #investSummaryPanel {
+  display: flex !important;
+  flex-direction: column;
+  gap: 20px;
+  width: 100% !important;
+  animation: fadeInSummary 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInSummary {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1024px) {
+  .invest-main-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Base Panel */
+.invest-panel {
+  background: var(--invest-card-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--invest-card-border);
+  border-radius: 24px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.28);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--invest-card-border);
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.panel-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-title-icon {
+  font-size: 1.35rem;
+}
+
+.panel-title {
+  font-size: 1.00rem;
+  font-weight: 400;
+  color: #ffffff;
+  margin: 0;
+  font-family: var(--invest-font);
+}
+
+body.light-mode .panel-title {
+  color: #0f172a;
+}
+
+.panel-sub {
+  font-size: 0.76rem;
+  color: var(--invest-text-sub);
+  margin-top: 2px;
+}
+
+/* ========================================================
+   FIXED BOTTOM DOCK: แถบเลือกทีมแข่งขันแบบตรึงด้านล่างหน้าจอ
+   ======================================================== */
+.invest-fixed-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
+  padding: 10px 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+body.light-mode .invest-fixed-bottom-bar {
+  background: rgba(255, 255, 255, 0.95);
+  border-top-color: #e2e8f0;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.08);
+}
+
+.bottom-bar-inner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px 12px;
+  flex-wrap: wrap;
+  max-width: 1440px;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .bottom-bar-inner {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: safe center;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ปุ่มทั่วไปในแถบ Dock: ปรับสีพื้นเป็นสีเทาน้ำหนักสี 40% ตามที่กำหนด */
+.bottom-dock-btn {
+  background: rgba(100, 116, 139, 0.4);
+  /* สีเทาน้ำหนักสี 40% */
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 6px 14px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  font-family: var(--invest-font);
+  color: #e2e8f0;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 0.82rem;
+}
+
+body.light-mode .bottom-dock-btn {
+  background: rgba(148, 163, 184, 0.4);
+  /* สีเทาน้ำหนักสี 40% */
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.bottom-dock-btn:hover {
+  background: rgba(100, 116, 139, 0.65);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+body.light-mode .bottom-dock-btn:hover {
+  background: rgba(148, 163, 184, 0.6);
+  border-color: #94a3b8;
+}
+
+/* ปุ่มปิดการแสดงผล (ปุ่มหน้าสุด) */
+.btn-close-display {
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #fca5a5;
+  font-weight: 700;
+}
+
+.btn-close-display.is-active-close {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.35) 0%, rgba(185, 28, 28, 0.6) 100%) !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.45) !important;
+  transform: translateY(-1px);
+}
+
+body.light-mode .btn-close-display.is-active-close {
+  background: #fee2e2 !important;
+  border-color: #ef4444 !important;
+  color: #b91c1c !important;
+}
+
+/* เมื่อคลิกเลือกปุ่มทีมในแต่ละทีม: ปุ่มที่ถูกเลือกเด่นขึ้น */
+.bottom-dock-btn.is-active-team {
+  background: linear-gradient(135deg, #0056ff 0%, #2563eb 100%) !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.45) !important;
+  transform: translateY(-2px);
+  font-weight: 700;
+}
+
+/* เมื่อคลิกเลือกปุ่มทีมในแต่ละทีม ให้ทีมอื่นปรับสีพื้นของปุ่มให้เป็นสีเทาน้ำหนักสี 40% */
+.bottom-dock-btn.is-inactive-other {
+  background: rgba(100, 116, 139, 0.4) !important;
+  /* สีเทาน้ำหนักสี 40% */
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(226, 232, 240, 0.75) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+body.light-mode .bottom-dock-btn.is-inactive-other {
+  background: rgba(148, 163, 184, 0.4) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: rgba(30, 41, 59, 0.7) !important;
+}
+
+.dock-order-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 1px 6px;
+  border-radius: 999px;
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+.dock-thumb-circle {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.dock-thumb-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dock-team-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ========================================================
+   LEFT COLUMN: SELECTED TEAM HERO CARD
+   ======================================================== */
+.team-detail-hero-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+body.light-mode .team-detail-hero-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+.team-hero-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.team-hero-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.team-order-badge-lg {
+  font-size: 0.80rem;
+  font-weight: 400;
+  background: linear-gradient(135deg, #0056ff 0%, #38bdf8 100%);
+  color: #ffffff;
+  padding: 3px 10px;
+  border-radius: 999px;
+  box-shadow: 0 2px 10px var(--invest-primary-glow);
+  white-space: nowrap;
+}
+
+.team-hero-title {
+  font-size: 1.0rem;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--invest-font);
+}
+
+body.light-mode .team-hero-title {
+  color: #0f172a;
+}
+
+.team-hero-actions-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.team-status-tag {
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.status-open {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.status-closed {
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+/* ========================================================
+   ปุ่มสถานะการโหวต/ลงทุน (แบบ Image 2: 🟢 เปิดโหวต / 🔒 ปิดโหวต)
+   ======================================================== */
+.btn-team-invest-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 5px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: 'Kanit', sans-serif;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  outline: none;
+  user-select: none;
+}
+
+/* สถานะเปิดโหวต: 🟢 เปิดโหวต (แบบ Image 2 - พื้นหลังโปร่งแสงเขียว ขอบเขียว ตัวอักษร #34d399) */
+.btn-team-invest-toggle.status-pill-open,
+.btn-team-invest-toggle.btn-invest-green {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border: 1px solid rgba(16, 185, 129, 0.45) !important;
+  color: #34d399 !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.22);
+}
+
+.btn-team-invest-toggle.status-pill-open:hover:not(:disabled),
+.btn-team-invest-toggle.btn-invest-green:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.32) !important;
+  border-color: rgba(16, 185, 129, 0.75) !important;
+  color: #6ee7b7 !important;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-team-invest-toggle.status-pill-open:active:not(:disabled),
+.btn-team-invest-toggle.btn-invest-green:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* สถานะปิดโหวต: 🔒 ปิดโหวต (แบบ Image 2 - พื้นหลังโปร่งแสงแดง ขอบแดง ตัวอักษร #f87171) */
+.btn-team-invest-toggle.status-pill-closed,
+.btn-team-invest-toggle.btn-invest-red {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+  color: #f87171 !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.22);
+}
+
+.btn-team-invest-toggle.status-pill-closed:hover:not(:disabled),
+.btn-team-invest-toggle.btn-invest-red:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.32) !important;
+  border-color: rgba(239, 68, 68, 0.75) !important;
+  color: #fca5a5 !important;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-team-invest-toggle.status-pill-closed:active:not(:disabled),
+.btn-team-invest-toggle.btn-invest-red:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* Disabled state */
+.btn-team-invest-toggle:disabled,
+.btn-team-invest-toggle.is-disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  filter: grayscale(0.5);
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Light mode overrides */
+body.light-mode .btn-team-invest-toggle.status-pill-open,
+body.light-mode .btn-team-invest-toggle.btn-invest-green {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.6) !important;
+  color: #059669 !important;
+}
+
+body.light-mode .btn-team-invest-toggle.status-pill-closed,
+body.light-mode .btn-team-invest-toggle.btn-invest-red {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  color: #dc2626 !important;
+}
+
+/* Toast Notification for investment.html */
+.invest-toast-notice {
+  position: fixed;
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(15, 23, 42, 0.96);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 999px;
+  font-family: 'Kanit', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+  z-index: 99999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.invest-toast-notice.is-active {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.invest-toast-notice.toast-success {
+  border-color: #10b981;
+  box-shadow: 0 10px 32px rgba(16, 185, 129, 0.4);
+}
+
+.invest-toast-notice.toast-info {
+  border-color: #3b82f6;
+  box-shadow: 0 10px 32px rgba(59, 130, 246, 0.4);
+}
+
+.invest-toast-notice.toast-warning {
+  border-color: #f59e0b;
+  box-shadow: 0 10px 32px rgba(245, 158, 11, 0.4);
+}
+
+/* Team Photo Stage */
+.team-photo-stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2px auto;
+  width: 100%;
+}
+
+.team-photo-frame {
+  width: 100%;
+  max-width: 320px;
+  height: 230px;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  background: #1e293b;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.team-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.team-photo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--invest-text-muted);
+  font-size: 0.85rem;
+}
+
+.team-photo-placeholder .ph-icon {
+  font-size: 2.8rem;
+}
+
+/* Fund Raised Highlight Bar */
+.team-fund-highlight {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.08) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.fund-meta-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.fund-meta-label {
+  font-size: 0.72rem;
+  color: #fbbf24;
+  font-weight: 500;
+}
+
+.fund-meta-amount {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fbbf24;
+}
+
+.fund-meta-voters {
+  font-size: 0.78rem;
+  color: var(--invest-text-sub);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Team Members List */
+.team-members-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.members-box-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--invest-text-sub);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.members-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.member-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.76rem;
+}
+
+body.light-mode .member-chip {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.member-chip.is-captain {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.member-chip-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.member-chip-name {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+body.light-mode .member-chip-name {
+  color: #0f172a;
+}
+
+.member-chip-dept {
+  font-size: 0.68rem;
+  color: var(--invest-text-sub);
+}
+
+.captain-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.2);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* ========================================================
+   RIGHT COLUMN: 5-COLUMN TEAM METRICS GRID (กว้างช่องละ 20%)
+   ======================================================== */
+.team-metrics-5grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  /* 5 แถวกว้างแถวละ 20% */
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 1200px) {
+  .team-metrics-5grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .team-metrics-5grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.metric-col-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  min-height: 115px;
+}
+
+body.light-mode .metric-col-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.metric-col-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* Circular Gauge */
+.metric-gauge-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+  margin-bottom: 6px;
+}
+
+.metric-gauge-circle.circle-amber {
+  background: conic-gradient(#f59e0b var(--gauge-deg, 0deg), rgba(255, 255, 255, 0.08) 0deg);
+}
+
+.metric-gauge-circle.circle-blue {
+  background: conic-gradient(#38bdf8 var(--gauge-deg, 0deg), rgba(255, 255, 255, 0.08) 0deg);
+}
+
+.metric-gauge-circle.circle-purple {
+  background: conic-gradient(#c084fc var(--gauge-deg, 0deg), rgba(255, 255, 255, 0.08) 0deg);
+}
+
+.metric-gauge-inner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+body.light-mode .metric-gauge-inner {
+  background: #ffffff;
+}
+
+.metric-gauge-inner.text-amber {
+  color: #fbbf24;
+}
+
+.metric-gauge-inner.text-blue {
+  color: #38bdf8;
+}
+
+.metric-gauge-inner.text-purple {
+  color: #c084fc;
+}
+
+.metric-col-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+body.light-mode .metric-col-title {
+  color: #0f172a;
+}
+
+.metric-col-sub {
+  font-size: 0.67rem;
+  color: var(--invest-text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.metric-kpi-icon {
+  font-size: 1.45rem;
+  margin-bottom: 2px;
+  line-height: 1;
+}
+
+.metric-kpi-num-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin: 10px 0 8px 0;
+}
+
+.metric-kpi-num {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.card-voters-count .metric-kpi-num {
+  color: #34d399;
+}
+
+.card-team-fund .metric-kpi-num {
+  color: #fbbf24;
+}
+
+.metric-kpi-unit {
+  font-size: 0.74rem;
+  color: var(--invest-text-sub);
+}
+
+/* ========================================================
+   RIGHT COLUMN: COMBO CHART (VERTICAL STACKED BARS + GREEN DASHED LINE)
+   ======================================================== */
+.invest-chart-box {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+body.light-mode .invest-chart-box {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+.chart-header-row {
+  display: flex;
+  justify-content: center;
+  /* จัดส่วนคำอธิบายกราฟให้อยู่ตรงกลางตามคำสั่ง */
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  text-align: center;
+}
+
+.chart-legend-wrap {
+  display: flex;
+  justify-content: center;
+  /* จัดส่วนคำอธิบายกราฟให้อยู่ตรงกลางตามคำสั่ง */
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--invest-text-sub);
+  width: 100%;
+  text-align: center;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-box {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.legend-invested {
+  background: linear-gradient(135deg, #0056ff, #38bdf8);
+}
+
+.legend-total {
+  background: rgba(51, 65, 85, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.legend-line {
+  display: inline-block;
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.legend-dashed-green {
+  background: repeating-linear-gradient(90deg, #10b981, #10b981 4px, transparent 4px, transparent 8px);
+}
+
+/* SVG Chart Container */
+.combo-chart-stage {
+  width: 100%;
+  min-height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.combo-chart-svg {
+  width: 100%;
+  height: auto;
+  max-height: 380px;
+  display: block;
+}
+
+/* SVG Elements Styling */
+.chart-axis-line {
+  stroke: rgba(255, 255, 255, 0.15);
+  stroke-width: 1;
+}
+
+body.light-mode .chart-axis-line {
+  stroke: #cbd5e1;
+}
+
+.chart-grid-line {
+  stroke: rgba(255, 255, 255, 0.05);
+  stroke-width: 1;
+  stroke-dasharray: 3, 3;
+}
+
+body.light-mode .chart-grid-line {
+  stroke: #e2e8f0;
+}
+
+/* ========================================================
+   SVG CHARTS: Font Kanit ปกติทั้งหมดตามคำสั่ง
+   ======================================================== */
+.combo-chart-svg,
+.summary-chart-svg {
+  font-family: var(--invest-font) !important;
+}
+
+.combo-chart-svg text,
+.combo-chart-svg tspan,
+.summary-chart-svg text,
+.summary-chart-svg tspan {
+  font-family: var(--invest-font) !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+}
+
+/* แกนซ้าย: ปรับสี font ด้านซ้ายให้สว่าง ชัดเจน ตามคำสั่ง */
+.chart-axis-val,
+.chart-left-axis-val {
+  font-family: var(--invest-font) !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  fill: #ffffff !important;
+  /* สีขาวสว่าง ชัดเจน */
+}
+
+body.light-mode .chart-axis-val,
+body.light-mode .chart-left-axis-val {
+  fill: #0f172a !important;
+}
+
+/* หัวข้อแกนซ้าย: ปรับสีสว่างสดใส (ฟ้าสว่าง #38bdf8) */
+.combo-chart-svg .chart-axis-text,
+.summary-chart-svg .chart-money-axis-text {
+  font-family: var(--invest-font) !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  fill: #38bdf8 !important;
+  /* ฟ้าสว่างสดใส */
+}
+
+body.light-mode .combo-chart-svg .chart-axis-text,
+body.light-mode .summary-chart-svg .chart-money-axis-text {
+  fill: #0056ff !important;
+}
+
+/* แกนขวา: สีเขียวมรกต */
+.combo-chart-svg .chart-money-axis-text,
+.summary-chart-svg .chart-axis-text {
+  font-family: var(--invest-font) !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  fill: #10b981 !important;
+}
+
+.chart-money-axis-val {
+  font-family: var(--invest-font) !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  fill: #10b981 !important;
+}
+
+/* ข้อความใต้กราฟแท่ง (รองรับ 2 บรรทัด ตัวอักษรปกติ font Kanit) */
+.chart-dept-label,
+.chart-team-label-l1,
+.chart-team-label-l2 {
+  font-family: var(--invest-font) !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  fill: #f1f5f9;
+  text-anchor: middle;
+}
+
+body.light-mode .chart-dept-label,
+body.light-mode .chart-team-label-l1,
+body.light-mode .chart-team-label-l2 {
+  fill: #0f172a;
+}
+
+.chart-dept-sub {
+  font-family: var(--invest-font) !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  fill: var(--invest-text-sub);
+  text-anchor: middle;
+}
+
+.chart-order-badge-txt {
+  font-family: var(--invest-font) !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  fill: #38bdf8;
+  text-anchor: middle;
+}
+
+.chart-val-bubble {
+  font-family: var(--invest-font) !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  fill: #ffffff;
+  text-anchor: middle;
+}
+
+.chart-green-val,
+.chart-line-val {
+  font-family: var(--invest-font) !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  fill: #10b981;
+  text-anchor: middle;
+}
+
+/* Bias Breakdown Footer */
+.bias-footer-note {
+  font-size: 0.74rem;
+  color: var(--invest-text-muted);
+  line-height: 1.5;
+  margin-top: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  text-align: center;
+  /* จัดให้อยู่ตรงกลาง */
+}
+
+body.light-mode .bias-footer-note {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+/* ========================================================
+   TOP INVESTORS BUTTON & LIGHTBOX (กว้าง 90%)
+   ======================================================== */
+.btn-top-investors {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.35) 100%);
+  border: 1.5px solid #f59e0b;
+  border-radius: 12px;
+  color: #fbbf24;
+  font-family: var(--invest-font);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.2);
+}
+
+.btn-top-investors:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.45);
+  transform: translateY(-1px);
+}
+
+body.light-mode .btn-top-investors {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #b45309;
+}
+
+body.light-mode .btn-top-investors:hover {
+  background: #f59e0b;
+  color: #ffffff;
+}
+
+/* Lightbox Modal Backdrop */
+.top-investors-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Card (กว้าง 90% ตามคำสั่ง) */
+.top-investors-modal-card {
+  width: 90%;
+  max-width: 1200px;
+  max-height: 88vh;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+  animation: scaleInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.light-mode .top-investors-modal-card {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.18);
+}
+
+@keyframes scaleInModal {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(30, 41, 59, 0.5);
+  flex-shrink: 0;
+}
+
+body.light-mode .modal-header-row {
+  background: #f8fafc;
+  border-bottom-color: #e2e8f0;
+}
+
+.modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-icon {
+  font-size: 1.6rem;
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-family: var(--invest-font);
+}
+
+body.light-mode .modal-title {
+  color: #0f172a;
+}
+
+.modal-team-tag {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.18);
+  border: 1px solid #38bdf8;
+  color: #38bdf8;
+}
+
+.modal-subtitle {
+  font-size: 0.76rem;
+  color: var(--invest-text-sub);
+  margin: 3px 0 0 0;
+}
+
+.modal-close-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #f87171;
+  transform: rotate(90deg);
+}
+
+body.light-mode .modal-close-btn {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+/* Modal Table */
+.modal-table-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 20px;
+}
+
+.top-investors-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--invest-font);
+  font-size: 0.86rem;
+}
+
+.top-investors-table thead th {
+  background: rgba(15, 23, 42, 0.95);
+  color: #94a3b8;
+  font-weight: 700;
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+body.light-mode .top-investors-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  border-bottom-color: #cbd5e1;
+}
+
+.top-investors-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.15s ease;
+}
+
+body.light-mode .top-investors-table tbody tr {
+  border-bottom-color: #f1f5f9;
+}
+
+.top-investors-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+body.light-mode .top-investors-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.top-investors-table td {
+  padding: 12px 14px;
+  vertical-align: middle;
+}
+
+/* แถวที่มีดัชนีลำเอียง (สังกัดเดียวกันกับผู้แข่งขัน): แสดงสีพื้นเป็นสีส้ม ตามคำสั่ง */
+.top-investors-table tbody tr.row-bias-orange {
+  background: rgba(249, 115, 22, 0.18) !important;
+  border-left: 4px solid #f97316;
+}
+
+body.light-mode .top-investors-table tbody tr.row-bias-orange {
+  background: #fff7ed !important;
+  border-left: 4px solid #ea580c;
+}
+
+.top-investors-table tbody tr.row-bias-orange:hover {
+  background: rgba(249, 115, 22, 0.25) !important;
+}
+
+body.light-mode .top-investors-table tbody tr.row-bias-orange:hover {
+  background: #ffedd5 !important;
+}
+
+/* Badge ดัชนีลำเอียง */
+.badge-bias-orange {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.3) 0%, rgba(234, 88, 12, 0.5) 100%);
+  border: 1px solid #f97316;
+  color: #fed7aa;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+body.light-mode .badge-bias-orange {
+  background: #fed7aa;
+  border-color: #ea580c;
+  color: #9a3412;
+}
+
+.badge-normal-dept {
+  font-size: 0.72rem;
+  color: var(--invest-text-muted);
+}
+
+/* Rank Pills */
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+body.light-mode .rank-badge {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.rank-badge.rank-1 {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  color: #000000;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+}
+
+.rank-badge.rank-2 {
+  background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+  color: #0f172a;
+}
+
+.rank-badge.rank-3 {
+  background: linear-gradient(135deg, #fed7aa 0%, #c2410c 100%);
+  color: #000000;
+}
+
+/* Investor Name Cell */
+.investor-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.investor-avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #38bdf8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.investor-avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.investor-name {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+body.light-mode .investor-name {
+  color: #0f172a;
+}
+
+.investor-dept-tag {
+  font-size: 0.78rem;
+  color: var(--invest-text-sub);
+}
+
+.investor-money-val {
+  font-weight: 800;
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.investor-pct-val {
+  font-weight: 700;
+  color: #38bdf8;
+  font-size: 0.82rem;
+}
+
+/* Modal Footer */
+.modal-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(30, 41, 59, 0.5);
+  flex-shrink: 0;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+body.light-mode .modal-footer-row {
+  background: #f8fafc;
+  border-top-color: #e2e8f0;
+}
+
+.modal-footer-meta {
+  font-size: 0.82rem;
+  color: var(--invest-text-sub);
+}
+
+.modal-dismiss-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-family: var(--invest-font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-dismiss-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+body.light-mode .modal-dismiss-btn {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+/* ========================================================
+   BOTTOM DOCK: ปุ่มสรุปผล (วางด้านหน้าปุ่มปิดการแสดงผล)
+   ======================================================== */
+.bottom-dock-btn.btn-dock-summary {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.22) 100%) !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.65) !important;
+  color: #fbbf24 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.2) !important;
+}
+
+.bottom-dock-btn.btn-dock-summary:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.4) 0%, rgba(217, 119, 6, 0.4) 100%) !important;
+  border-color: #f59e0b !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.45) !important;
+  transform: translateY(-2px);
+}
+
+.bottom-dock-btn.btn-dock-summary.is-active-summary {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  border-color: #fbbf24 !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6) !important;
+  transform: translateY(-2px) scale(1.04);
+}
+
+body.light-mode .bottom-dock-btn.btn-dock-summary {
+  background: #fef3c7 !important;
+  border-color: #f59e0b !important;
+  color: #b45309 !important;
+}
+
+body.light-mode .bottom-dock-btn.btn-dock-summary:hover,
+body.light-mode .bottom-dock-btn.btn-dock-summary.is-active-summary {
+  background: #f59e0b !important;
+  color: #ffffff !important;
+}
+
+/* ========================================================
+   LIGHTBOX: ยืนยันรหัสผ่านดูผลสรุปการแข่งขัน (PIN: 111111)
+   ======================================================== */
+.summary-auth-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(4, 9, 26, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeInModal 0.25s ease;
+}
+
+.summary-auth-modal-card {
+  width: 100%;
+  max-width: 480px;
+  background: #0f172a;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 22px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 30px rgba(56, 189, 248, 0.2);
+  padding: 28px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: relative;
+  font-family: var(--invest-font);
+}
+
+body.light-mode .summary-auth-modal-card {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+}
+
+.auth-modal-header {
+  text-align: center;
+  position: relative;
+}
+
+.auth-icon-wrap {
+  font-size: 2.6rem;
+  margin-bottom: 6px;
+  filter: drop-shadow(0 4px 10px rgba(245, 158, 11, 0.45));
+}
+
+.auth-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 6px 0;
+  font-family: var(--invest-font);
+}
+
+body.light-mode .auth-modal-title {
+  color: #0f172a;
+}
+
+.auth-modal-subtitle {
+  font-size: 0.85rem;
+  color: var(--invest-text-muted);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.auth-close-btn {
+  position: absolute;
+  top: -12px;
+  right: -8px;
+  background: transparent;
+  border: none;
+  color: var(--invest-text-muted);
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.auth-close-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.auth-notice-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fde68a;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+body.light-mode .auth-notice-box {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.auth-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auth-input-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--invest-text-muted);
+}
+
+.auth-pin-input {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  color: #ffffff;
+  font-size: 1.6rem;
+  letter-spacing: 0.45em;
+  text-align: center;
+  outline: none;
+  font-family: var(--invest-font);
+  transition: all 0.2s ease;
+}
+
+.auth-pin-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.4);
+  background: rgba(15, 23, 42, 0.98);
+}
+
+body.light-mode .auth-pin-input {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+body.light-mode .auth-pin-input:focus {
+  background: #ffffff;
+  border-color: #0056ff;
+}
+
+.auth-error-msg {
+  color: #f87171;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 4px;
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+.auth-modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.btn-auth-cancel {
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: var(--invest-text-muted);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--invest-font);
+}
+
+.btn-auth-cancel:hover {
+  background: rgba(148, 163, 184, 0.25);
+  color: #ffffff;
+}
+
+.btn-auth-confirm {
+  padding: 10px 22px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border: 1px solid #fbbf24;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.45);
+  transition: all 0.2s;
+  font-family: var(--invest-font);
+}
+
+.btn-auth-confirm:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #b45309 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+}
+
+/* ========================================================
+   FULL WIDTH PANEL (100%): กราฟสรุปผลการแข่งขัน & การลงทุน
+   ======================================================== */
+.invest-summary-panel {
+  background: var(--invest-card-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--invest-card-border);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: var(--invest-card-shadow);
+  width: 100%;
+}
+
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--invest-card-border);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.summary-header-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.summary-status-pill.closed {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.80rem;
+  font-weight: 400;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: #f87171;
+}
+
+body.light-mode .summary-status-pill.closed {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #dc2626;
+}
+
+.btn-summary-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: var(--invest-text-light);
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--invest-font);
+}
+
+.btn-summary-back:hover {
+  background: rgba(148, 163, 184, 0.25);
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+/* 4 Summary Highlight Cards */
+.summary-kpis-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 960px) {
+  .summary-kpis-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.summary-kpi-card {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid var(--invest-card-border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.2s ease;
+}
+
+body.light-mode .summary-kpi-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.summary-kpi-card.champ-card {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(217, 119, 6, 0.08) 100%);
+  border: 1.5px solid rgba(245, 158, 11, 0.5);
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.2);
+}
+
+.summary-kpi-icon {
+  font-size: 2.2rem;
+  flex-shrink: 0;
+}
+
+.summary-kpi-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.summary-kpi-label {
+  font-size: 0.78rem;
+  color: var(--invest-text-muted);
+  font-weight: 600;
+}
+
+.summary-kpi-val {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #38bdf8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summary-kpi-val.champ-name {
+  color: #fbbf24;
+}
+
+.summary-kpi-sub {
+  font-size: 0.72rem;
+  color: var(--invest-text-muted);
+}
+
+/* Legend Box */
+.summary-legend-box {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid var(--invest-card-border);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+
+body.light-mode .summary-legend-box {
+  background: #f1f5f9;
+}
+
+.summary-legend-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--invest-text-muted);
+  margin-bottom: 10px;
+}
+
+.summary-legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  align-items: center;
+}
+
+.summary-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  color: var(--invest-text-light);
+}
+
+.summary-color-chip {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.summary-line-chip {
+  width: 24px;
+  height: 0;
+  display: inline-block;
+  border-top: 3px dashed #10b981;
+}
+
+/* SVG Chart Stage */
+.summary-chart-container {
+  width: 100%;
+  min-height: 480px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid var(--invest-card-border);
+  border-radius: 18px;
+  padding: 18px;
+  overflow-x: auto;
+  position: relative;
+  margin-bottom: 24px;
+}
+
+body.light-mode .summary-chart-container {
+  background: #ffffff;
+}
+
+.summary-chart-svg {
+  width: 100%;
+  min-width: 860px;
+  height: auto;
+  display: block;
+}
+
+/* Summary Ranking Table */
+.summary-table-section {
+  margin-top: 10px;
+}
+
+.summary-table-title {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #ffffff;
+  margin-bottom: 12px;
+  font-family: var(--invest-font);
+}
+
+body.light-mode .summary-table-title {
+  color: #0f172a;
+}
+
+.summary-table-wrapper {
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid var(--invest-card-border);
+}
+
+.summary-rank-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+  font-family: var(--invest-font);
+}
+
+.summary-rank-table th {
+  background: rgba(15, 23, 42, 0.85);
+  padding: 12px 14px;
+  font-weight: 700;
+  color: #94a3b8;
+  border-bottom: 1px solid var(--invest-card-border);
+  white-space: nowrap;
+}
+
+body.light-mode .summary-rank-table th {
+  background: #f8fafc;
+  color: #475569;
+}
+
+.summary-rank-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--invest-text-light);
+}
+
+body.light-mode .summary-rank-table td {
+  border-bottom-color: #f1f5f9;
+}
+
+.summary-rank-table tr:hover {
+  background: rgba(56, 189, 248, 0.06);
+}
+
+.rank-badge-champ {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.82rem;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+
+/* ========================================================
+   SUMMARY STATS SECTION: ข้อมูลสถิติ (4 Donut Cards)
+   สไตล์การแสดงผลตรงตามรูปตัวอย่าง media_1794664182875_3e3d2ff9
+   ======================================================== */
+.summary-stats-section {
+  margin: 32px 0 28px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summary-stats-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--invest-card-border);
+  padding-bottom: 12px;
+}
+
+.summary-stats-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-stats-icon {
+  font-size: 1.5rem;
+  background: rgba(56, 189, 248, 0.12);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.summary-stats-title {
+  font-size: 1.25rem;
+  font-family: var(--invest-font);
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+body.light-mode .summary-stats-title {
+  color: #0f172a;
+}
+
+.summary-stats-sub {
+  font-size: 0.84rem;
+  font-family: var(--invest-font);
+  font-weight: 400;
+  color: var(--invest-text-muted);
+  margin: 2px 0 0 0;
+}
+
+/* 4-Card Donut Grid (แบ่งออกเป็น 4 กล่อง/แถว) */
+.stat-donut-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  width: 100%;
+}
+
+@media (max-width: 1080px) {
+  .stat-donut-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .stat-donut-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Stat Donut Card: ดีไซน์ตรงตามภาพ media_1794664182875_3e3d2ff9.png */
+.stat-donut-card {
+  position: relative;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  padding: 24px 18px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.stat-donut-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), 0 0 15px rgba(245, 158, 11, 0.15);
+}
+
+body.light-mode .stat-donut-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .stat-donut-card:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 12px 30px rgba(245, 158, 11, 0.18);
+}
+
+/* Placeholder card for Card 4 (เว้นไว้ก่อน) */
+.stat-donut-card.is-placeholder {
+  opacity: 0.82;
+  border-style: dashed;
+}
+
+.stat-donut-card.is-placeholder:hover {
+  border-color: rgba(148, 163, 184, 0.5);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+/* ปุ่มขยายกราฟ (Top Right Expand Icon Button) */
+.btn-zoom-chart {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  z-index: 2;
+}
+
+.btn-zoom-chart:hover {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: #f59e0b;
+  color: #fbbf24;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+}
+
+body.light-mode .btn-zoom-chart {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #64748b;
+}
+
+body.light-mode .btn-zoom-chart:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #d97706;
+}
+
+/* Donut Chart SVG Wrap */
+.donut-chart-wrap {
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 0 16px 0;
+  position: relative;
+}
+
+.donut-chart-wrap svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  font-family: var(--invest-font) !important;
+}
+
+.donut-chart-wrap svg text,
+.donut-chart-wrap svg tspan {
+  font-family: var(--invest-font) !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+}
+
+/* Card Title (ตรงตามภาพ: ดัชนีลำเอียง) */
+.stat-card-title {
+  font-size: 1.00rem;
+  font-family: var(--invest-font);
+  font-weight: 400;
+  color: #ffffff;
+  margin: 0 0 6px 0;
+  letter-spacing: 0.2px;
+}
+
+body.light-mode .stat-card-title {
+  color: #0f172a;
+}
+
+/* Card Subtitle (ตรงตามภาพ: 320,000 บาท) */
+.stat-card-sub {
+  font-size: 0.95rem;
+  font-family: var(--invest-font);
+  font-weight: 400;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+body.light-mode .stat-card-sub {
+  color: #64748b;
+}
+
+/* ========================================================
+   LIGHTBOX: ขยายกราฟสถิติ (ความกว้าง 80% ตามคำสั่ง)
+   ======================================================== */
+.chart-zoom-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 2150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+/* ความกว้าง 80% ตามคำสั่งอย่างเคร่งครัด */
+.chart-zoom-modal-card {
+  width: 80% !important;
+  max-width: 1000px;
+  max-height: 88vh;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.75);
+  animation: scaleInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.light-mode .chart-zoom-modal-card {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.18);
+}
+
+.zoom-modal-body {
+  padding: 26px 28px;
+  overflow-y: auto;
+  max-height: calc(88vh - 150px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Layout ภายใน Lightbox แสดงกราฟขนาดใหญ่ */
+.zoom-chart-content-row {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .zoom-chart-content-row {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+}
+
+.zoom-chart-svg-wrap {
+  width: 260px;
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.zoom-chart-svg-wrap svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  font-family: var(--invest-font) !important;
+}
+
+.zoom-chart-svg-wrap svg text,
+.zoom-chart-svg-wrap svg tspan {
+  font-family: var(--invest-font) !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+}
+
+/* Stat Breakdown Grid ภายใน Modal */
+.zoom-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+@media (max-width: 520px) {
+  .zoom-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.zoom-metric-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+body.light-mode .zoom-metric-box {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.zoom-metric-label {
+  font-size: 0.85rem;
+  color: var(--invest-text-muted);
+  font-family: var(--invest-font);
+  font-weight: 400;
+}
+
+.zoom-metric-val {
+  font-size: 1.4rem;
+  font-family: var(--invest-font);
+  font-weight: 400;
+  color: #ffffff;
+}
+
+body.light-mode .zoom-metric-val {
+  color: #0f172a;
+}
+
+.zoom-metric-val.highlight-gold {
+  color: #f59e0b;
+}
+
+.zoom-metric-val.highlight-sky {
+  color: #38bdf8;
+}
+
+.zoom-metric-val.highlight-emerald {
+  color: #10b981;
+}
+
+/* ตารางแสดงสัดส่วนทีมใน Modal (กล่องที่ 3) */
+.zoom-teams-table-wrap {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--invest-card-border);
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.zoom-teams-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  font-family: var(--invest-font);
+}
+
+.zoom-teams-table th {
+  background: rgba(15, 23, 42, 0.85);
+  padding: 12px 14px;
+  font-weight: 400;
+  color: #94a3b8;
+  border-bottom: 1px solid var(--invest-card-border);
+  text-align: left;
+}
+
+body.light-mode .zoom-teams-table th {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.zoom-teams-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--invest-text-light);
+  font-weight: 400;
+}
+
+body.light-mode .zoom-teams-table td {
+  border-bottom-color: #e2e8f0;
+  color: #1e293b;
+}
+
+.zoom-team-color-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+
+
+/* ========================================================
+   SUMMARY STATS SECTION: ข้อมูลสถิติ (4 Donut Cards)
+   สไตล์การแสดงผลตรงตามรูปตัวอย่าง media_1794664182875_3e3d2ff9
+   ======================================================== */
+.summary-stats-section {
+  margin: 32px 0 28px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summary-stats-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--invest-card-border);
+  padding-bottom: 12px;
+}
+
+.summary-stats-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-stats-icon {
+  font-size: 1.5rem;
+  background: rgba(56, 189, 248, 0.12);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.summary-stats-title {
+  font-size: 1.25rem;
+  font-family: var(--invest-font);
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+body.light-mode .summary-stats-title {
+  color: #0f172a;
+}
+
+.summary-stats-sub {
+  font-size: 0.84rem;
+  font-family: var(--invest-font);
+  font-weight: 400;
+  color: var(--invest-text-muted);
+  margin: 2px 0 0 0;
+}
+
+/* 4-Card Donut Grid (แบ่งออกเป็น 4 กล่อง/แถว) */
+.stat-donut-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  width: 100%;
+}
+
+@media (max-width: 1080px) {
+  .stat-donut-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .stat-donut-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Stat Donut Card: ดีไซน์ตรงตามภาพ media_1794664182875_3e3d2ff9.png */
+.stat-donut-card {
+  position: relative;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  padding: 24px 18px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.stat-donut-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), 0 0 15px rgba(245, 158, 11, 0.15);
+}
+
+body.light-mode .stat-donut-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .stat-donut-card:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 12px 30px rgba(245, 158, 11, 0.18);
+}
+
+/* Placeholder card for Card 4 (เว้นไว้ก่อน) */
+.stat-donut-card.is-placeholder {
+  opacity: 0.82;
+  border-style: dashed;
+}
+
+.stat-donut-card.is-placeholder:hover {
+  border-color: rgba(148, 163, 184, 0.5);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+/* ปุ่มขยายกราฟ (Top Right Expand Icon Button) */
+.btn-zoom-chart {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  z-index: 2;
+}
+
+.btn-zoom-chart:hover {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: #f59e0b;
+  color: #fbbf24;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+}
+
+body.light-mode .btn-zoom-chart {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #64748b;
+}
+
+body.light-mode .btn-zoom-chart:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #d97706;
+}
+
+/* Donut Chart SVG Wrap */
+.donut-chart-wrap {
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 0 16px 0;
+  position: relative;
+}
+
+.donut-chart-wrap svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  font-family: var(--invest-font) !important;
+}
+
+.donut-chart-wrap svg text,
+.donut-chart-wrap svg tspan {
+  font-family: var(--invest-font) !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+}
+
+/* Card Title (ตรงตามภาพ: ดัชนีลำเอียง) */
+.stat-card-title {
+  font-size: 1.00rem;
+  font-family: var(--invest-font);
+  font-weight: 400;
+  color: #ffffff;
+  margin: 0 0 6px 0;
+  letter-spacing: 0.2px;
+}
+
+body.light-mode .stat-card-title {
+  color: #0f172a;
+}
+
+/* Card Subtitle (ตรงตามภาพ: 320,000 บาท) */
+.stat-card-sub {
+  font-size: 0.95rem;
+  font-family: var(--invest-font);
+  font-weight: 400;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+body.light-mode .stat-card-sub {
+  color: #64748b;
+}
+
+/* ========================================================
+   LIGHTBOX: ขยายกราฟสถิติ (ความกว้าง 80% ตามคำสั่ง)
+   ======================================================== */
+.chart-zoom-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 2150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+/* ความกว้าง 80% ตามคำสั่งอย่างเคร่งครัด */
+.chart-zoom-modal-card {
+  width: 80% !important;
+  max-width: 1000px;
+  max-height: 88vh;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.75);
+  animation: scaleInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.light-mode .chart-zoom-modal-card {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.18);
+}
+
+.zoom-modal-body {
+  padding: 26px 28px;
+  overflow-y: auto;
+  max-height: calc(88vh - 150px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Layout ภายใน Lightbox แสดงกราฟขนาดใหญ่ */
+.zoom-chart-content-row {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .zoom-chart-content-row {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+}
+
+.zoom-chart-svg-wrap {
+  width: 260px;
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.zoom-chart-svg-wrap svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  font-family: var(--invest-font) !important;
+}
+
+.zoom-chart-svg-wrap svg text,
+.zoom-chart-svg-wrap svg tspan {
+  font-family: var(--invest-font) !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+}
+
+/* Stat Breakdown Grid ภายใน Modal */
+.zoom-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+@media (max-width: 520px) {
+  .zoom-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.zoom-metric-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+body.light-mode .zoom-metric-box {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.zoom-metric-label {
+  font-size: 0.85rem;
+  color: var(--invest-text-muted);
+  font-family: var(--invest-font);
+  font-weight: 400;
+}
+
+.zoom-metric-val {
+  font-size: 1.4rem;
+  font-family: var(--invest-font);
+  font-weight: 400;
+  color: #ffffff;
+}
+
+body.light-mode .zoom-metric-val {
+  color: #0f172a;
+}
+
+.zoom-metric-val.highlight-gold {
+  color: #f59e0b;
+}
+
+.zoom-metric-val.highlight-sky {
+  color: #38bdf8;
+}
+
+.zoom-metric-val.highlight-emerald {
+  color: #10b981;
+}
+
+/* ตารางแสดงสัดส่วนทีมใน Modal (กล่องที่ 3) */
+.zoom-teams-table-wrap {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--invest-card-border);
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.zoom-teams-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  font-family: var(--invest-font);
+}
+
+.zoom-teams-table th {
+  background: rgba(15, 23, 42, 0.85);
+  padding: 12px 14px;
+  font-weight: 400;
+  color: #94a3b8;
+  border-bottom: 1px solid var(--invest-card-border);
+  text-align: left;
+}
+
+body.light-mode .zoom-teams-table th {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.zoom-teams-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--invest-text-light);
+  font-weight: 400;
+}
+
+body.light-mode .zoom-teams-table td {
+  border-bottom-color: #e2e8f0;
+  color: #1e293b;
+}
+
+.zoom-team-color-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+
+
+/* ========================================================
+   SUMMARY STATS SECTION: ข้อมูลสถิติ (4 Donut Cards)
+   สไตล์การแสดงผลตรงตามรูปตัวอย่าง media_1794664182875_3e3d2ff9
+   ======================================================== */
+.summary-stats-section {
+  margin: 32px 0 28px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summary-stats-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--invest-card-border);
+  padding-bottom: 12px;
+}
+
+.summary-stats-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-stats-icon {
+  font-size: 1.5rem;
+  background: rgba(56, 189, 248, 0.12);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.summary-stats-title {
+  font-size: 1.20rem;
+  font-family: var(--invest-font);
+  font-weight: 500;
+  color: #ffffff;
+  margin: 0;
+}
+
+body.light-mode .summary-stats-title {
+  color: #0f172a;
+}
+
+.summary-stats-sub {
+  font-size: 0.84rem;
+  font-family: var(--invest-font);
+  font-weight: 400;
+  color: var(--invest-text-muted);
+  margin: 2px 0 0 0;
+}
+
+/* 4-Card Donut Grid (แบ่งออกเป็น 4 กล่อง/แถว) */
+.stat-donut-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  width: 100%;
+}
+
+@media (max-width: 1080px) {
+  .stat-donut-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .stat-donut-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Stat Donut Card: ดีไซน์ตรงตามภาพ media_1794664182875_3e3d2ff9.png */
+.stat-donut-card {
+  position: relative;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  padding: 24px 18px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.stat-donut-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), 0 0 15px rgba(245, 158, 11, 0.15);
+}
+
+body.light-mode .stat-donut-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .stat-donut-card:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 12px 30px rgba(245, 158, 11, 0.18);
+}
+
+/* Placeholder card for Card 4 (เว้นไว้ก่อน) */
+.stat-donut-card.is-placeholder {
+  opacity: 0.82;
+  border-style: dashed;
+}
+
+.stat-donut-card.is-placeholder:hover {
+  border-color: rgba(148, 163, 184, 0.5);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+/* ปุ่มขยายกราฟ (Top Right Expand Icon Button) */
+.btn-zoom-chart {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  z-index: 2;
+}
+
+.btn-zoom-chart:hover {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: #f59e0b;
+  color: #fbbf24;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+}
+
+body.light-mode .btn-zoom-chart {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #64748b;
+}
+
+body.light-mode .btn-zoom-chart:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #d97706;
+}
+
+/* Donut Chart SVG Wrap */
+.donut-chart-wrap {
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 0 16px 0;
+  position: relative;
+}
+
+.donut-chart-wrap svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  font-family: var(--invest-font) !important;
+}
+
+.donut-chart-wrap svg text,
+.donut-chart-wrap svg tspan {
+  font-family: var(--invest-font) !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+}
+
+/* Card Title (ตรงตามภาพ: ดัชนีลำเอียง) */
+.stat-card-title {
+  font-size: 1.00rem;
+  font-family: var(--invest-font);
+  font-weight: 400;
+  color: #ffffff;
+  margin: 0 0 6px 0;
+  letter-spacing: 0.2px;
+}
+
+body.light-mode .stat-card-title {
+  color: #0f172a;
+}
+
+/* Card Subtitle (ตรงตามภาพ: 320,000 บาท) */
+.stat-card-sub {
+  font-size: 0.95rem;
+  font-family: var(--invest-font);
+  font-weight: 400;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+body.light-mode .stat-card-sub {
+  color: #64748b;
+}
+
+/* ========================================================
+   LIGHTBOX: ขยายกราฟสถิติ (ความกว้าง 80% ตามคำสั่ง)
+   ======================================================== */
+.chart-zoom-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 2150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+/* ความกว้าง 80% ตามคำสั่งอย่างเคร่งครัด */
+.chart-zoom-modal-card {
+  width: 80% !important;
+  max-width: 1000px;
+  max-height: 88vh;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.75);
+  animation: scaleInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.light-mode .chart-zoom-modal-card {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.18);
+}
+
+.zoom-modal-body {
+  padding: 26px 28px;
+  overflow-y: auto;
+  max-height: calc(88vh - 150px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Layout ภายใน Lightbox แสดงกราฟขนาดใหญ่ */
+.zoom-chart-content-row {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .zoom-chart-content-row {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+}
+
+.zoom-chart-svg-wrap {
+  width: 260px;
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.zoom-chart-svg-wrap svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  font-family: var(--invest-font) !important;
+}
+
+.zoom-chart-svg-wrap svg text,
+.zoom-chart-svg-wrap svg tspan {
+  font-family: var(--invest-font) !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+}
+
+/* Stat Breakdown Grid ภายใน Modal */
+.zoom-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+@media (max-width: 520px) {
+  .zoom-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.zoom-metric-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+body.light-mode .zoom-metric-box {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.zoom-metric-label {
+  font-size: 0.85rem;
+  color: var(--invest-text-muted);
+  font-family: var(--invest-font);
+  font-weight: 400;
+}
+
+.zoom-metric-val {
+  font-size: 1.4rem;
+  font-family: var(--invest-font);
+  font-weight: 400;
+  color: #ffffff;
+}
+
+body.light-mode .zoom-metric-val {
+  color: #0f172a;
+}
+
+.zoom-metric-val.highlight-gold {
+  color: #f59e0b;
+}
+
+.zoom-metric-val.highlight-sky {
+  color: #38bdf8;
+}
+
+.zoom-metric-val.highlight-emerald {
+  color: #10b981;
+}
+
+/* ตารางแสดงสัดส่วนทีมใน Modal (กล่องที่ 3) */
+.zoom-teams-table-wrap {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--invest-card-border);
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.zoom-teams-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  font-family: var(--invest-font);
+}
+
+.zoom-teams-table th {
+  background: rgba(15, 23, 42, 0.85);
+  padding: 12px 14px;
+  font-weight: 400;
+  color: #94a3b8;
+  border-bottom: 1px solid var(--invest-card-border);
+  text-align: left;
+}
+
+body.light-mode .zoom-teams-table th {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.zoom-teams-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--invest-text-light);
+  font-weight: 400;
+}
+
+body.light-mode .zoom-teams-table td {
+  border-bottom-color: #e2e8f0;
+  color: #1e293b;
+}
+
+.zoom-team-color-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
