@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลงทะเบียนเข้าร่วมงาน & โหวตทีมชนะ - CRSDG NEW YEAR 2026</title>
+    <!-- Google Fonts Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS Stylesheets -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            font-family: 'Kanit', sans-serif !important;
+        }
+
+        body {
+            background: #080d1a;
+            color: #ffffff;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 16px 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .reg-container {
+            width: 100%;
+            max-width: 580px;
+            margin: 0 auto;
+        }
+
+        .reg-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .reg-badge-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 14px;
+            border-radius: 9999px;
+            background: rgba(0, 229, 255, 0.15);
+            border: 1px solid rgba(0, 229, 255, 0.35);
+            color: #00e5ff;
+            font-size: 0.82rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .reg-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0 0 6px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .reg-subtitle {
+            font-size: 0.88rem;
+            color: rgba(255, 255, 255, 0.65);
+            margin: 0;
+        }
+
+        .card-box {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 18px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-step-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #00e5ff;
+            margin: 0 0 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(11, 18, 34, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: #ffffff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: #00e5ff;
+            box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.25);
+        }
+
+        .btn-search {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            padding: 0 20px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: transform 0.15s;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Member Profile Found Card */
+        .member-found-card {
+            background: rgba(26, 38, 66, 0.6);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        .member-avatar-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #00e5ff;
+            flex-shrink: 0;
+            background: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .member-avatar-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .member-info-col {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .member-info-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 3px;
+        }
+
+        .member-info-meta {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.65);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.72rem;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .status-registered {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+
+        /* Teams Voting Grid */
+        .teams-vote-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .team-vote-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            position: relative;
+        }
+
+        .team-vote-card:hover {
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .team-vote-card.selected {
+            background: rgba(0, 229, 255, 0.12);
+            border-color: #00e5ff;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.35);
+        }
+
+        .team-vote-card.selected::after {
+            content: "✓";
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            color: #00e5ff;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .team-vote-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin: 0 auto 6px;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        .team-vote-name {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 2px;
+        }
+
+        .team-vote-dept {
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        /* Submit Button */
+        .btn-submit-reg {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            transition: all 0.22s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .btn-submit-reg:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+        }
+
+        .btn-submit-reg:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .nav-home-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .nav-home-link a {
+            color: #00e5ff;
+            font-size: 0.88rem;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .nav-home-link a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        /* Success Overlay */
+        .success-box {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid #10b981;
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 16px;
+            animation: fadeInTab 0.3s ease;
+        }
+
+        .success-icon {
+            font-size: 2.4rem;
+            margin-bottom: 8px;
+        }
+
+        .vote-closed-banner {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #fca5a5;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reg-container">
+        <!-- Header -->
+        <header class="reg-header">
+            <div class="reg-badge-logo">🎉 CRSDG NEW YEAR 2026</div>
+            <h1 class="reg-title">ลงทะเบียนเข้าร่วมกิจกรรม</h1>
+            <p class="reg-subtitle">กรุณาระบุรหัสพนักงานเพื่อยืนยันการเข้าร่วม และร่วมโหวตทายผลทีมชนะ</p>
+        </header>
+
+        <!-- Step 1: Identify Employee -->
+        <div class="card-box">
+            <h2 class="card-step-title"><span>1️⃣</span> ค้นหาข้อมูลพนักงาน</h2>
+            <div class="input-row">
+                <input type="text" id="empSearchInput" class="form-input" placeholder="ใส่รหัสพนักงาน เช่น 14065..." autocomplete="off">
+                <button type="button" class="btn-search" id="btnSearchEmp">ค้นหา</button>
+            </div>
+
+            <!-- Dynamic Member Found Box -->
+            <div id="memberFoundDisplay" style="display: none;">
+                <!-- Filled dynamically -->
+            </div>
+        </div>
+
+        <!-- Step 2: Choose Winning Team -->
+        <div class="card-box" id="voteStepBox" style="display: none;">
+            <h2 class="card-step-title"><span>2️⃣</span> โหวตทายผลทีมที่จะชนะ</h2>
+            
+            <div id="voteClosedNotice" class="vote-closed-banner" style="display: none;">
+                🔴 ขณะนี้ระบบปิดรับโหวตแล้ว (แสดงผลทีมที่ท่านได้โหวตไว้)
+            </div>
+
+            <p style="font-size: 0.82rem; color: rgba(255, 255, 255, 0.65); margin: 0 0 10px;">
+                คลิกเลือก 1 ทีมแข่งขันที่คุณคิดว่าจะชนะเลิศในกิจกรรมปีนี้:
+            </p>
+
+            <div class="teams-vote-grid" id="teamsVoteGrid">
+                <!-- Rendered dynamically -->
+            </div>
+
+            <!-- Submit Button -->
+            <button type="button" class="btn-submit-reg" id="btnSubmitRegistration">
+                ✅ ยืนยันการลงทะเบียน & บันทึกผลโหวต
+            </button>
+        </div>
+
+        <!-- Success Result Box -->
+        <div id="successDisplayBox" style="display: none;">
+            <!-- Filled dynamically -->
+        </div>
+
+        <!-- Footer link back to main stage -->
+        <div class="nav-home-link">
+            <a href="index.html">← กลับไปหน้าหลักเวทีการแข่งขัน</a> &nbsp;|&nbsp; 
+            <a href="admin.html">หน้า Admin Dashboard</a>
+        </div>
+    </div>
+
+    <!-- State & Logic Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="js/firebase-sync.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/audio.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const state = window.stateManager;
+            const sound = window.soundEffects;
+
+            const empSearchInput = document.getElementById('empSearchInput');
+            const btnSearchEmp = document.getElementById('btnSearchEmp');
+            const memberFoundDisplay = document.getElementById('memberFoundDisplay');
+            const voteStepBox = document.getElementById('voteStepBox');
+            const voteClosedNotice = document.getElementById('voteClosedNotice');
+            const teamsVoteGrid = document.getElementById('teamsVoteGrid');
+            const btnSubmitRegistration = document.getElementById('btnSubmitRegistration');
+            const successDisplayBox = document.getElementById('successDisplayBox');
+
+            let currentMember = null;
+            let selectedTeamName = '';
+
+            // Check URL search param (e.g. ?id=14065)
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialId = urlParams.get('id');
+            if (initialId) {
+                empSearchInput.value = initialId;
+                searchEmployee(initialId);
+            }
+
+            function searchEmployee(queryId) {
+                const q = String(queryId || empSearchInput.value).trim();
+                if (!q) {
+                    alert('กรุณากรอกรหัสพนักงาน');
+                    return;
+                }
+
+                const members = state.getMembers();
+                const found = members.find(m => {
+                    const eid = String(m.EmployeeID || m.id).trim();
+                    return eid === q || String(m.EmpName || m.name).includes(q);
+                });
+
+                if (!found) {
+                    alert(`ไม่พบข้อมูลพนักงานรหัส "${q}" ในระบบ`);
+                    memberFoundDisplay.style.display = 'none';
+                    voteStepBox.style.display = 'none';
+                    return;
+                }
+
+                currentMember = found;
+                selectedTeamName = found.chosenTeam || '';
+
+                // Render Member Info
+                const isReg = found.registered === true && found.registeredAt;
+                const avatarSrc = found.photo || found.originalPhoto || '';
+
+                memberFoundDisplay.innerHTML = `
+                    <div class="member-found-card">
+                        <div class="member-avatar-box">
+                            ${avatarSrc ? `<img src="${avatarSrc}" alt="Avatar">` : `<span style="font-size: 1.8rem;">👤</span>`}
+                        </div>
+                        <div class="member-info-col">
+                            <div class="member-info-name">${found.EmpName || found.name}</div>
+                            <div class="member-info-meta">
+                                <span>รหัส: <strong>${found.EmployeeID || found.id}</strong></span>
+                                <span>กลุ่ม: <strong>${found.Group || found.department || '-'}</strong></span>
+                                <span class="status-badge ${isReg ? 'status-registered' : 'status-pending'}">
+                                    ${isReg ? '✅ ลงทะเบียนแล้ว' : '⏳ ยังไม่ลงทะเบียน'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                memberFoundDisplay.style.display = 'block';
+
+                // Check voting status
+                const isVoteOpen = state.isVoteOpen();
+                if (voteClosedNotice) {
+                    voteClosedNotice.style.display = isVoteOpen ? 'none' : 'block';
+                }
+
+                renderTeamVoteCards(isVoteOpen);
+                voteStepBox.style.display = 'block';
+                if (sound) sound.playClick();
+            }
+
+            function renderTeamVoteCards(isVoteOpen) {
+                // ใช้ข้อมูลจากตาราง crsdg_player สำหรับการโหวตเลือกให้คะแนน (หากยังไม่มี ให้ fallback เป็น getTeamNames())
+                const players = (typeof state.getPlayers === 'function') ? state.getPlayers() : [];
+                let voteTeams = [];
+                if (players && players.length > 0) {
+                    voteTeams = players.map(p => ({
+                        id: p.id,
+                        name: p.teamName || ('ทีมลำดับที่ ' + p.orderNo),
+                        department: (p.members && p.members.length > 0) ? `สมาชิก ${p.members.length} คน` : 'ทีมโหวต',
+                        color: '#f59e0b',
+                        teamPhoto: p.teamPhoto || ''
+                    }));
+                } else {
+                    voteTeams = state.getTeamNames();
+                }
+
+                teamsVoteGrid.innerHTML = voteTeams.map(t => {
+                    const isSelected = selectedTeamName === t.name;
+                    return `
+                        <div class="team-vote-card ${isSelected ? 'selected' : ''}" 
+                             data-team="${t.name}" 
+                             style="${!isVoteOpen ? 'pointer-events: none; opacity: ' + (isSelected ? '1' : '0.5') : ''}">
+                            ${t.teamPhoto ? `<img src="${t.teamPhoto}" alt="${t.name}" style="width: 32px; height: 32px; border-radius: 8px; object-fit: cover; margin-bottom: 6px; display: block;">` : `<div class="team-vote-dot" style="background: ${t.color || '#3b82f6'}; color: ${t.color || '#3b82f6'};"></div>`}
+                            <div class="team-vote-name">${t.name}</div>
+                            <div class="team-vote-dept">${t.department || ''}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Click handler for team vote cards
+                if (isVoteOpen) {
+                    const cards = teamsVoteGrid.querySelectorAll('.team-vote-card');
+                    cards.forEach(c => {
+                        c.addEventListener('click', () => {
+                            cards.forEach(other => other.classList.remove('selected'));
+                            c.classList.add('selected');
+                            selectedTeamName = c.getAttribute('data-team');
+                            if (sound) sound.playClick();
+                        });
+                    });
+                }
+            }
+
+            btnSearchEmp.addEventListener('click', () => searchEmployee());
+            empSearchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchEmployee();
+                }
+            });
+
+            // Submit Registration & Vote
+            btnSubmitRegistration.addEventListener('click', () => {
+                if (!currentMember) return;
+                const empId = currentMember.EmployeeID || currentMember.id;
+                const isVoteOpen = state.isVoteOpen();
+
+                const nowIso = new Date().toISOString();
+                const updatePayload = {
+                    registered: true,
+                    registeredAt: currentMember.registeredAt || nowIso
+                };
+
+                if (isVoteOpen && selectedTeamName) {
+                    updatePayload.chosenTeam = selectedTeamName;
+                }
+
+                const res = state.updateMember(empId, updatePayload);
+                if (!res.success) {
+                    alert(res.message);
+                    return;
+                }
+
+                if (window.FirebaseSync && typeof window.FirebaseSync.updateMemberRegistration === 'function') {
+                    window.FirebaseSync.updateMemberRegistration(empId, updatePayload);
+                }
+
+                // Show success screen
+                voteStepBox.style.display = 'none';
+                memberFoundDisplay.style.display = 'none';
+
+                successDisplayBox.innerHTML = `
+                    <div class="card-box success-box">
+                        <div class="success-icon">🎉</div>
+                        <h2 style="font-size: 1.4rem; color: #34d399; margin: 0 0 6px;">ลงทะเบียนสำเร็จเรียบร้อย!</h2>
+                        <p style="font-size: 0.92rem; color: #ffffff; margin-bottom: 12px;">
+                            ยินดีต้อนรับคุณ <strong>${currentMember.EmpName || currentMember.name}</strong> เข้าสู่กิจกรรม
+                        </p>
+                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.75); line-height: 1.6;">
+                            <div>✅ สิทธิ์ลุ้นรับของรางวัลของคุณถูกเปิดใช้งานเรียบร้อย</div>
+                            ${selectedTeamName ? `<div>🗳️ คุณได้ทายผลทีมชนะ: <strong style="color: #00e5ff;">${selectedTeamName}</strong></div>` : ''}
+                        </div>
+                    </div>
+                `;
+                successDisplayBox.style.display = 'block';
+                if (sound) sound.playCheer();
+            });
+        });
+    </script>
+</body>
+
+</html>
+

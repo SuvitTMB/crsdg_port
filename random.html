@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบลงทะเบียนและแสดงผลสุ่มรางวัล - CRS DG Lucky Draw</title>
+    <!-- Google Fonts Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS Stylesheets -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/random.css">
+</head>
+<body class="stage-body">
+    <!-- Overlay for depth and clarity -->
+    <div class="stage-overlay"></div>
+
+    <!-- Canvas for Confetti Fireworks -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- ========================================================
+         TOP HEADER BAR - Matches the user's screenshot exactly
+         ======================================================== -->
+    <header class="stage-header">
+        <div class="header-left">
+            <!-- Button 1: กลับไปหน้า Admin -->
+            <a href="admin.html" class="btn-pill" id="backAdminBtn">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                    <path d="m15 18-6-6 6-6"/>
+                </svg>
+                <span>กลับไปหน้า Admin</span>
+            </a>
+
+            <!-- Button 2: รีโมตควบคุม -->
+            <button type="button" class="btn-pill" id="remoteBtn">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                </svg>
+                <span>รีโมตควบคุม</span>
+            </button>
+        </div>
+
+        <div class="header-right">
+            <!-- Quick Sound & History Buttons -->
+            <button type="button" class="btn-pill" id="soundToggleBtn" title="เปิด/ปิดเสียง">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                </svg>
+                <span>เสียง: เปิด</span>
+            </button>
+
+            <button type="button" class="btn-pill" id="historyToggleBtn" title="ดูรายชื่อผู้โชคดี">
+                <span>🏆 ประวัติ</span>
+            </button>
+
+            <!-- Button 3: เต็มจอ (Gold button matching screenshot) -->
+            <button type="button" class="btn-pill btn-fullscreen" id="fullscreenBtn">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                </svg>
+                <span>เต็มจอ</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ========================================================
+         CENTRAL GAME SHOW STAGE DISPLAY
+         ======================================================== -->
+    <main class="stage-main">
+        <!-- Current Prize Selection Banner -->
+        <div class="prize-banner animate-float">
+            <button type="button" class="prize-nav-btn" id="prevPrizeBtn" title="รางวัลก่อนหน้า">❮</button>
+            <div class="prize-content">
+                <span class="prize-badge" id="prizeBadge">GRAND PRIZE</span>
+                <h1 class="prize-title" id="prizeTitle">รางวัลที่ 1: สร้อยคอทองคำ หนัก 1 บาท</h1>
+                <div class="prize-meta">
+                    <span id="prizeQuantity">ทั้งหมด 1 รางวัล</span>
+                    <span id="prizeRemaining" class="remaining-badge active">(เหลือ 1 รางวัล)</span>
+                </div>
+            </div>
+            <button type="button" class="prize-nav-btn" id="nextPrizeBtn" title="รางวัลถัดไป">❯</button>
+        </div>
+
+        <!-- Center Slot Display Box -->
+        <div class="slot-container">
+            <div class="slot-card" id="slotCard">
+                <div class="slot-badge-id" id="slotEmpId">CRS-XXXX</div>
+                <div class="slot-name" id="slotName">พร้อมเริ่มสุ่มรางวัล</div>
+                <div class="slot-dept" id="slotDept">งานเลี้ยงสังสรรค์ปีใหม่ CRS DG NEW YEAR 2026</div>
+            </div>
+        </div>
+
+        <!-- Action / Spin Trigger Button -->
+        <div class="stage-actions">
+            <button type="button" class="btn-action-main" id="actionBtn">
+                <span id="actionBtnText">เริ่มสุ่มรางวัล (Spacebar)</span>
+            </button>
+            <div class="keyboard-hint">
+                กด <kbd>Space</kbd> เพื่อสุ่ม/หยุด • <kbd>F</kbd> เต็มจอ • <kbd>M</kbd> เปิด/ปิดเสียง • <kbd>C</kbd> จุดพลุ
+            </div>
+        </div>
+    </main>
+
+    <!-- ========================================================
+         WINNER CELEBRATION POPUP MODAL
+         ======================================================== -->
+    <div class="modal-overlay" id="winnerModal">
+        <div class="winner-card">
+            <div class="winner-crown">👑</div>
+            <div class="winner-headline">🎉 ขอแสดงความยินดีกับผู้โชคดี! 🎉</div>
+            <div class="winner-prize-name" id="winPrizeTitle">รางวัลที่ 1: สร้อยคอทองคำ หนัก 1 บาท</div>
+            
+            <div class="winner-details-box">
+                <div class="winner-emp-id" id="winEmpId">CRS-0101</div>
+                <div class="winner-full-name" id="winName">คุณสมชาย วงศ์สวัสดิ์</div>
+                <div class="winner-dept-text" id="winDept">ฝ่ายเทคโนโลยีสารสนเทศ (IT)</div>
+            </div>
+
+            <div class="winner-modal-actions">
+                <button type="button" class="btn-pill" id="winCloseBtn">ปิดหน้าต่าง</button>
+                <button type="button" class="btn-pill btn-fullscreen" id="winNextBtn">สุ่มรางวัลถัดไป ❯</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         ON-SCREEN QUICK REMOTE MODAL (Triggered by "รีโมตควบคุม")
+         ======================================================== -->
+    <div class="modal-overlay" id="remoteModal">
+        <div class="remote-modal-card">
+            <div class="remote-modal-header">
+                <div class="remote-modal-title">
+                    <span>🎛️ รีโมตควบคุมเกมโชว์</span>
+                </div>
+                <button type="button" class="btn-pill" onclick="remoteController.closeModal()">✕</button>
+            </div>
+            <div class="remote-grid">
+                <button type="button" class="btn-remote-pad btn-remote-spin" data-remote-action="TOGGLE_SPIN">
+                    🎰 เริ่ม / หยุดสุ่ม (Toggle)
+                </button>
+                <button type="button" class="btn-remote-pad" data-remote-action="PREV_PRIZE">
+                    ⏮️ รางวัลก่อนหน้า
+                </button>
+                <button type="button" class="btn-remote-pad" data-remote-action="NEXT_PRIZE">
+                    ⏭️ รางวัลถัดไป
+                </button>
+                <button type="button" class="btn-remote-pad" data-remote-action="CELEBRATE">
+                    🎉 จุดพลุเฉลิมฉลอง
+                </button>
+                <button type="button" class="btn-remote-pad" data-remote-action="TOGGLE_SOUND">
+                    🔊 สลับเสียงเปิด/ปิด
+                </button>
+            </div>
+            <div class="remote-external-link">
+                ต้องการควบคุมจากแท็บอื่นหรือโทรศัพท์มือถือ? 
+                <br>
+                <a href="remote.html" target="_blank">เปิดหน้ารีโมตควบคุมเต็มรูปแบบ (remote.html) ↗</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         SLIDE-OUT WINNER HISTORY DRAWER
+         ======================================================== -->
+    <div class="history-drawer" id="historyDrawer">
+        <div class="history-drawer-header">
+            <div class="history-drawer-title">🏆 รายชื่อผู้ได้รับรางวัล</div>
+            <button type="button" class="btn-pill" id="historyCloseBtn">✕</button>
+        </div>
+        <div class="history-list" id="historyList">
+            <!-- Dynamic Items -->
+        </div>
+    </div>
+
+    <!-- JavaScript Files in Separated Folders -->
+    <script src="js/state.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/confetti.js"></script>
+    <script src="js/remote.js"></script>
+    <script src="js/random.js"></script>
+</body>
+</html>

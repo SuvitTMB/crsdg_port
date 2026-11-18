@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ระบบลงทะเบียนพนักงาน | AL Drive Forum Special</title>
+
+  <!-- Google Fonts: Kanit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap"
+    rel="stylesheet">
+
+  <!-- Canvas Confetti for Celebration -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <!-- Central State Manager (ตารางข้อมูล crsdg_member, crsdg_winner, crsdg_prize) -->
+  <script src="js/state.js"></script>
+
+  <!-- Firebase SDKs & Storage Module (Bucket: faifah-ttb.appspot.com > Member) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+  <script src="js/firebase-storage.js"></script>
+  <script src="js/firebase-sync.js"></script>
+
+  <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body>
+  <!-- Ambient background for desktop view -->
+  <div class="desktop-bg-blur"></div>
+
+  <!-- Main Mobile App Wrapper -->
+  <main class="mobile-device-frame">
+
+    <!-- ========================================================
+         FIXED TOP BAR (แสดงเมื่อเข้าสู่หน้า Home Portal)
+         ด้านซ้าย: logo + CRSDG New Year 2027
+         ด้านขวา: รูปพนักงาน + icon logout
+         ======================================================== -->
+    <header class="app-fixed-top-bar" id="appFixedTopBar" style="display: none;">
+      <div class="topbar-brand-area">
+        <img src="./images/logo@.png" alt="CRSDG Logo" class="topbar-logo">
+        <div class="topbar-brand-text">
+          <span class="topbar-title">CRSDG New Year 2027</span>
+          <span class="topbar-sub">Digital Celebration</span>
+        </div>
+      </div>
+
+      <div class="topbar-user-area">
+        <!-- รูปพนักงาน แตะเพื่อดูข้อมูลส่วนตัว -->
+        <div class="topbar-avatar-wrap" id="topbarUserAvatar" title="แตะเพื่อดูข้อมูลคุณ">
+          <img id="topbarAvatarImg" src="" alt="avatar" class="topbar-avatar-img" style="display: none;">
+          <span id="topbarAvatarLetter" class="topbar-avatar-letter">ส</span>
+        </div>
+        <!-- icon logout -->
+        <button type="button" class="topbar-btn-logout" id="topbarBtnLogout" title="ออกจากระบบ (Logout)">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+
+    <!-- App Content Scroll Area -->
+    <div class="app-scroll-container">
+
+      <!-- VIEW 1: Registration View -->
+      <div id="registrationView" class="view-panel">
+        <!-- Central Branding & Hero Section -->
+        <section class="hero-section">
+          <!-- Floating Light Glow behind Header -->
+          <div class="glow-orb" aria-hidden="true"></div>
+
+          <!-- Center Header Image -->
+          <div class="header-image-wrapper">
+            <img src="./images/logo@.png" alt="AL Drive Forum Special" class="header-logo animate-float"
+              id="headerLogo">
+          </div>
+
+        </section>
+
+        <!-- Registration Card Form -->
+        <section class="registration-section">
+          <div class="glass-card">
+            <div class="card-header">
+              <h1 class="form-title">ลงทะเบียนพนักงาน</h1>
+              <p class="form-subtitle">กรอกรหัสพนักงานเพื่อยืนยันสิทธิ์เข้าร่วมงาน</p>
+              <div class="realtime-live-badge" id="realtimeLiveBadge" title="ข้อมูลอัปเดตแบบ Real-time">
+                <span class="live-pulse-dot"></span>
+                <span class="live-label">ลงทะเบียนแล้ว <strong id="liveRegisteredCount">0</strong>
+                  คน</span>
+              </div>
+            </div>
+
+            <form id="regForm" class="reg-form" novalidate autocomplete="off">
+              <!-- Employee ID Input Group -->
+              <div class="form-group" id="formGroupEmpId">
+                <label for="empId" class="input-label">
+                  <span>รหัสพนักงาน</span>
+                  <span class="label-badge">Employee ID</span>
+                </label>
+
+                <div class="input-wrapper">
+                  <span class="input-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <rect x="2" y="4" width="20" height="16" rx="3"></rect>
+                      <path d="M7 15h4M7 11h2"></path>
+                      <circle cx="16" cy="11" r="2"></circle>
+                    </svg>
+                  </span>
+
+                  <input type="text" id="empId" name="empId" class="text-input"
+                    placeholder="กรอกรหัสพนักงาน (ตัวเลขเท่านั้น)" maxlength="10" inputmode="numeric" pattern="[0-9]*"
+                    oninput="this.value = this.value.replace(/\D/g, '')" required>
+
+                  <button type="button" class="btn-clear" id="btnClear" title="ล้างข้อความ" aria-label="Clear input">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- Error & Hint Messages -->
+                <div class="feedback-msg" id="feedbackMsg" role="alert" aria-live="polite"></div>
+              </div>
+
+
+              <!-- Submit Registration Button -->
+              <button type="submit" class="btn-submit" id="btnSubmit">
+                <span class="btn-text">ลงทะเบียน</span>
+                <span class="btn-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </span>
+                <span class="btn-spinner" aria-hidden="true"></span>
+              </button>
+            </form>
+
+            <footer class="card-footer">
+              <svg class="secure-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <span>ระบบลงทะเบียนยืนยันสิทธิ์เข้าร่วมกิจกรรม</span>
+            </footer>
+          </div>
+        </section>
+
+        <!-- Bottom Spacer -->
+        <div class="bottom-spacer" aria-hidden="true"></div>
+      </div>
+
+      <!-- ========================================================
+           VIEW: PHOTO UPLOAD & ZOOM/SCALE VIEW (ตรวจสอบและอัปโหลดรูปภาพ ย่อ/ขยาย)
+           ======================================================== -->
+      <section id="photoUploadView" class="photo-upload-view" style="display: none;">
+        <!-- Header Banner -->
+        <div class="reward-header photo-header">
+          <div class="header-image-wrapper">
+            <img src="./images/logo@.png" alt="AL Drive Forum Special" class="reward-logo animate-float">
+          </div>
+          <h2 class="reward-hero-title">อัปโหลดรูปภาพประจำตัว</h2>
+          <p class="reward-hero-sub">ปรับตำแหน่ง ย่อ-ขยาย เพื่อให้เห็นใบหน้าชัดเจน</p>
+        </div>
+
+        <div class="glass-card photo-card">
+          <!-- Member Greeting Chip (เอาข้อมูลรหัสพนักงานออก) -->
+          <div class="photo-member-chip">
+            <div class="chip-avatar-mini" id="uploadAvatarInitial">พ</div>
+            <div class="chip-meta">
+              <div class="chip-name" id="uploadEmpName">ชื่อพนักงาน</div>
+              <div class="chip-sub">
+                <span class="chip-dept" id="uploadEmpDept">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 1: File selection Dropzone (shown when no photo loaded into canvas yet) -->
+          <div class="photo-dropzone-box" id="photoDropzoneBox">
+            <input type="file" id="memberPhotoFileInput" accept="image/*" class="sr-only" capture="user">
+            <label for="memberPhotoFileInput" class="photo-dropzone-label">
+              <div class="dropzone-icon-circle">
+                <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+              </div>
+              <span class="dropzone-title">แตะเพื่อถ่ายรูป หรือเลือกรูปภาพ</span>
+              <span class="dropzone-sub">รองรับไฟล์ JPG, PNG, WebP (จากกล้องหรือคลังภาพ)</span>
+              <span class="btn-choose-file">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                📸 เลือกรูปภาพ
+              </span>
+            </label>
+          </div>
+
+          <!-- Step 2: Interactive Cropper & Scale Workspace (shown after photo selected) -->
+          <div class="photo-cropper-workspace" id="photoCropperWorkspace" style="display: none;">
+            <div class="cropper-tip">
+              <span>👆 <strong>แตะลาก</strong> เพื่อเลื่อนตำแหน่งภาพ • ใช้แถบเลื่อนหรือปุ่มเพื่อ <strong>ย่อ /
+                  ขยาย</strong></span>
+            </div>
+
+            <!-- Canvas Viewport with circular avatar guide ring -->
+            <div class="cropper-viewport-wrapper" id="cropperViewportWrapper">
+              <canvas id="photoCanvas" width="360" height="360"></canvas>
+              <div class="cropper-circular-overlay" aria-hidden="true">
+                <div class="circular-ring"></div>
+                <div class="crosshair-center"></div>
+              </div>
+            </div>
+
+            <!-- Zoom & Scale Controls (ย่อ และ ขยาย รูปภาพ) -->
+            <div class="photo-scale-controls">
+              <div class="scale-label-row">
+                <span class="scale-title">🔍 ปรับขนาดรูปภาพ (ย่อ / ขยาย)</span>
+                <span class="scale-val-badge" id="zoomValueBadge">100%</span>
+              </div>
+
+              <div class="scale-slider-row">
+                <button type="button" class="btn-scale-step" id="btnZoomOut" title="ย่อรูปภาพ (Zoom Out)">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </button>
+                <input type="range" id="zoomRangeSlider" min="0.2" max="3.0" step="0.02" value="1.0"
+                  class="zoom-range-input">
+                <button type="button" class="btn-scale-step" id="btnZoomIn" title="ขยายรูปภาพ (Zoom In)">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="scale-quick-actions">
+                <button type="button" class="btn-scale-quick" id="btnResetScale">🔄 พอดีกรอบ</button>
+                <button type="button" class="btn-scale-quick" id="btnRotate90">🔃 หมุน 90°</button>
+                <button type="button" class="btn-scale-quick" id="btnChangePhoto">📸 เปลี่ยนรูปใหม่</button>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="photo-action-buttons">
+              <button type="button" class="btn-save-photo" id="btnSavePhoto">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>💾 บันทึกรูปภาพและดำเนินการต่อ</span>
+              </button>
+              <button type="button" class="btn-skip-photo" id="btnSkipPhoto" style="display: none;">
+                ข้ามขั้นตอนนี้ไปก่อน
+              </button>
+            </div>
+          </div>
+
+          <!-- Storage Notice -->
+          <div class="photo-storage-notice">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span>บันทึกไฟล์รูปภาพไปยังที่จัดเก็บ</span>
+          </div>
+        </div>
+
+        <div class="bottom-spacer" aria-hidden="true"></div>
+      </section>
+
+      <!-- ========================================================
+           VIEW 3: HOME PORTAL (แท็บหน้าหลัก, คุณและทีม, โหวต AI, เกม 4 ต่อ 4, ข้อมูลคุณ)
+           ======================================================== -->
+      <div id="homePortalView" class="home-portal-view" style="display: none;">
+
+        <!-- ----------------------------------------------------
+             TAB 1: หน้าหลัก (HOME & EVENT SCHEDULE)
+             ---------------------------------------------------- -->
+        <section id="tabPaneHome" class="home-tab-pane is-active">
+          <!-- Hero Brand Logo (แทนกล่องสวัสดี) -->
+          <div class="home-brand-logo-wrap">
+            <img src="./images/person.png" alt="CRSDG New Year 2027" class="home-hero-logo">
+          </div>
+
+          <!-- Quick Navigation 4 Boxes (Line-Art SVG Icons) -->
+          <div class="portal-quick-grid">
+            <div class="quick-pill-card" id="quickPillTeam">
+              <div class="quick-icon-wrap" style="background: rgba(0, 86, 255, 0.1); color: #0056ff;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <div class="quick-text-wrap">
+                <span class="quick-title">คุณและทีม</span>
+                <span class="quick-desc">สมาชิก & สังกัด</span>
+              </div>
+            </div>
+            <div class="quick-pill-card" id="quickPillVote">
+              <div class="quick-icon-wrap" style="background: rgba(245, 158, 11, 0.14); color: #f59e0b;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+              </div>
+              <div class="quick-text-wrap">
+                <span class="quick-title">นักลงทุน AI</span>
+                <span class="quick-desc">จัดสรรเงินลงทุน AI</span>
+              </div>
+            </div>
+            <div class="quick-pill-card" id="quickPillGame">
+              <div class="quick-icon-wrap" style="background: rgba(168, 85, 247, 0.14); color: #9333ea;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="6" width="20" height="12" rx="4"></rect>
+                  <path d="M6 12h4m-2-2v4"></path>
+                  <line x1="15" y1="11" x2="15.01" y2="11" stroke-width="3"></line>
+                  <line x1="18" y1="13" x2="18.01" y2="13" stroke-width="3"></line>
+                </svg>
+              </div>
+              <div class="quick-text-wrap">
+                <span class="quick-title">เกม 4 ต่อ 4</span>
+                <span class="quick-desc">คะแนนสดบนเวที</span>
+              </div>
+            </div>
+            <div class="quick-pill-card" id="quickPillProfile">
+              <div class="quick-icon-wrap" style="background: rgba(16, 185, 129, 0.14); color: #10b981;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <div class="quick-text-wrap">
+                <span class="quick-title">ข้อมูลคุณ</span>
+                <span class="quick-desc">แก้ไขรูปและโปรไฟล์</span>
+              </div>
+            </div>
+
+            <!-- กล่องที่ 5: QR Code เพื่อสแกน (คลิกเพื่อแสดง lightbox QR Code) -->
+            <div class="quick-pill-card" id="quickPillQr" onclick="window.openQrLightbox()" role="button" tabindex="0">
+              <div class="quick-icon-wrap" style="background: rgba(14, 165, 233, 0.14); color: #0284c7;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
+                  <line x1="10" y1="7" x2="10" y2="7.01" stroke-width="3"></line>
+                  <line x1="7" y1="10" x2="7" y2="10.01" stroke-width="3"></line>
+                  <line x1="17" y1="10" x2="17" y2="10.01" stroke-width="3"></line>
+                </svg>
+              </div>
+              <div class="quick-text-wrap">
+                <span class="quick-title">QR Code</span>
+                <span class="quick-desc">บอกเพื่อนสแกน</span>
+              </div>
+            </div>
+
+            <!-- กล่องที่ 6: ประเมินผลกิจกรรม (คลิกเพื่อเปิดแบบประเมินผล) -->
+            <div class="quick-pill-card" id="quickPillEval" onclick="window.openEvalLightbox()" role="button" tabindex="0">
+              <div class="quick-icon-wrap" style="background: rgba(236, 72, 153, 0.14); color: #db2777;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 11l3 3L22 4"></path>
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+              </div>
+              <div class="quick-text-wrap">
+                <span class="quick-title">ประเมินผล</span>
+                <span class="quick-desc">แบบประเมิน</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Event Schedule Section (กำหนดการกิจกรรมตามภาพแนบ CRSDG AI Showcase & New Year Celebration) -->
+          <div class="event-schedule-section" id="eventScheduleSection">
+            <div class="agenda-slide-card">
+              <!-- Header Top Banner matching slide layout -->
+              <div class="agenda-header-banner">
+                <div class="agenda-title-block">
+                  <div class="agenda-title-row">
+                    <span class="agenda-badge-pill">AGENDA</span>
+                    <h3 class="agenda-main-title">CRSDG AI Showcase &amp; New Year Celebration</h3>
+                  </div>
+                  <div class="agenda-sub-meta">
+                    <span class="agenda-date-location">26 Nov'26 | สโมสรทหาร วิภาวดี-รังสิต</span>
+                  </div>
+                </div>
+
+                <div class="agenda-mc-info-wrap">
+                  <div class="agenda-mc-card">
+                    <span class="mc-card-role">Afternoon MC:</span>
+                    <strong class="mc-card-names">Mark &amp; Mook</strong>
+                  </div>
+                  <div class="agenda-mc-card">
+                    <span class="mc-card-role">Night MC:</span>
+                    <strong class="mc-card-names">Choopol &amp; Sun</strong>
+                  </div>
+                  <div class="agenda-brand-logo">
+                    <span class="ttb-logo-badge"><span class="ttb-t1">t</span><span class="ttb-t2">t</span><span class="ttb-b">b</span></span>
+                    <span class="agenda-wip-tag">WIP</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Agenda Table Responsive Container -->
+              <div class="agenda-table-responsive">
+                <table class="agenda-custom-table">
+                  <thead>
+                    <tr>
+                      <th class="th-time">Time</th>
+                      <th class="th-duration">Duration</th>
+                      <th class="th-topic">Topic</th>
+                      <th class="th-presenter">Presenter</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Row 1: Registration -->
+                    <tr>
+                      <td class="td-time">13.30 - 14.00</td>
+                      <td class="td-duration">30 นาที</td>
+                      <td class="td-topic"><strong class="topic-title-bold">Registration</strong></td>
+                      <td class="td-presenter">-</td>
+                    </tr>
+
+                    <!-- Row 2: MC Greeting/ Opening -->
+                    <tr>
+                      <td class="td-time">14.00 - 14.15</td>
+                      <td class="td-duration">15 นาที</td>
+                      <td class="td-topic"><strong class="topic-title-bold">MC Greeting/ Opening</strong></td>
+                      <td class="td-presenter"><span class="presenter-tag-pill">MC</span></td>
+                    </tr>
+
+                    <!-- Row 3: CRSDG Opening -->
+                    <tr>
+                      <td class="td-time">14.15 - 14.45</td>
+                      <td class="td-duration">30 นาที</td>
+                      <td class="td-topic"><strong class="topic-title-bold">CRSDG Opening</strong></td>
+                      <td class="td-presenter"><strong class="presenter-lead-name">K. Natthawan</strong></td>
+                    </tr>
+
+                    <!-- Group 1: Segment & Mkt -->
+                    <tr class="row-group-head">
+                      <td class="td-time">14.45 - 14.55</td>
+                      <td class="td-duration">10 นาที</td>
+                      <td class="td-topic">
+                        <div class="topic-with-group">
+                          <span class="group-segment-pill">Segment &amp; Mkt</span>
+                          <span class="topic-text"><strong class="topic-title-bold">EP.1</strong> Mr. Agent</span>
+                        </div>
+                      </td>
+                      <td class="td-presenter">Kamolwan (Golf)</td>
+                    </tr>
+                    <tr>
+                      <td class="td-time">14.55 - 15.05</td>
+                      <td class="td-duration">10 นาที</td>
+                      <td class="td-topic">
+                        <div class="topic-with-group">
+                          <span class="group-segment-ghost"></span>
+                          <span class="topic-text"><strong class="topic-title-bold">EP.2</strong> Product Marketing : Creative</span>
+                        </div>
+                      </td>
+                      <td class="td-presenter">Parischaya (Tik)</td>
+                    </tr>
+                    <tr class="row-wrapup">
+                      <td class="td-time">15.05 - 15.25</td>
+                      <td class="td-duration">20 นาที</td>
+                      <td class="td-topic">
+                        <div class="topic-with-group">
+                          <span class="group-segment-ghost"></span>
+                          <span class="topic-text topic-italic">On-ground &amp; wrap-up Score</span>
+                        </div>
+                      </td>
+                      <td class="td-presenter">P' Orn &amp; MC</td>
+                    </tr>
+
+                    <!-- Group 2: Sales Mgmt. -->
+                    <tr class="row-group-head">
+                      <td class="td-time">15.25 - 15.35</td>
+                      <td class="td-duration">10 นาที</td>
+                      <td class="td-topic">
+                        <div class="topic-with-group">
+                          <span class="group-segment-pill sales-pill">Sales Mgmt.</span>
+                          <span class="topic-text"><strong class="topic-title-bold">EP.3</strong> Wealth Advisor 360 Pro</span>
+                        </div>
+                      </td>
+                      <td class="td-presenter">Palarp (Peng) &amp; Nattapong (Arty)</td>
+                    </tr>
+                    <tr>
+                      <td class="td-time">15.35 - 15.45</td>
+                      <td class="td-duration">10 นาที</td>
+                      <td class="td-topic">
+                        <div class="topic-with-group">
+                          <span class="group-segment-ghost"></span>
+                          <span class="topic-text"><strong class="topic-title-bold">EP.4</strong> KPI Analysis &amp; Dashboard</span>
+                        </div>
+                      </td>
+                      <td class="td-presenter">Sedtasenee (Art)</td>
+                    </tr>
+                    <tr class="row-wrapup">
+                      <td class="td-time">15.45 - 16.05</td>
+                      <td class="td-duration">20 นาที</td>
+                      <td class="td-topic">
+                        <div class="topic-with-group">
+                          <span class="group-segment-ghost"></span>
+                          <span class="topic-text topic-italic">On-ground &amp; wrap-up Score</span>
+                        </div>
+                      </td>
+                      <td class="td-presenter">P' Ole &amp; MC</td>
+                    </tr>
+
+                    <!-- Break 1 -->
+                    <tr class="row-break-line">
+                      <td class="td-time">16.05 - 16.20</td>
+                      <td class="td-duration">15 นาที</td>
+                      <td class="td-topic" colspan="2">
+                        <span class="break-notice-text">☕ --- Break ---</span>
+                      </td>
+                    </tr>
+
+                    <!-- Group 3: RCI -->
+                    <tr class="row-group-head">
+                      <td class="td-time">16.20 - 16.30</td>
+                      <td class="td-duration">10 นาที</td>
+                      <td class="td-topic">
+                        <div class="topic-with-group">
+                          <span class="group-segment-pill rci-pill">RCI</span>
+                          <span class="topic-text"><strong class="topic-title-bold">EP.5</strong> Customer Analytics : Prototype</span>
+                        </div>
+                      </td>
+                      <td class="td-presenter">Katanyoo (Arc)</td>
+                    </tr>
+                    <tr>
+                      <td class="td-time">16.30 - 16.40</td>
+                      <td class="td-duration">10 นาที</td>
+                      <td class="td-topic">
+                        <div class="topic-with-group">
+                          <span class="group-segment-ghost"></span>
+                          <span class="topic-text"><strong class="topic-title-bold">EP.6</strong> AI-Assistant for End-to-End Campaign Management : Insights to Action</span>
+                        </div>
+                      </td>
+                      <td class="td-presenter">Wirunpon (Mook)</td>
+                    </tr>
+                    <tr>
+                      <td class="td-time">16.40 - 16.50</td>
+                      <td class="td-duration">10 นาที</td>
+                      <td class="td-topic">
+                        <div class="topic-with-group">
+                          <span class="group-segment-ghost"></span>
+                          <span class="topic-text"><strong class="topic-title-bold">EP.7</strong> TBC</span>
+                        </div>
+                      </td>
+                      <td class="td-presenter">Jarupa (Ching Ching)</td>
+                    </tr>
+                    <tr class="row-wrapup">
+                      <td class="td-time">16.50 - 17.10</td>
+                      <td class="td-duration">20 นาที</td>
+                      <td class="td-topic">
+                        <div class="topic-with-group">
+                          <span class="group-segment-ghost"></span>
+                          <span class="topic-text topic-italic">On-ground &amp; wrap-up score</span>
+                        </div>
+                      </td>
+                      <td class="td-presenter">P' Mike &amp; MC</td>
+                    </tr>
+
+                    <!-- Game AHA 7 Questions -->
+                    <tr>
+                      <td class="td-time">17.10 - 17.20</td>
+                      <td class="td-duration">10 นาที</td>
+                      <td class="td-topic"><strong class="topic-title-bold">Game AHA 7 Questions</strong></td>
+                      <td class="td-presenter"><span class="presenter-tag-pill">MC</span></td>
+                    </tr>
+
+                    <!-- Closing Speech -->
+                    <tr>
+                      <td class="td-time">17.20 - 17.30</td>
+                      <td class="td-duration">10 นาที</td>
+                      <td class="td-topic"><strong class="topic-title-bold">Closing Speech</strong></td>
+                      <td class="td-presenter"><strong class="presenter-lead-name">K. Natthawan</strong></td>
+                    </tr>
+
+                    <!-- Setup Break -->
+                    <tr class="row-break-line">
+                      <td class="td-time">17.30 - 18.30</td>
+                      <td class="td-duration">60 นาที</td>
+                      <td class="td-topic" colspan="2">
+                        <span class="break-notice-text">🔄 --- Break (for room setup) ---</span>
+                      </td>
+                    </tr>
+
+                    <!-- Dinner Party -->
+                    <tr class="row-dinner-party">
+                      <td class="td-time td-time-dinner">18.30 - 22.00</td>
+                      <td class="td-duration">-</td>
+                      <td class="td-topic" colspan="2">
+                        <div class="dinner-highlight-box">
+                          <strong class="dinner-title">🍽️ Dinner Party</strong>
+                          <span class="dinner-desc">งานเลี้ยงสังสรรค์ส่งท้ายปี, มอบรางวัลชนะเลิศ &amp; Lucky Draw</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ----------------------------------------------------
+             TAB 2: คุณและทีม (YOU & TEAM)
+             ---------------------------------------------------- -->
+        <section id="tabPaneTeam" class="home-tab-pane" style="display: none;">
+          <div class="tab-header-banner">
+            <h3 class="tab-header-title">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"
+                style="display: inline-block; vertical-align: -3px; margin-right: 6px;">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <span>คุณและทีมของคุณ</span>
+            </h3>
+            <p class="tab-header-sub">ข้อมูลสังกัดและเพื่อนร่วมสายงาน</p>
+          </div>
+
+          <div class="team-portal-container" id="myTeamContainer">
+            <!-- Dynamic content rendered by JS -->
+          </div>
+        </section>
+
+        <!-- ----------------------------------------------------
+             TAB 3: พอร์ตลงทุน (AI INVESTMENT PORTFOLIO)
+             ---------------------------------------------------- -->
+        <section id="tabPaneVote" class="home-tab-pane" style="display: none;">
+          <div class="tab-header-banner">
+            <h3 class="tab-header-title">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"
+                style="display: inline-block; vertical-align: -3px; margin-right: 6px;">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              </svg>
+              <span>พอร์ตนักลงทุน AI ของคุณ</span>
+            </h3>
+            <p class="tab-header-sub">จัดสรรเงินงบประมาณเพื่อลงทุนในทีมแข่งขันที่คุณชื่นชอบ</p>
+          </div>
+
+          <!-- Dynamic Portfolio & Teams Investment Container -->
+          <div id="aiVotePortfolioContainer">
+            <!-- Rendered dynamically by JS -->
+          </div>
+
+          <div class="voting-list-container" id="votingTeamsList">
+            <!-- Teams from crsdg_player rendered by JS -->
+          </div>
+        </section>
+
+        <!-- ----------------------------------------------------
+             TAB 4: เกม 4 ต่อ 4 (4 vs 4 GAME)
+             ---------------------------------------------------- -->
+        <section id="tabPaneGame" class="home-tab-pane" style="display: none;">
+          <div class="tab-header-banner">
+            <h3 class="tab-header-title">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"
+                style="display: inline-block; vertical-align: -3px; margin-right: 6px;">
+                <rect x="2" y="6" width="20" height="12" rx="4"></rect>
+                <path d="M6 12h4m-2-2v4"></path>
+                <line x1="15" y1="11" x2="15.01" y2="11" stroke-width="3"></line>
+                <line x1="18" y1="13" x2="18.01" y2="13" stroke-width="3"></line>
+              </svg>
+              <span>การแข่งขันเกม 4 ต่อ 4</span>
+            </h3>
+            <p class="tab-header-sub">ผลการแข่งขันและคะแนนสะสมแบบ Real-time</p>
+          </div>
+
+          <!-- Live Scoreboard Widget -->
+          <div class="glass-card live-game-widget" id="liveGameWidget">
+            <!-- Rendered dynamically from crsdg_game_state_sync -->
+          </div>
+
+          <!-- 4v4 Game Voting Section (ระบบการโหวต ทีมที่คุณคิดว่าเป็นผู้ชนะ) -->
+          <div class="glass-card game-vote-card" id="gameVoteCard">
+            <div class="game-vote-header">
+              <div class="game-vote-title-row">
+                <div class="game-vote-icon-badge">🗳️</div>
+                <div class="game-vote-title-text-group">
+                  <h4 class="game-vote-title">ระบบโหวต เกม 4 ต่อ 4</h4>
+                  <p class="game-vote-subtitle">ร่วมทายผลทีมชนะเลิศเกม 4 ต่อ 4 (โหวตได้ 1 ทีม)</p>
+                </div>
+              </div>
+
+              <!-- Real-time Status Notice -->
+              <div class="game-vote-status-banner" id="gameVoteStatusBanner">
+                <!-- Rendered dynamically by JS -->
+              </div>
+            </div>
+
+            <!-- List of All Competing Teams with Vote Button at the end -->
+            <div class="game-vote-teams-list" id="gameVoteTeamsList">
+              <!-- Rendered dynamically by JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ----------------------------------------------------
+             TAB 5: ข้อมูลคุณ (YOUR PROFILE)
+             ---------------------------------------------------- -->
+        <section id="tabPaneProfile" class="home-tab-pane" style="display: none;">
+          <div class="tab-header-banner">
+            <h3 class="tab-header-title">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"
+                style="display: inline-block; vertical-align: -3px; margin-right: 6px;">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <span>ข้อมูลส่วนตัว</span>
+            </h3>
+            <p class="tab-header-sub">จัดการข้อมูลส่วนตัวและรูปภาพประจำตัว</p>
+          </div>
+
+          <div class="glass-card profile-details-card">
+            <!-- Photo Avatar Center (แสดงรูปภาพ สามารถแก้ไขรูปภาพได้) -->
+            <div class="profile-avatar-center">
+              <div class="profile-avatar-circle" id="profileAvatarCircle" title="แตะเพื่อเปลี่ยนหรือปรับแต่งรูปภาพ">
+                <img id="profileAvatarImg" src="" alt="รูปพนักงาน" class="profile-avatar-img" style="display: none;">
+                <span id="profileAvatarLetter">พ</span>
+                <button type="button" class="btn-avatar-camera" id="btnEditProfilePhoto" title="เปลี่ยนรูปภาพ">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                  </svg>
+                </button>
+              </div>
+
+              <button type="button" class="btn-change-photo-action" id="btnChangePhotoAction">
+                📸 แตะเพื่อเปลี่ยน / ย่อ-ขยายรูปภาพ
+              </button>
+            </div>
+
+            <!-- Employee Details (ชื่อ-นามสกุล, สังกัด - เอาแถวรหัสพนักงานออก) -->
+            <div class="profile-meta-list">
+              <div class="profile-meta-row">
+                <span class="meta-label">ชื่อ - นามสกุล</span>
+                <span class="meta-val" id="profileEmpName">-</span>
+              </div>
+              <div class="profile-meta-row">
+                <span class="meta-label">ฝ่าย / สังกัด</span>
+                <span class="meta-val" id="profileEmpDept">-</span>
+              </div>
+              <div class="profile-meta-row">
+                <span class="meta-label">การลงทะเบียน</span>
+                <span class="meta-val text-success">
+                  <span class="dot-live-status"></span> ยืนยันสิทธิ์เรียบร้อยแล้ว
+                </span>
+              </div>
+            </div>
+
+            <!-- ด้านล่างมีปุ่ม logout -->
+            <div class="profile-logout-box">
+              <button type="button" class="btn-profile-logout" id="btnLogoutProfile">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>ออกจากระบบ (Logout)</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Bottom Spacer for Fixed Nav Bar -->
+        <div class="portal-bottom-spacer" aria-hidden="true"></div>
+      </div>
+
+    </div>
+
+    <!-- ========================================================
+         FIXED BOTTOM BAR (แท็บ 5 เมนู: หน้าหลัก, คุณและทีม, โหวต AI, เกม 4 ต่อ 4, ข้อมูลคุณ)
+         ======================================================== -->
+    <nav class="app-fixed-bottom-bar" id="appFixedBottomBar" style="display: none;">
+      <button type="button" class="bottom-nav-item is-active" data-tab="home" id="btnNavHome">
+        <div class="nav-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+        </div>
+        <span class="nav-label">หน้าหลัก</span>
+      </button>
+
+      <button type="button" class="bottom-nav-item" data-tab="team" id="btnNavTeam">
+        <div class="nav-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <span class="nav-label">คุณและทีม</span>
+      </button>
+
+      <button type="button" class="bottom-nav-item" data-tab="vote" id="btnNavVote">
+        <div class="nav-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+          </svg>
+        </div>
+        <span class="nav-label">นักลงทุน AI</span>
+      </button>
+
+      <button type="button" class="bottom-nav-item" data-tab="game" id="btnNavGame">
+        <div class="nav-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="6" width="20" height="12" rx="4"></rect>
+            <path d="M6 12h4m-2-2v4"></path>
+            <line x1="15" y1="11" x2="15.01" y2="11" stroke-width="3"></line>
+            <line x1="18" y1="13" x2="18.01" y2="13" stroke-width="3"></line>
+          </svg>
+        </div>
+        <span class="nav-label">เกม 4 ต่อ 4</span>
+      </button>
+
+      <button type="button" class="bottom-nav-item" data-tab="profile" id="btnNavProfile">
+        <div class="nav-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <span class="nav-label">ข้อมูลคุณ</span>
+      </button>
+    </nav>
+    <div class="modal-backdrop" id="successModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-card">
+        <div class="modal-badge-wrapper">
+          <div class="modal-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+              stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+        </div>
+
+        <h2 id="modalTitle" class="modal-title">ลงทะเบียนสำเร็จ!</h2>
+        <p class="modal-subtitle">บันทึกข้อมูลการเข้าร่วมงานเรียบร้อยแล้ว</p>
+
+        <!-- Digital Pass Card -->
+        <div class="pass-card">
+          <div class="pass-header">
+            <span class="pass-event">AL Drive Forum Special</span>
+            <span class="pass-status">CONFIRMED</span>
+          </div>
+          <div class="pass-body">
+            <div class="pass-field" id="rowEmpName" style="display: none;">
+              <span class="pass-label">ชื่อ - นามสกุล</span>
+              <span class="pass-value" id="modalEmpName">-</span>
+            </div>
+            <div class="pass-field">
+              <span class="pass-label">รหัสพนักงาน</span>
+              <span class="pass-value" id="modalEmpId">108425</span>
+            </div>
+            <div class="pass-field" id="rowEmpBranch" style="display: none;">
+              <span class="pass-label">สาขา / กลุ่ม</span>
+              <span class="pass-value" id="modalEmpBranch">-</span>
+            </div>
+            <div class="pass-field">
+              <span class="pass-label">เวลาที่ลงทะเบียน</span>
+              <span class="pass-value" id="modalRegTime">29 ต.ค. 2026 10:55 น.</span>
+            </div>
+          </div>
+          <div class="pass-ticket-barcode">
+            <div class="barcode-lines"></div>
+            <span class="barcode-code" id="modalTicketCode">BTI-2026-9042</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn-modal-close" id="btnModalClose">
+          เสร็จสิ้น
+        </button>
+      </div>
+    </div>
+
+    <!-- Claim Confirmation Lightbox Modal (เมื่อกดยืนยันการรับรางวัล) -->
+    <div class="modal-backdrop" id="claimConfirmModal" role="dialog" aria-modal="true"
+      aria-labelledby="claimModalTitle">
+      <div class="modal-card claim-confirm-modal-card">
+        <!-- Icon ยืนยันการรับรางวัล -->
+        <div class="modal-badge-wrapper">
+          <div class="modal-badge modal-badge-claim">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+        </div>
+
+        <h2 id="claimModalTitle" class="modal-title">ยืนยันการรับของรางวัล</h2>
+        <p class="modal-subtitle">กรุณาตรวจสอบข้อมูลก่อนยืนยันการรับรางวัล</p>
+
+        <!-- แสดงรหัสพนักงาน ชื่อ-นามสกุล และรายการของรางวัลที่ได้รับ -->
+        <div class="claim-details-box">
+          <div class="claim-detail-row">
+            <span class="claim-detail-label">รหัสพนักงาน</span>
+            <span class="claim-detail-val" id="claimModalEmpId">-</span>
+          </div>
+          <div class="claim-detail-row">
+            <span class="claim-detail-label">ชื่อ - นามสกุล</span>
+            <span class="claim-detail-val" id="claimModalEmpName">-</span>
+          </div>
+          <div class="claim-detail-row full-prize-row">
+            <span class="claim-detail-label">ของรางวัลที่ได้รับ</span>
+            <!-- รูปภาพของรางวัล -->
+            <div class="claim-modal-prize-frame" id="claimModalPrizeFrame">
+              <img id="claimModalPrizeImg" src="" alt="ของรางวัล" class="claim-modal-prize-img" style="display: none;">
+              <div id="claimModalPrizeFallback" class="claim-modal-prize-fallback">🎁</div>
+            </div>
+            <!-- ชื่อของรางวัล (ไม่มี icon และจัดกึ่งกลาง) -->
+            <span class="claim-detail-prize" id="claimModalPrizeName">-</span>
+          </div>
+          <!-- ผู้มอบรางวัล (กรณีมีข้อมูลเจ้าของรางวัล / ผู้บริหาร) -->
+          <div class="claim-detail-row full-owner-row" id="claimModalOwnerRow" style="display: none;">
+            <span class="claim-detail-label">ผู้มอบรางวัล</span>
+            <div class="claim-modal-owner-wrap">
+              <span class="claim-modal-owner-name" id="claimModalOwnerName">-</span>
+              <span class="claim-modal-owner-pos" id="claimModalOwnerPos"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ขอให้คุณกดยืนยันต่อหน้าเจ้าหน้าที่เท่านั้น -->
+        <div class="claim-officer-alert">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>*** ขอให้คุณกดยืนยันต่อหน้าเจ้าหน้าที่เท่านั้น ***</span>
+        </div>
+
+        <!-- ปุ่มกดใน Lightbox -->
+        <div class="claim-modal-actions">
+          <button type="button" class="btn-claim-modal-confirm" id="btnClaimModalConfirm">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span id="claimModalBtnText">ยืนยันรับรางวัลแล้ว</span>
+          </button>
+          <button type="button" class="btn-claim-modal-cancel" id="btnClaimModalCancel">
+            ยกเลิก
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================
+       LIGHTBOX: TEAM DETAILS MODAL (แสดงรูปรวม สมาชิก และคำอธิบายระบบ)
+       ======================================================== -->
+  <div class="modal-backdrop" id="teamDetailModal" role="dialog" aria-modal="true">
+    <div class="team-detail-lightbox-card">
+      <!-- Header with close button -->
+      <div class="team-modal-header">
+        <div class="team-modal-title-group">
+          <span class="team-modal-order-pill" id="modalTeamOrderPill">ทีมที่ 1</span>
+          <h3 class="team-modal-team-name" id="modalTeamNameDisplay">ชื่อทีมแข่งขัน</h3>
+        </div>
+        <button type="button" class="btn-modal-close-icon" onclick="window.closeTeamDetailLightbox()"
+          title="ปิดหน้าต่าง">
+          ✕
+        </button>
+      </div>
+
+      <div class="team-modal-scrollable-body">
+        <!-- Team Group Photo Section (แสดงรูปภาพตรงกลาง เหนือรูปแสดงชื่อทีม) -->
+        <div class="team-modal-photo-section" id="modalTeamPhotoSection" style="display: none;">
+          <div class="modal-photo-team-title" id="modalPhotoTeamName">ชื่อทีมแข่งขัน</div>
+          <div class="team-modal-photo-wrapper" id="modalTeamPhotoWrapper">
+            <img id="modalTeamPhotoImg" src="" alt="รูปทีมแข่งขัน" class="team-modal-group-img">
+          </div>
+        </div>
+
+        <!-- รายละเอียดโครงการ (แสดงข้อมูลโครงการของทีม พร้อมใส่สีพื้น) -->
+        <div class="team-modal-system-desc-card">
+          <div class="system-desc-header">
+            <span class="system-desc-icon">📝</span>
+            <span class="system-desc-title">รายละเอียดโครงการ</span>
+          </div>
+          <p class="system-desc-text" id="modalTeamProjectDesc">
+            ยังไม่มีรายละเอียดโครงการ
+          </p>
+        </div>
+
+        <!-- Team Members Roster (รายละเอียดสมาชิกในทีม) -->
+        <div class="team-modal-members-card">
+          <div class="team-modal-members-header">
+            <span>👥 สมาชิกในทีม (<span id="modalTeamMembersCount">0</span> คน)</span>
+          </div>
+          <div class="team-modal-members-list" id="modalTeamMembersList">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="team-modal-footer">
+        <button type="button" class="btn-close-team-modal" onclick="window.closeTeamDetailLightbox()">
+          ✕ ปิดหน้าต่าง
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       LIGHTBOX: ANNOUNCEMENT TEAM INVESTMENT OPENED
+       (แจ้งเตือนฝั่งผู้ใช้งาน เมื่อแอดมินเปิดโหวต/เปิดการลงทุนของทีม)
+       ======================================================== -->
+  <div class="modal-backdrop team-invest-opened-backdrop" id="teamInvestOpenedModal" role="dialog" aria-modal="true" style="display: none;">
+    <div class="team-invest-opened-card">
+      <button type="button" class="btn-modal-close-icon btn-close-invest-announce" onclick="window.closeTeamInvestOpenedModal()" title="ปิดหน้าต่าง">✕</button>
+      
+      <!-- Top Celebration Icon Badge -->
+      <div class="invest-opened-badge-glow">
+        <span class="invest-opened-badge-icon">📢</span>
+      </div>
+
+      <!-- Header Information -->
+      <div class="invest-opened-status-pill">🟢 เปิดรับการลงทุนแล้ว!</div>
+      <div class="invest-opened-team-order" id="investOpenedTeamOrder">ทีมที่ 1</div>
+      <h3 class="invest-opened-team-name" id="investOpenedTeamName">ชื่อทีมแข่งขัน</h3>
+
+      <!-- Team Photo Section -->
+      <div class="invest-opened-photo-frame" id="investOpenedPhotoFrame" style="display: none;">
+        <img id="investOpenedPhotoImg" src="" alt="รูปทีมแข่งขัน" class="invest-opened-photo-img">
+      </div>
+
+      <!-- Announcement Text -->
+      <p class="invest-opened-desc">
+        ขณะนี้ระบบได้ <strong>เปิดรับการลงทุนสำหรับทีมนี้แล้ว</strong><br>
+        ผู้ร่วมงานสามารถเข้าสู่ระบบนักลงทุน AI เพื่อจัดสรรเงินทุนสนับสนุนทีมโปรดของคุณได้ทันที!
+      </p>
+
+      <!-- Action Buttons -->
+      <div class="invest-opened-actions">
+        <button type="button" class="btn-go-invest-now" id="btnGoInvestNow" onclick="window.goToInvestPortfolioFromModal()">
+          <span>💰 ไปที่นักลงทุน AI ทันที</span>
+        </button>
+        <button type="button" class="btn-dismiss-invest-opened" onclick="window.closeTeamInvestOpenedModal()">
+          ปิดหน้าต่าง
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       LIGHTBOX: QR CODE MODAL (แสดง QR Code เพื่อสแกน จาก ./images/qr.png)
+       ======================================================== -->
+  <div class="modal-backdrop" id="qrLightboxModal" role="dialog" aria-modal="true">
+    <div class="qr-lightbox-card">
+      <div class="qr-lightbox-header">
+        <div class="qr-lightbox-title-group">
+          <span class="qr-lightbox-badge">📱 SCAN ME</span>
+          <h3 class="qr-lightbox-title">QR Code สำหรับสแกน</h3>
+        </div>
+        <button type="button" class="btn-modal-close-icon" onclick="window.closeQrLightbox()" title="ปิดหน้าต่าง">
+          ✕
+        </button>
+      </div>
+      <div class="qr-lightbox-body">
+        <div class="qr-image-frame">
+          <img src="./images/qr.png" alt="QR Code เพื่อสแกน" class="qr-lightbox-img">
+        </div>
+        <p class="qr-lightbox-instruction">
+          ใช้สมาร์ตโฟนสแกน QR Code นี้เพื่อเข้าร่วมหรือทำรายการในกิจกรรม
+        </p>
+      </div>
+      <div class="qr-lightbox-footer">
+        <button type="button" class="btn-close-team-modal" onclick="window.closeQrLightbox()">
+          ✕ ปิดหน้าต่าง
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: FULLSCREEN EVENT EVALUATION (แบบประเมินผลกิจกรรม เต็มหน้าจอ)
+       ======================================================== -->
+  <div class="eval-fullscreen-backdrop" id="evalLightboxModal" role="dialog" aria-modal="true" style="display: none;">
+    <div class="eval-fullscreen-container">
+      <!-- Fullscreen Header with Brand & Close Button -->
+      <header class="eval-fullscreen-header">
+        <div class="eval-header-title-wrap">
+          <div class="eval-badge-pill">⭐ EVENT EVALUATION</div>
+          <h2 class="eval-header-title">แบบประเมินผลกิจกรรม CRSDG New Year 2027</h2>
+          <p class="eval-header-sub">ร่วมประเมินและสะท้อนความคิดเห็นเพื่อพัฒนาการจัดงานในครั้งถัดไป</p>
+        </div>
+        <button type="button" class="btn-eval-fullscreen-close" onclick="window.closeEvalLightbox()" title="ปิดหน้าต่างแบบประเมิน">
+          ✕
+        </button>
+      </header>
+
+      <!-- Scrollable Fullscreen Body -->
+      <div class="eval-fullscreen-scroll-body" id="evalFormBody">
+        <div class="eval-fullscreen-content-inner">
+          <!-- Respondent Identification Card -->
+          <div class="eval-card eval-respondent-card">
+            <div class="respondent-avatar-badge" id="evalRespondentAvatar">👤</div>
+            <div class="respondent-details">
+              <div class="respondent-name-line">
+                <span class="respondent-label">ผู้ร่วมประเมิน:</span>
+                <strong class="respondent-name" id="evalRespondentName">ผู้ร่วมกิจกรรม</strong>
+                <span class="respondent-verified-tag">✓ ยืนยันสิทธิ์ในระบบ</span>
+              </div>
+              <div class="respondent-sub-line">
+                สังกัด: <strong id="evalRespondentDept">-</strong>
+              </div>
+            </div>
+          </div>
+
+          <form id="eventEvaluationForm" onsubmit="window.handleEvalFormSubmit(event)">
+            <!-- ข้อ 1: ความพึงพอใจในภาพรวมการจัดงาน (Interactive Star Rating) -->
+            <div class="eval-card eval-q-card-prominent">
+              <div class="eval-card-header">
+                <span class="eval-q-num">1</span>
+                <div>
+                  <h4 class="eval-card-title">ความพึงพอใจในภาพรวมของกิจกรรม <span class="eval-req">*</span></h4>
+                  <p class="eval-card-desc">โปรดแตะเพื่อให้คะแนนดาว (1 - 5 ดาว)</p>
+                </div>
+              </div>
+              <div class="eval-stars-interactive-wrap">
+                <div class="eval-stars-interactive" id="evalStarContainer">
+                  <span class="star-btn" data-star="1" onclick="window.setEvalStar(1)">★</span>
+                  <span class="star-btn" data-star="2" onclick="window.setEvalStar(2)">★</span>
+                  <span class="star-btn" data-star="3" onclick="window.setEvalStar(3)">★</span>
+                  <span class="star-btn" data-star="4" onclick="window.setEvalStar(4)">★</span>
+                  <span class="star-btn" data-star="5" onclick="window.setEvalStar(5)">★</span>
+                </div>
+                <input type="hidden" id="evalScoreOverall" value="">
+                <div class="eval-score-text-badge" id="evalScoreText" style="color: #94a3b8;">กรุณาแตะเพื่อให้คะแนนดาว (1 - 5 ดาว)</div>
+              </div>
+            </div>
+
+            <!-- ข้อ 2: การประเมินในแต่ละกิจกรรม 4 ด้าน -->
+            <div class="eval-card">
+              <div class="eval-card-header">
+                <span class="eval-q-num">2</span>
+                <div>
+                  <h4 class="eval-card-title">การประเมินในแต่ละกิจกรรมย่อย <span class="eval-req">*</span></h4>
+                  <p class="eval-card-desc">ประเมินความพึงพอใจในแต่ละมิติของการจัดงาน</p>
+                </div>
+              </div>
+
+              <div class="eval-sub-questions-list">
+                <div class="eval-sub-q-box">
+                  <div class="sub-q-header">
+                    <span class="sub-q-icon">💡</span>
+                    <span class="sub-q-title">2.1 เวที AI Pitching & ระบบพอร์ตลงทุน</span>
+                  </div>
+                  <div class="eval-pill-group" data-q="eval_pitch">
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'ดีเยี่ยม')">ดีเยี่ยม</button>
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'ดีมาก')">ดีมาก</button>
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'ปานกลาง')">ปานกลาง</button>
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'ควรปรับปรุง')">ควรปรับปรุง</button>
+                  </div>
+                </div>
+
+                <div class="eval-sub-q-box">
+                  <div class="sub-q-header">
+                    <span class="sub-q-icon">🎮</span>
+                    <span class="sub-q-title">2.2 การแข่งขันเกมบนเวที "4 ต่อ 4 CRSDG Game"</span>
+                  </div>
+                  <div class="eval-pill-group" data-q="eval_game">
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'สนุกมากที่สุด')">สนุกมากที่สุด</button>
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'สนุกมาก')">สนุกมาก</button>
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'ปานกลาง')">ปานกลาง</button>
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'ควรปรับปรุง')">ควรปรับปรุง</button>
+                  </div>
+                </div>
+
+                <div class="eval-sub-q-box">
+                  <div class="sub-q-header">
+                    <span class="sub-q-icon">🍱</span>
+                    <span class="sub-q-title">2.3 อาหาร เครื่องดื่ม และการดูแลต้อนรับ (Buffet & Hospitality)</span>
+                  </div>
+                  <div class="eval-pill-group" data-q="eval_food">
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'ประทับใจมาก')">ประทับใจมาก</button>
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'ดี')">ดี</button>
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'ปานกลาง')">ปานกลาง</button>
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'ควรปรับปรุง')">ควรปรับปรุง</button>
+                  </div>
+                </div>
+
+                <div class="eval-sub-q-box">
+                  <div class="sub-q-header">
+                    <span class="sub-q-icon">📱</span>
+                    <span class="sub-q-title">2.4 ระบบเว็บแอปพลิเคชัน & กิจกรรมดิจิทัล</span>
+                  </div>
+                  <div class="eval-pill-group" data-q="eval_app">
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'ใช้งานง่ายมาก')">ใช้งานง่ายมาก</button>
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'สะดวกดี')">สะดวกดี</button>
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'ปานกลาง')">ปานกลาง</button>
+                    <button type="button" class="eval-option-pill" onclick="window.selectEvalOption(this, 'ควรปรับปรุง')">ควรปรับปรุง</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ข้อ 3: สิ่งที่คุณประทับใจมากที่สุดในงาน (เลือกได้หลายข้อ) -->
+            <div class="eval-card">
+              <div class="eval-card-header">
+                <span class="eval-q-num">3</span>
+                <div>
+                  <h4 class="eval-card-title">สิ่งที่คุณประทับใจมากที่สุดในงาน <span class="eval-hint">(แตะเลือกได้หลายข้อ)</span></h4>
+                  <p class="eval-card-desc">ไฮไลต์และโมเมนต์ที่โดนใจคุณในงาน CRSDG 2027</p>
+                </div>
+              </div>
+              <div class="eval-tags-container">
+                <button type="button" class="eval-tag-chip" onclick="window.toggleEvalTag(this)">💡 นวัตกรรมและไอเดีย AI</button>
+                <button type="button" class="eval-tag-chip" onclick="window.toggleEvalTag(this)">💰 ระบบพอร์ตลงทุน Real-time</button>
+                <button type="button" class="eval-tag-chip" onclick="window.toggleEvalTag(this)">🎮 เกมเวที 4 ต่อ 4 สนุกสนาน</button>
+                <button type="button" class="eval-tag-chip" onclick="window.toggleEvalTag(this)">🎁 รางวัลและของขวัญโดนใจ</button>
+                <button type="button" class="eval-tag-chip" onclick="window.toggleEvalTag(this)">🍱 อาหารและเครื่องดื่มอร่อย</button>
+                <button type="button" class="eval-tag-chip" onclick="window.toggleEvalTag(this)">🤝 บรรยากาศอบอุ่นและความสามัคคี</button>
+              </div>
+            </div>
+
+            <!-- ข้อ 4: ข้อเสนอแนะเพิ่มเติม -->
+            <div class="eval-card">
+              <div class="eval-card-header">
+                <span class="eval-q-num">4</span>
+                <div>
+                  <h4 class="eval-card-title">ข้อคิดเห็นหรือข้อเสนอแนะเพิ่มเติมเพื่อการพัฒนา</h4>
+                  <p class="eval-card-desc">มุมมองและคำแนะนำของท่านมีความหมายอย่างยิ่งต่อทีมงาน</p>
+                </div>
+              </div>
+              <textarea id="evalFeedbackText" class="eval-textarea" rows="4" placeholder="พิมพ์ความคิดเห็น ข้อเสนอแนะ หรือความประทับใจเพิ่มเติมได้ที่นี่..."></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="eval-fullscreen-actions">
+              <button type="submit" class="btn-submit-eval-primary">
+                <span>✓ ส่งแบบประเมินผลกิจกรรม</span>
+              </button>
+              <button type="button" class="btn-cancel-eval-link" onclick="window.closeEvalLightbox()">
+                ยกเลิก / ปิดหน้าต่าง
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Success Screen (แสดงเมื่อส่งผลแล้ว เต็มหน้าจอสวยงาม) -->
+      <div class="eval-fullscreen-success" id="evalSuccessView" style="display: none;">
+        <div class="success-content-card">
+          <div class="success-big-icon">🎉</div>
+          <h2 class="success-title">ส่งแบบประเมินผลเรียบร้อยแล้ว</h2>
+          <p class="success-desc">
+            ขอขอบพระคุณทุกความคิดเห็นและคะแนนความพึงพอใจของท่าน<br>
+            ทีมงานและฝ่ายบริหารจะนำข้อมูลทุกส่วนไปพัฒนาเพื่อจัดกิจกรรมให้ดียิ่งขึ้นไป
+          </p>
+          <div class="success-meta-pill" id="successRespondentBadge">
+            ✓ บันทึกผลสำเร็จสำหรับ: ผู้ร่วมกิจกรรม
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 18px;">
+            <button type="button" class="btn-primary btn-success-finish" onclick="window.closeEvalLightbox()">
+              ✓ เสร็จสิ้น / กลับสู่หน้าหลัก
+            </button>
+            <button type="button" class="btn-secondary" onclick="window.reopenEvalForm()"
+              style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #cbd5e1; font-size: 0.85rem; padding: 10px 16px; border-radius: 12px; cursor: pointer;">
+              ✏️ ทำแบบประเมินใหม่ / แก้ไขคำตอบ
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+
+</html>

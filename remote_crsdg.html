@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>4 ต่อ 4 CRSDG - รีโมตควบคุมการแข่งขัน</title>
+
+    <!-- Google Fonts Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS Stylesheets -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/remote_crsdg.css">
+</head>
+
+<body class="remote-body">
+    <div class="remote-container">
+
+        <!-- ========================================================
+             TOP BAR: BRAND & QUICK TOOLS & OPEN MAIN SCREEN
+             ======================================================== -->
+        <header class="remote-top-bar">
+            <div class="top-bar-left">
+                <div class="remote-brand">
+                    <span class="remote-brand-title">🎮 CRSDG GAME REMOTE</span>
+                    <span class="remote-brand-sub">รีโมตควบคุมจอแข่งขัน 4 ต่อ 4</span>
+                </div>
+                <div class="remote-conn-status is-disconnected" id="remoteConnStatus"
+                    title="สถานะการเชื่อมต่อกับหน้าจอ game.html">
+                    <span class="conn-dot"></span>
+                    <span id="remoteConnText">รอเชื่อมต่อ...</span>
+                </div>
+            </div>
+
+            <!-- กลุ่มเครื่องมือด้านขวามือ: 4 Icons + ปุ่มเปิดจอหลัก -->
+            <div class="top-bar-actions">
+                <div class="top-sys-icons">
+                    <button type="button" class="btn-top-sys" id="topBtnMute" onclick="remoteController.toggleMute()"
+                        title="เปิด/ปิดเสียงจอหลัก">
+                        <span class="sys-icon" id="topMuteIcon">🔊</span>
+                    </button>
+                    <button type="button" class="btn-top-sys btn-top-buzzer" onclick="remoteController.playBuzzer()"
+                        title="ทดสอบเสียงออด (Buzzer)">
+                        <span class="sys-icon">🚨</span>
+                    </button>
+                    <button type="button" class="btn-top-sys btn-top-win" onclick="remoteController.playWin()"
+                        title="เล่นเสียงไชโย/ชนะ (Fanfare)">
+                        <span class="sys-icon">🎺</span>
+                    </button>
+                    <button type="button" class="btn-top-sys" id="topBtnFullscreen"
+                        onclick="remoteController.toggleFullscreen()" title="เปิด/ปิดเต็มจอ (Fullscreen)">
+                        <span class="sys-icon" id="topFsIcon">⛶</span>
+                    </button>
+                </div>
+                <button type="button" class="btn-top-launch" onclick="remoteController.openMainScreen()"
+                    title="คลิกเพื่อเปิดหน้าจอแข่งขัน game.html">
+                    <span class="launch-icon">🖥️</span>
+                    <span class="launch-text">เปิดจอหลัก</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ========================================================
+             STAGE NAVIGATION TABS (สำหรับจอขนาดเล็ก/มือถือ)
+             ======================================================== -->
+        <nav class="remote-stage-tabs" id="remoteStageTabs">
+            <button type="button" class="stage-tab-btn is-active" data-tab="arena"
+                onclick="remoteController.switchTab('arena')">
+                👥 แถว 1: หน้าเลือกทีม
+            </button>
+            <button type="button" class="stage-tab-btn" data-tab="quiz" onclick="remoteController.switchTab('quiz')">
+                📋 แถว 2: เลือกคำถาม
+            </button>
+            <button type="button" class="stage-tab-btn stage-game-tab" data-tab="game"
+                onclick="remoteController.switchTab('game')">
+                🎮 แถว 3: กระดานแข่งขัน
+            </button>
+        </nav>
+
+        <!-- ========================================================
+             MAIN 3-COLUMN DASHBOARD LAYOUT (100% WIDTH, 33% EACH COLUMN)
+             ใต้กล่อง 4 กล่อง แบ่งเป็น 3 แถว กว้าง 33%
+             แถวที่ 1: หน้าเลือกทีม | แถวที่ 2: เลือกคำถาม | แถวที่ 3: กระดานแข่งขัน
+             ======================================================== -->
+        <main class="remote-three-columns-layout" id="remoteThreeColumnsLayout">
+
+            <!-- ========================================================
+                 แถว/คอลัมน์ที่ 1 (33%): หน้าเลือกทีม (ARENA STAGE)
+                 ======================================================== -->
+            <section class="remote-dashboard-col col-arena is-disabled-col" id="panelArena">
+                <div class="col-sticky-header" onclick="remoteController.switchTab('arena')"
+                    title="คลิกเพื่อสลับมาทำงานที่แถวที่ 1 (หน้าเลือกทีม)">
+                    <div class="col-title-group">
+                        <span class="col-title-icon">👥</span>
+                        <div class="col-title-text-wrap">
+                            <h3 class="col-title">แถวที่ 1: หน้าเลือกทีม</h3>
+                            <span class="col-sub">กำหนดทีมแข่งขัน Blue vs Orange</span>
+                        </div>
+                    </div>
+                    <div class="col-status-pill" id="statusPillArena">
+                        <span class="col-status-dot"></span>
+                        <span class="col-status-text">รอเริ่มการแข่งขัน</span>
+                    </div>
+                </div>
+
+                <div class="col-inner-scroll">
+                    <!-- Section: เลือกทีมที่จะแข่งขัน -->
+                    <div class="remote-section-card">
+                        <div class="section-card-title">
+                            <span>👥 เลือกทีมที่จะแข่งขัน</span>
+                            <button type="button" class="btn-modal-action"
+                                style="padding: 4px 10px; font-size: 0.78rem;"
+                                onclick="remoteController.resetEliminated()">
+                                ↺ รีเซ็ตทีมตกรอบ
+                            </button>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div>
+                                <label
+                                    style="font-size: 0.82rem; color: #93c5fd; font-weight: 700; display: block; margin-bottom: 4px;">
+                                    🔵 เลือกทีมฝั่งซ้าย (Blue Side):
+                                </label>
+                                <select id="arenaSelectLeft" onchange="remoteController.selectTeamLeft(this.value)"
+                                    style="width: 100%; padding: 10px 14px; border-radius: 10px; background: rgba(30, 41, 59, 0.9); border: 1.5px solid #3b82f6; color: #ffffff; font-family: inherit; font-size: 0.95rem;">
+                                </select>
+                            </div>
+
+                            <div>
+                                <label
+                                    style="font-size: 0.82rem; color: #fdba74; font-weight: 700; display: block; margin-bottom: 4px;">
+                                    🟠 เลือกทีมฝั่งขวา (Orange Side):
+                                </label>
+                                <select id="arenaSelectRight" onchange="remoteController.selectTeamRight(this.value)"
+                                    style="width: 100%; padding: 10px 14px; border-radius: 10px; background: rgba(30, 41, 59, 0.9); border: 1.5px solid #f97316; color: #ffffff; font-family: inherit; font-size: 0.95rem;">
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                            <button type="button" class="btn-modal-action"
+                                style="background: rgba(245, 158, 11, 0.25); border-color: #ffd700; color: #ffd700;"
+                                onclick="remoteController.randomTeams()">
+                                🎲 สุ่มเลือกทีม
+                            </button>
+                            <button type="button" class="btn-modal-action btn-arena-go-quiz" id="btnGoToQuizSelect"
+                                style="background: linear-gradient(135deg, #2563eb, #1d4ed8); border: 1.5px solid #93c5fd; color: #ffffff; font-weight: 500; font-size: 0.80rem; padding: 10px 14px; border-radius: 10px;"
+                                onclick="remoteController.goToQuizSelect()"
+                                title="ปิด Popup บนหน้าเกม และเปิดหน้าเลือกชุดคำถาม (เปิดแถวที่ 2)">
+                                📋 เลือกชุดคำถาม ❯
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ตารางข้อมูลทีมแข่งขันทั้งหมดในระบบ (Database: crsdg_nameteam & crsdg_team) -->
+                    <div class="remote-section-card">
+                        <div class="section-card-title">
+                            <span>📋 ตารางข้อมูลทีมแข่งขัน (<code
+                                    style="color: #60a5fa; font-size: 0.8rem;">crsdg_nameteam</code>)</span>
+                            <span style="font-size: 0.78rem; color: #34d399; font-weight: 700;" id="teamsDbCountBadge">
+                                เชื่อมต่อตารางข้อมูลแล้ว
+                            </span>
+                        </div>
+                        <div style="font-size: 0.76rem; color: rgba(255,255,255,0.6); margin-bottom: 4px;">
+                            💡 รายชื่อทีมและสมาชิกดึงตรงจากฐานข้อมูลระบบ • แตะปุ่มเพื่อเลือกเป็นทีมฝั่งซ้ายหรือฝั่งขวา
+                        </div>
+                        <div class="remote-teams-table-container" id="remoteTeamsTableContainer">
+                            <!-- Teams rendered dynamically from database -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================
+                 แถว/คอลัมน์ที่ 2 (33%): เลือกคำถาม (QUIZ SELECT STAGE)
+                 ======================================================== -->
+            <section class="remote-dashboard-col col-quiz" id="panelQuiz">
+                <div class="col-sticky-header" onclick="remoteController.switchTab('quiz')"
+                    title="คลิกเพื่อสลับมาทำงานที่แถวที่ 2 (เลือกคำถาม)">
+                    <div class="col-title-group">
+                        <span class="col-title-icon">📋</span>
+                        <div class="col-title-text-wrap">
+                            <h3 class="col-title">แถวที่ 2: เลือกคำถาม</h3>
+                            <span class="col-sub">ชุดคำถามการแข่งขันและสุ่มข้อสอบ</span>
+                        </div>
+                    </div>
+                    <div class="col-status-pill" id="statusPillQuiz">
+                        <span class="col-status-dot"></span>
+                        <span class="col-status-text">คลิกเพื่อเลือก</span>
+                    </div>
+                </div>
+
+                <div class="col-inner-scroll">
+                    <div class="remote-section-card">
+                        <div class="section-card-title">
+                            <span>📋 เลือกชุดคำถามการแข่งขัน</span>
+                            <button type="button" class="btn-modal-action"
+                                style="padding: 4px 10px; font-size: 0.78rem;"
+                                onclick="remoteController.resetUsedQuizzes()">
+                                ↺ รีเซ็ตคำถาม
+                            </button>
+                        </div>
+
+                        <div class="remote-quiz-items" id="remoteQuizItemsList">
+                            <!-- Quiz cards rendered dynamically here -->
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                            <button type="button" class="btn-modal-action"
+                                style="background: rgba(245, 158, 11, 0.25); border-color: #ffd700; color: #ffd700;"
+                                onclick="remoteController.randomQuiz()">
+                                🎲 สุ่มชุดคำถาม
+                            </button>
+                            <button type="button" class="btn-modal-action btn-launch-game-comp" id="btnStartGameAction"
+                                style="background: linear-gradient(135deg, #10b981, #059669); border: 1.5px solid #86efac; color: #ffffff; font-weight: 400; font-size: 0.80rem; padding: 10px 14px; border-radius: 10px;"
+                                onclick="remoteController.startQuizGame()" title="กรุณาเลือกหรือสุ่มชุดคำถามก่อนเริ่มการแข่งขัน" disabled>
+                                🚀 เริ่มแข่งขัน ❯
+                            </button>
+                        </div>
+
+                        <button type="button" class="btn-modal-action" style="margin-top: 6px;"
+                            onclick="remoteController.backToArena()">
+                            ◀ กลับไปหน้าเลือกทีม
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================
+                 แถว/คอลัมน์ที่ 3 (33%): กระดานแข่งขัน (GAME STAGE)
+                 ======================================================== -->
+            <section class="remote-dashboard-col col-game" id="panelGame">
+                <div class="col-sticky-header" onclick="remoteController.switchTab('game')"
+                    title="คลิกเพื่อสลับมาทำงานที่แถวที่ 3 (กระดานแข่งขัน)">
+                    <div class="col-title-group">
+                        <span class="col-title-icon">🎮</span>
+                        <div class="col-title-text-wrap">
+                            <h3 class="col-title">แถวที่ 3: กระดานแข่งขัน</h3>
+                            <span class="col-sub">คะแนนกองกลาง, ป้ายคำตอบ, Strikes, ขโมย</span>
+                        </div>
+                    </div>
+                    <div class="col-status-pill" id="statusPillGame">
+                        <span class="col-status-dot"></span>
+                        <span class="col-status-text">คลิกเพื่อเลือก</span>
+                    </div>
+                </div>
+
+                <div class="col-inner-scroll">
+                    <!-- Face-off / Turn Picker Card (แสดงเมื่อเลือกคำถามแล้ว และจอหลักแสดง 'เลือกทีมที่ได้สิทธิ์ตอบคำถาม') -->
+                    <div class="remote-turn-picker-card" id="remoteTurnPickerCard" style="display: none;">
+                        <div class="turn-picker-header">
+                            <span class="turn-picker-badge-top">⚔️ สิทธิ์การตอบคำถาม (FACE-OFF)</span>
+                            <h4 class="turn-picker-title">เลือกทีมที่ได้สิทธิ์ตอบคำถาม</h4>
+                            <p class="turn-picker-desc">กรุณาเลือกว่าทีมใดชนะการกดปุ่ม (Face-off)
+                                และได้เริ่มตอบคำถามก่อนในข้อนี้</p>
+                        </div>
+                        <div class="turn-picker-btns-grid">
+                            <button type="button" class="btn-pick-turn-remote btn-pick-blue" id="btnPickTurnBlueRemote"
+                                onclick="remoteController.chooseFirstTurn('blue')"
+                                title="เลือกทีมฝั่งซ้ายเป็นฝ่ายเริ่มตอบก่อน">
+                                <span class="pick-tag">🔵 ทีมฝั่งซ้าย</span>
+                                <span class="pick-name" id="pickNameBlueRemote">ทีมฝั่งซ้าย</span>
+                                <span class="pick-action-label">เลือกให้เริ่มตอบก่อน ❯</span>
+                            </button>
+                            <button type="button" class="btn-pick-turn-remote btn-pick-orange"
+                                id="btnPickTurnOrangeRemote" onclick="remoteController.chooseFirstTurn('orange')"
+                                title="เลือกทีมฝั่งขวาเป็นฝ่ายเริ่มตอบก่อน">
+                                <span class="pick-tag">🟠 ทีมฝั่งขวา</span>
+                                <span class="pick-name" id="pickNameOrangeRemote">ทีมฝั่งขวา</span>
+                                <span class="pick-action-label">เลือกให้เริ่มตอบก่อน ❯</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Overview Header & Bank Score & Teams Cards -->
+                    <div class="remote-overview-card">
+                        <div class="overview-header">
+                            <span class="overview-round-title" id="overviewRoundTitle">รอบที่ 1: คัดเลือกสาย A</span>
+                            <span class="overview-game-badge" id="overviewGameBadge">แข่งครั้งที่ 1 / 3</span>
+                        </div>
+
+                        <!-- Bank Score -->
+                        <div class="remote-bank-box">
+                            <div class="bank-info-label">
+                                <span class="sub">คะแนนสะสมในข้อนี้</span>
+                                <span class="main">💰 กองกลาง (BANK)</span>
+                            </div>
+                            <div class="bank-score-number" id="bankScoreNum">0</div>
+                        </div>
+
+                        <!-- 2 Teams Comparison Cards (Blue vs Orange) -->
+                        <div class="remote-teams-grid">
+                            <!-- Team Left (Blue) -->
+                            <div class="remote-team-card team-blue is-active-turn" id="cardTeamBlue">
+                                <div class="team-header-row">
+                                    <span class="team-badge-tag">🔵 ซ้าย</span>
+                                    <span class="team-turn-indicator" id="turnTeamBlue">● กำลังตอบ</span>
+                                </div>
+                                <div class="remote-team-name" id="nameTeamBlue">ทีมฝั่งซ้าย</div>
+                                <div class="remote-cap-name" id="capTeamBlue">👑 หัวหน้าทีม</div>
+
+                                <div class="team-score-stepper-box">
+                                    <button type="button" class="score-step-btn"
+                                        onclick="remoteController.adjustScore('blue', -10)"
+                                        title="ลด 10 คะแนน">-10</button>
+                                    <span class="remote-score-val" id="scoreTeamBlue">0</span>
+                                    <button type="button" class="score-step-btn"
+                                        onclick="remoteController.adjustScore('blue', 10)"
+                                        title="เพิ่ม 10 คะแนน">+10</button>
+                                </div>
+
+                                <div class="team-bottom-btns">
+                                    <button type="button" class="btn-remote-action btn-set-turn-blue"
+                                        onclick="remoteController.setActiveTurn('blue')"
+                                        title="สลับให้ทีมฝั่งซ้ายเป็นฝ่ายตอบ">
+                                        🔵 สลับให้ฝั่งนี้ตอบ
+                                    </button>
+                                    <button type="button" class="btn-remote-action btn-award-blue-remote"
+                                        onclick="remoteController.awardPoints('blue')"
+                                        title="มอบคะแนนกองกลางให้ทีมฝั่งซ้าย">
+                                        + มอบคะแนน
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Team Right (Orange) -->
+                            <div class="remote-team-card team-orange" id="cardTeamOrange">
+                                <div class="team-header-row">
+                                    <span class="team-badge-tag">🟠 ขวา</span>
+                                    <span class="team-turn-indicator" id="turnTeamOrange">รอตอบ</span>
+                                </div>
+                                <div class="remote-team-name" id="nameTeamOrange">ทีมฝั่งขวา</div>
+                                <div class="remote-cap-name" id="capTeamOrange">👑 หัวหน้าทีม</div>
+
+                                <div class="team-score-stepper-box">
+                                    <button type="button" class="score-step-btn"
+                                        onclick="remoteController.adjustScore('orange', -10)"
+                                        title="ลด 10 คะแนน">-10</button>
+                                    <span class="remote-score-val" id="scoreTeamOrange">0</span>
+                                    <button type="button" class="score-step-btn"
+                                        onclick="remoteController.adjustScore('orange', 10)"
+                                        title="เพิ่ม 10 คะแนน">+10</button>
+                                </div>
+
+                                <div class="team-bottom-btns">
+                                    <button type="button" class="btn-remote-action btn-set-turn-orange"
+                                        onclick="remoteController.setActiveTurn('orange')"
+                                        title="สลับให้ทีมฝั่งขวาเป็นฝ่ายตอบ">
+                                        🟠 สลับให้ฝั่งนี้ตอบ
+                                    </button>
+                                    <button type="button" class="btn-remote-action btn-award-orange-remote"
+                                        onclick="remoteController.awardPoints('orange')"
+                                        title="มอบคะแนนกองกลางให้ทีมฝั่งขวา">
+                                        + มอบคะแนน
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Question & Ranked Answers Showcase -->
+                    <div class="remote-question-card" id="remoteQuestionCard">
+                        <div class="question-header-bar">
+                            <div class="question-live-indicator">
+                                <span class="live-dot-pulse"></span>
+                                <span class="live-title-text" id="questionLiveStatusText">คำถามการแข่งขัน
+                                    (กำลังแข่ง)</span>
+                            </div>
+                            <button type="button" class="btn-reveal-all-pill"
+                                onclick="remoteController.revealAllAnswers()"
+                                title="สั่งเปิดเฉลยคำตอบที่เหลือทั้งหมดบนกระดานแข่งขัน">
+                                👁️ เฉลยคำตอบทั้งหมด
+                            </button>
+                        </div>
+
+                        <!-- กล่องข้อความคำถามขนาดใหญ่สำหรับพิธีกร -->
+                        <div class="question-banner-box">
+                            <div class="question-pill-row">
+                                <span class="question-num-pill" id="questionNumPill">❓ คำถามข้อแข่งขัน</span>
+                                <span class="question-score-pill" id="questionTotalPointsBadge">คะแนนเต็ม 100</span>
+                            </div>
+                            <div class="question-title-text" id="currentQuestionTitle">
+                                กำลังรอเริ่มคำถามในข้อนี้...
+                            </div>
+                        </div>
+
+                        <!-- แถบความคืบหน้าการเปิดป้ายคำตอบบนกระดาน -->
+                        <div class="board-progress-container">
+                            <div class="board-progress-header">
+                                <span class="progress-title">📊 ป้ายคำตอบบนกระดาน</span>
+                                <span class="progress-counter" id="answersProgressStats">เปิดแล้ว 0 / 4 ป้าย</span>
+                            </div>
+                            <div class="board-progress-track">
+                                <div class="board-progress-fill" id="answersProgressFill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="board-answers-guide">
+                            <span>💡 ตัวเลือกเรียงตามคะแนนจากมากไปน้อย</span>
+                        </div>
+
+                        <!-- รายการตัวเลือกคำตอบทั้งหมด เรียงตามลำดับคะแนนและป้ายบนกระดาน -->
+                        <div class="remote-answers-list" id="remoteAnswersList">
+                            <!-- Answers list dynamically rendered here -->
+                        </div>
+                    </div>
+
+                    <!-- Strikes & Buzzer Section -->
+                    <div class="remote-section-card">
+                        <div class="section-card-title">
+                            <span>❌ กากบาทตอบผิด (STRIKES)</span>
+                            <button type="button" class="btn-modal-action"
+                                style="padding: 4px 10px; font-size: 0.78rem;"
+                                onclick="remoteController.resetStrikes()">
+                                ↺ ล้างกากบาท
+                            </button>
+                        </div>
+                        <div class="remote-strikes-grid">
+                            <button type="button" class="btn-strike-remote" id="remoteStrike1"
+                                onclick="remoteController.toggleStrike(1)">
+                                <span>✕</span>
+                                <span class="sub">ผิดครั้งที่ 1</span>
+                            </button>
+                            <button type="button" class="btn-strike-remote" id="remoteStrike2"
+                                onclick="remoteController.toggleStrike(2)">
+                                <span>✕</span>
+                                <span class="sub">ผิดครั้งที่ 2</span>
+                            </button>
+                            <button type="button" class="btn-strike-remote" id="remoteStrike3"
+                                onclick="remoteController.toggleStrike(3)">
+                                <span>✕</span>
+                                <span class="sub">ผิดครั้งที่ 3</span>
+                            </button>
+                        </div>
+                        <!-- ปุ่มกากบาท 1 รูปสำหรับช่วงขโมยคะแนน (โยนให้อีกฝั่งตอบ) -->
+                        <div class="remote-steal-strike-box" id="remoteStealStrikeBox" style="display: none;">
+                            <button type="button" class="btn-steal-single-strike" id="btnStealSingleStrike"
+                                onclick="remoteController.stealFailed()"
+                                title="คลิกเมื่อทีมที่ได้รับโยนมาตอบผิด (แสดงกากบาท 1 รูป และโอนคะแนนให้ทีมที่เริ่ม)">
+                                <span class="steal-x-icon">✕</span>
+                                <span>ทีมขโมยตอบผิด (กากบาท 1 รูป)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Steal Phase Controller (แสดงเมื่อตอบผิดครบ 3 ครั้ง) -->
+                    <div class="remote-steal-container" id="remoteStealContainer" style="display: none;">
+                        <!-- ขั้นที่ 1: ปุ่มกดยืนยันการเปลี่ยนทีมเพื่อขโมยคะแนน (แสดงเมื่อผิดครบ 3 ครั้ง) -->
+                        <div class="remote-steal-confirm-box" id="remoteStealConfirmBox" style="display: none;">
+                            <div class="steal-confirm-header">
+                                <span class="steal-confirm-badge">⚡ ตอบผิดครบ 3 ครั้ง</span>
+                                <h4 class="steal-confirm-title" id="stealConfirmTitle">
+                                    เปลี่ยนสิทธิ์ตอบคำถามเพื่อขโมยคะแนน</h4>
+                                <p class="steal-confirm-desc" id="stealConfirmDesc">
+                                    ทีมคู่แข่งขันได้รับสิทธิ์ในการตอบ 1 คำตอบเพื่อขโมยคะแนนกองกลางทั้งหมด
+                                </p>
+                            </div>
+                            <button type="button" class="btn-confirm-steal-turn" id="btnConfirmStealTurn"
+                                onclick="remoteController.confirmStealTurn()">
+                                <span class="btn-steal-icon">⚔️</span>
+                                <span class="btn-steal-text"
+                                    id="btnConfirmStealText">กดยืนยันการเปลี่ยนทีมเพื่อขโมยคะแนน ❯</span>
+                            </button>
+                        </div>
+
+                        <!-- ขั้นที่ 2: ปุ่มผลการตอบ (แสดงเมื่อคลิกยืนยัน หรืออยู่ในสถานะขโมยคะแนน) -->
+                        <div class="remote-steal-box" id="remoteStealBox" style="display: none;">
+                            <div class="steal-box-header" id="remoteStealTxt">
+                                ⚔️ สิทธิ์ขโมยคะแนน: ทีมคู่แข่งขันมีสิทธิ์ตอบ 1 คำตอบ
+                            </div>
+                            <div class="steal-guide-sub" id="stealGuideSub">
+                                กรุณาเลือกผลการตอบของทีมที่ได้สิทธิ์ขโมยคะแนน:
+                            </div>
+                            <div class="steal-btns-row">
+                                <button type="button" class="btn-steal-success-remote"
+                                    onclick="remoteController.stealSuccess()"
+                                    title="ทีมที่ได้รับโยนมาตอบถูก ได้รับคะแนนสะสมทั้งหมด">
+                                    ✓ ขโมยสำเร็จ (ตอบถูก)
+                                </button>
+                                <button type="button" class="btn-steal-failed-remote"
+                                    onclick="remoteController.stealFailed()"
+                                    title="ทีมที่ได้รับโยนมาตอบผิด (แสดงกากบาท 1 รูป และโอนคะแนนให้ทีมที่เริ่ม)">
+                                    ✕ ตอบผิด (โอนคะแนนให้ทีมที่เริ่ม)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Round Summary Action Button (กดเพื่อเปิด Lightbox สรุปผล) -->
+                    <div id="remoteSummaryTriggerBox" style="display: none;">
+                        <button type="button" class="btn-big-summary-trigger"
+                            onclick="remoteController.triggerRoundSummary()">
+                            📊 สรุปผลรอบนี้ ❯
+                        </button>
+                    </div>
+
+                    <!-- Modal & Progression Controls -->
+                    <div class="remote-section-card">
+                        <div class="section-card-title">
+                            <span>🏆 การดำเนินเกม & ควบคุมหน้าต่าง</span>
+                        </div>
+                        <div class="modal-actions-row">
+                            <button type="button" class="btn-modal-action"
+                                onclick="remoteController.openTurnPickerModal()"
+                                title="เปิดหน้าต่างเลือกทีมที่ได้สิทธิ์ตอบคำถามบนจอหลัก"
+                                style="background: rgba(245, 158, 11, 0.2); border-color: #ffd700; color: #ffd700;">
+                                ⚔️ สิทธิ์ตอบคำถาม
+                            </button>
+                            <button type="button" class="btn-modal-action"
+                                onclick="remoteController.proceedIntermission()"
+                                title="หลังจบครั้งที่ 1 หรือ 2 ให้ไปเลือกคำถามข้อต่อไป">
+                                🎲 ไปข้อถัดไป ❯
+                            </button>
+                            <button type="button" class="btn-modal-action"
+                                onclick="remoteController.confirmMatchWinner()" title="ยืนยันผลการแข่งขัน 3 ครั้ง">
+                                👑 ยืนยันทีมชนะ ❯
+                            </button>
+                            <button type="button" class="btn-modal-action" onclick="remoteController.backToQuizSelect()"
+                                title="ย้อนกลับไปหน้าเลือกชุดคำถาม">
+                                ◀ กลับเลือกคำถาม
+                            </button>
+                            <button type="button" class="btn-modal-action" onclick="remoteController.closeModal()"
+                                title="ปิดหน้าต่าง Popup ปัจจุบันบนจอหลัก">
+                                ✕ ปิด Popup บนจอ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer / Link to main screen -->
+        <footer style="text-align: center; margin-top: 14px; font-size: 0.82rem; color: rgba(255,255,255,0.5);">
+            <a href="game.html" target="_blank" style="color: #60a5fa; text-decoration: none;">
+                🖥️ เปิดหน้าจอการแข่งขันหลัก (game.html)
+            </a>
+            &nbsp;•&nbsp;
+            <span>4 ต่อ 4 CRSDG New Year</span>
+        </footer>
+
+    </div>
+
+    <!-- ========================================================
+         MODAL / LIGHTBOX: สั่งให้หน้าเกมเริ่มการแข่งขัน (เปิดแถวที่ 1)
+         แสดงเมื่อหน้า game อยู่ในหน้าแรกและยังไม่ได้เริ่มทำการแข่งขัน
+         ======================================================== -->
+    <div class="remote-modal-backdrop" id="remoteStartIntroModal" style="display: flex;">
+        <div class="remote-intro-modal-card">
+            <div class="intro-modal-icon-wrap">
+                <span class="intro-modal-icon">🎮</span>
+            </div>
+            <div class="intro-modal-badge">4 ต่อ 4 CRSDG GAME</div>
+            <button type="button" class="btn-intro-enter-arena btn-start-comp-orange" id="btnRemoteStartComp"
+                onclick="remoteController.clickStartCompetition()">
+                <svg class="start-btn-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor;">
+                    <path d="M8 5v14l11-7z" />
+                </svg>
+                <span>เริ่มการแข่งขัน</span>
+            </button>
+            <div class="intro-modal-subhint">
+                💡 กดปุ่มด้านบนเพื่อเริ่มการแข่งขัน
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Cloud Firestore SDK & Central Sync -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script src="js/firebase-storage.js"></script>
+    <script src="js/firebase-sync.js"></script>
+
+    <!-- Central State Manager (ตารางข้อมูล crsdg_nameteam, crsdg_team, crsdg_member, crsdg_quiz) -->
+    <script src="js/state.js"></script>
+    <!-- Remote Client Script -->
+    <script src="js/remote_crsdg.js"></script>
+</body>
+
+</html>

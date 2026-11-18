@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>รีโมตควบคุมการสุ่มรางวัล - CRS DG Lucky Draw (AL2026)</title>
+
+    <!-- Google Fonts Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- CSS Stylesheets -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/remote-reward.css">
+</head>
+
+<body class="remote-body">
+    <!-- Top Remote Header -->
+    <header class="remote-header">
+        <div class="remote-header-top">
+            <div class="remote-app-title">
+                <span class="remote-title-icon">📱</span>
+                <div>
+                    <h1 class="remote-title-text">รีโมตควบคุมการสุ่มรางวัล</h1>
+                    <div class="remote-subtitle">CRS DG Lucky Draw 2026</div>
+                </div>
+            </div>
+            <div class="remote-room-pill">
+                <span>🔑</span>
+                <span>ห้อง: <strong>AL2026</strong></span>
+            </div>
+        </div>
+
+        <div class="remote-status-bar">
+            <div class="remote-connection-tag" id="connectionStatusTag">
+                <span class="conn-dot"></span>
+                <span id="connStatusText">เชื่อมต่อกับเวทีสุ่มรางวัลแล้ว</span>
+            </div>
+            <div class="remote-eligible-pill" id="remoteEligiblePill">
+                ผู้มีสิทธิ์: <strong id="remoteEligibleCount">--</strong> คน
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Remote Controller Container -->
+    <main class="remote-main">
+        <!-- Hidden fallback select for backward compatibility -->
+        <select id="remotePrizeSelect" style="display: none;"></select>
+
+        <!-- 1. Executive Sponsor Boxes Grid (กล่องรายชื่อผู้บริหาร) -->
+        <section class="remote-card executive-picker-section">
+            <div class="section-label">
+                <span>👥 กล่องรายชื่อผู้บริหาร (แตะเพื่อเลือกสุ่ม)</span>
+                <span class="exec-count-tag" id="execCountTag">19 ท่าน</span>
+            </div>
+            <div class="executive-grid-picker" id="executiveGridPicker">
+                <!-- Populated dynamically with 19 executive boxes -->
+            </div>
+        </section>
+
+        <!-- 2. Giant Spin Action Controls -->
+        <section class="remote-card controls-section">
+            <!-- Big Main Spin Button -->
+            <button type="button" class="btn-giant-spin" id="btnRemoteSpin">
+                <span class="giant-btn-icon" id="giantBtnIcon">🎲</span>
+                <span class="giant-btn-label" id="giantBtnLabel">เริ่มสุ่มรางวัล</span>
+                <span class="giant-btn-sub" id="giantBtnSub">START SPIN</span>
+            </button>
+
+            <!-- Secondary Action: Cancel Winner (Replaced Reroll Button) -->
+            <div class="secondary-btn-grid" style="grid-template-columns: 1fr;">
+                <button type="button" class="btn-cancel-winner-action" id="btnCancelWinner" disabled>
+                    <span class="btn-sec-icon">❌</span>
+                    <span>ยกเลิกผู้ได้รับรางวัลท่านนี้ (คืนสิทธิ์)</span>
+                </button>
+            </div>
+
+            <!-- Tool toggles -->
+            <div class="remote-tools-row">
+                <button type="button" class="btn-tool-toggle" id="btnRemoteToggleSound">
+                    <span id="remoteSoundIcon">🔊</span>
+                    <span>เสียง Stage</span>
+                </button>
+                <a href="reward.html" target="_blank" class="btn-tool-toggle link-to-stage">
+                    <span>🖥️ เปิดหน้าจอเวที</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- 3. Winner Feedback -->
+        <section class="remote-card winner-feedback-section">
+            <div class="section-label">
+                <span>🏆 ผู้โชคดี (ตามผู้บริหารที่เลือก)</span>
+                <span class="live-pill-sm">Live</span>
+            </div>
+
+            <div class="winner-feedback-box" id="winnerFeedbackBox">
+                <div class="winner-target-sponsor" id="remoteWinnerSponsorLabel">🎁 รางวัลของ: <strong>พี่โอเล่</strong></div>
+                <div class="winner-id-display" id="remoteWinnerId">-----</div>
+                <div class="winner-name-display" id="remoteWinnerName">ยังไม่มีการสุ่มผู้โชคดี</div>
+                <div class="winner-dept-display" id="remoteWinnerDept">สังกัด: -</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Cancel Winner Confirmation Lightbox Modal -->
+    <div class="modal-overlay" id="cancelWinnerModal" style="display: none;">
+        <div class="remote-modal-card">
+            <div class="remote-modal-header">
+                <div class="modal-warning-badge">⚠️</div>
+                <h3 class="remote-modal-title">ยืนยันยกเลิกผู้ได้รับรางวัล</h3>
+                <button type="button" class="btn-modal-close" id="btnCloseCancelModal">✕</button>
+            </div>
+            <div class="remote-modal-body">
+                <div class="modal-cancel-target-box">
+                    <div class="cancel-target-sponsor" id="modalCancelSponsor">รางวัลของ: พี่โอเล่</div>
+                    <div class="cancel-target-emp" id="modalCancelEmpInfo">12578 - วรรณา จรดล</div>
+                    <div class="cancel-target-dept" id="modalCancelEmpDept">สังกัด: Performance and Rewards</div>
+                </div>
+                <p class="modal-cancel-note">
+                    ระบบจะทำการ<strong>ยกเลิกผลการสุ่ม</strong> และ<strong>ตัดสิทธิ์พนักงานท่านนี้</strong>ไม่ให้ถูกสุ่มซ้ำอีกในรอบต่อไป จากนั้นจะเปิดสิทธิ์ให้รางวัลนี้สามารถเริ่มสุ่มใหม่ได้ทันที
+                </p>
+                <div class="modal-actions-row">
+                    <button type="button" class="btn-modal-cancel" id="btnDismissCancelModal">
+                        ยกเลิก (ไม่ลบ)
+                    </button>
+                    <button type="button" class="btn-modal-confirm-delete" id="btnConfirmCancelWinner">
+                        🗑️ ยืนยันยกเลิกรางวัล
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/audio.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script src="js/firebase-storage.js"></script>
+    <script src="js/firebase-sync.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/remote-reward.js"></script>
+</body>
+
+</html>

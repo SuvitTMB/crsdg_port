@@ -1,0 +1,2604 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - จัดการระบบสุ่มรางวัล & ข้อมูลสมาชิก crsdg_member</title>
+    <!-- Google Fonts Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS Stylesheets -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <!-- Immediate Theme Initialization (Default: Dark Mode) -->
+    <script>
+        (function () {
+            try {
+                var savedTheme = localStorage.getItem('crsdg_theme') || 'dark';
+                if (savedTheme === 'light') {
+                    document.documentElement.classList.add('light-mode');
+                }
+            } catch (e) { }
+        })();
+    </script>
+</head>
+
+<body class="admin-body">
+    <!-- ========================================================
+         ADMIN HEADER (Full-width 100% Fluid Bar)
+         ======================================================== -->
+    <header class="admin-header">
+        <div class="admin-logo-area">
+            <div class="admin-logo-badge">🎉</div>
+            <div class="admin-title-box">
+                <h1 class="admin-title">CRSDG NEW YEAR 2026</h1>
+                <p class="admin-subtitle">ระบบจัดการกิจกรรม</p>
+            </div>
+        </div>
+
+        <div class="admin-header-actions">
+            <!-- ย้ายปุ่มหน้าหลัก และหน้าเกมโชว์มาไว้ทางขวามือ -->
+            <a href="index.html" class="nav-back-link" title="กลับไปหน้าหลัก">
+                <svg class="admin-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="m15 18-6-6 6-6" />
+                </svg>
+                <span>หน้าหลัก</span>
+            </a>
+            <a href="game.html" class="nav-back-link" title="ไปหน้าเกมโชว์ 4 ต่อ 4">
+                <svg class="admin-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+                <span>หน้าเกมโชว์</span>
+            </a>
+            <a href="investment.html" class="nav-back-link" title="ไปหน้านักลงทุน AI (AI Investor Game)">
+                <svg class="admin-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                </svg>
+                <span>นักลงทุน AI</span>
+            </a>
+            <a href="showport.html" class="nav-back-link" title="ไปหน้าแดชบอร์ดสรุปพอร์ต (ShowPort)">
+                <svg class="admin-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+                <span>แสดงพอร์ต</span>
+            </a>
+            <a href="remote_crsdg.html" target="_blank" class="btn-pill-remote" title="เปิดหน้าต่างรีโมตแยก">
+                <svg class="admin-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+                    <path d="M12 18h.01" />
+                </svg>
+                <span>รีโมต</span>
+            </a>
+            <!-- ปุ่ม icon ขยายจอ / ย่อจอ (Fullscreen) -->
+            <button type="button" class="btn-fullscreen-toggle" id="fullscreenToggleBtn" title="ขยายเต็มจอ / ย่อจอ (F)"
+                aria-label="Toggle Fullscreen">
+                <svg class="admin-btn-icon" id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path
+                        d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+                <span id="fsLabelText">ขยายจอ</span>
+            </button>
+            <!-- ปุ่ม icon โหมดสว่าง / โหมดมืด (Default: โหมดมืด) -->
+            <button type="button" class="btn-theme-toggle" id="themeToggleBtn" title="สลับโหมดสว่าง / โหมดมืด"
+                aria-label="Toggle theme">
+                <span class="theme-icon-container">
+                    <span class="theme-icon theme-icon-dark" id="themeIconDark">🌙</span>
+                    <span class="theme-icon theme-icon-light" id="themeIconLight" style="display: none;">☀️</span>
+                </span>
+                <span class="theme-text" id="themeLabelText">โหมดมืด</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ========================================================
+         MAIN CONTAINER (100% Full-Width Screen)
+         ======================================================== -->
+    <main class="admin-container">
+        <!-- Overview Stat Cards (Compact High-Density Metrics) -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon icon-users">👥</div>
+                <div class="stat-content">
+                    <div class="stat-val" id="statParticipants">0</div>
+                    <div class="stat-label">สมาชิกทั้งหมด</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-teams">🛡️</div>
+                <div class="stat-content">
+                    <div class="stat-val" id="statAssignedTeams">0</div>
+                    <div class="stat-label">จัดกลุ่มแข่งขันแล้ว</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-prizes">🎁</div>
+                <div class="stat-content">
+                    <div class="stat-val" id="statPrizes">0</div>
+                    <div class="stat-label">จำนวนรางวัลทั้งหมด</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-winners">🏆</div>
+                <div class="stat-content">
+                    <div class="stat-val" id="statWinners">0</div>
+                    <div class="stat-label">แจกรางวัลแล้ว</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-remaining">✨</div>
+                <div class="stat-content">
+                    <div class="stat-val" id="statRemaining">0</div>
+                    <div class="stat-label">ผู้มีสิทธิ์ลุ้นที่เหลือ</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs Bar -->
+        <div class="admin-tabs">
+            <button type="button" class="admin-tab-btn active" data-tab="tab-participants">
+                👥 พนักงาน
+            </button>
+            <button type="button" class="admin-tab-btn" data-tab="tab-registration">
+                📝 ลงทะเบียน
+            </button>
+            <button type="button" class="admin-tab-btn" data-tab="tab-competition-teams" id="tabBtnCompTeams">
+                🛡️ ทีมแข่งขัน
+            </button>
+            <button type="button" class="admin-tab-btn" data-tab="tab-teams">
+                ⚔️ ทีมแข่งขัน 4 ต่อ 4
+            </button>
+            <button type="button" class="admin-tab-btn" data-tab="tab-quiz">
+                ❓ หมวดคำถาม
+            </button>
+            <button type="button" class="admin-tab-btn" data-tab="tab-vote">
+                🗳️ โหวตเกม
+            </button>
+            <button type="button" class="admin-tab-btn" data-tab="tab-prizes" id="tabBtnPrizes">
+                🎁 ของรางวัล <span class="tab-count-badge prize-badge" id="badgePrizesCount">19</span>
+            </button>
+            <button type="button" class="admin-tab-btn" data-tab="tab-winners" id="tabBtnWinners">
+                🏆 ผู้รับรางวัล <span class="tab-count-badge winner-badge" id="badgeWinnersCount">0</span>
+            </button>
+            <button type="button" class="admin-tab-btn" data-tab="tab-evaluations" id="tabBtnEvaluations">
+                ⭐ ประเมินผล
+            </button>
+        </div>
+
+        <!-- ========================================================
+             TAB 1: พนักงาน (Participants / Employee List - crsdg_member)
+             ======================================================== -->
+        <section class="admin-tab-pane active" id="tab-participants">
+            <!-- Single Add Employee Box (Toggleable) -->
+            <div class="single-add-box" id="singleAddBox" style="display: none;">
+                <div class="single-add-header">
+                    <h3 class="single-add-title">➕ เพิ่มพนักงานรายบุคคลลงตาราง crsdg_member</h3>
+                    <button type="button" class="btn-sm-text" id="btnCloseSingleAdd">✕ ปิดฟอร์ม</button>
+                </div>
+                <form id="addParticipantForm" class="single-add-form"
+                    style="display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;">
+                    <div class="avatar-upload-col"
+                        style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <input type="file" id="partPhotoInput" accept="image/*" style="display: none;">
+                        <div class="avatar-preview-box" id="avatarPreviewBox"
+                            style="width: 72px; height: 72px; border-radius: 50%; border: 2px dashed rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; background: rgba(255,255,255,0.05);"
+                            title="คลิกเพื่อเลือกรูป">
+                            <span id="avatarPlaceholder" style="font-size: 1.8rem;">👤</span>
+                            <img id="avatarPreviewImg" src="" alt="avatar"
+                                style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" class="btn-secondary btn-xs" id="btnChoosePhoto"
+                                style="font-size: 0.75rem; padding: 3px 8px;">เลือกรูป</button>
+                            <button type="button" class="btn-danger btn-xs" id="btnRemovePhoto"
+                                style="display: none; font-size: 0.75rem; padding: 3px 8px;">ลบ</button>
+                        </div>
+                    </div>
+                    <div class="fields-col"
+                        style="flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                        <div class="form-group">
+                            <label for="partId"
+                                style="font-size: 0.8rem; color: #cbd5e1; display: block; margin-bottom: 4px;">รหัสพนักงาน
+                                <span style="color: #ef4444;">*</span></label>
+                            <input type="text" id="partId" class="form-input" placeholder="เช่น 1001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="partName"
+                                style="font-size: 0.8rem; color: #cbd5e1; display: block; margin-bottom: 4px;">ชื่อ-นามสกุล
+                                <span style="color: #ef4444;">*</span></label>
+                            <input type="text" id="partName" class="form-input" placeholder="เช่น สมชาย ใจดี" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="partDept"
+                                style="font-size: 0.8rem; color: #cbd5e1; display: block; margin-bottom: 4px;">กลุ่ม
+                                (Group)</label>
+                            <input type="text" id="partDept" class="form-input"
+                                placeholder="เช่น Team A หรือ Management">
+                        </div>
+                    </div>
+                    <div class="form-group form-actions-cell"
+                        style="display: flex; align-items: flex-end; padding-top: 22px;">
+                        <button type="submit" class="btn-primary btn-save-participant" style="height: 38px;">
+                            💾 บันทึกลงตาราง crsdg_member
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Top Action Bar -->
+            <div class="table-top-action-bar" style="margin-bottom: 16px;">
+                <div class="table-title-group">
+                    <h2 class="admin-card-title">
+                        ข้อมูลรายชื่อผู้ร่วมงาน <code class="table-name-badge">crsdg_member</code>
+                        (<span id="tableCountBadge">0</span> ท่าน)
+                    </h2>
+                </div>
+                <div class="table-primary-actions">
+                    <!-- ปุ่ม Upload Excel -> แสดง Lightbox Modal -->
+                    <button type="button" class="btn-primary btn-upload-excel" id="btnOpenExcelModal"
+                        title="อัปโหลดข้อมูลพนักงานจากไฟล์ Excel">
+                        <svg class="btn-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        <span>อัปโหลด Excel</span>
+                    </button>
+
+                    <!-- ปุ่มเพิ่มพนักงานทีละคน -->
+                    <button type="button" class="btn-secondary btn-add-employee" id="btnToggleSingleAdd"
+                        title="เพิ่มข้อมูลพนักงานใหม่">
+                        <svg class="btn-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        <span>+ เพิ่มพนักงาน</span>
+                    </button>
+
+                    <!-- ปุ่ม Reset การลงทะเบียน (แสดง Lightbox ยืนยัน) -->
+                    <button type="button" class="btn-warning btn-reset-reg-trigger" id="btnOpenResetRegModal"
+                        title="รีเซ็ตสถานะการลงทะเบียนของพนักงานทั้งหมด">
+                        <svg class="btn-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                            <path d="M3 3v5h5" />
+                        </svg>
+                        <span>Reset ลงทะเบียน</span>
+                    </button>
+
+                    <!-- ปุ่มลบพนักงาน (แสดง Lightbox ยืนยันการลบ) -->
+                    <button type="button" class="btn-danger btn-delete-all-trigger" id="btnOpenDeleteModal"
+                        title="ลบข้อมูลพนักงานทั้งหมด">
+                        <svg class="btn-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                        <span>ลบพนักงาน</span>
+                    </button>
+
+                    <!-- ปุ่มส่งออก Excel -->
+                    <button type="button" class="btn-secondary btn-export-excel" id="btnExportExcel"
+                        title="ส่งออกข้อมูลทั้งหมดเป็นไฟล์ Excel .xlsx">
+                        <svg class="btn-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        <span>ส่งออก Excel</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Secondary Filter Bar (Search & Dropdowns) -->
+            <div class="table-filter-bar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchParticipant" class="form-input search-input"
+                        placeholder="ค้นหา EmployeeID, EmpName, Group...">
+                    <button type="button" class="btn-search-clear" id="btnClearSearchParticipant"
+                        title="ล้างข้อความค้นหา" style="display: none;">✕</button>
+                </div>
+
+                <div class="filter-dropdowns-group">
+                    <select id="filterTeamSelect" class="form-select filter-select">
+                        <option value="all">กลุ่ม Group: ทั้งหมด</option>
+                    </select>
+
+                    <select id="filterStatusSelect" class="form-select filter-select">
+                        <option value="all">สถานะรางวัล: ทั้งหมด</option>
+                        <option value="eligible">มีสิทธิ์ลุ้นรางวัล</option>
+                        <option value="winner">ได้รับรางวัลแล้ว</option>
+                    </select>
+
+                    <button type="button" class="btn-secondary btn-sm" id="btnClearParticipantFilter"
+                        title="ล้างการค้นหาและตัวกรองทั้งหมด">
+                        🔄 ล้างตัวกรอง
+                    </button>
+                </div>
+            </div>
+
+            <!-- Data Table with optimized proportions -->
+            <div class="table-responsive">
+                <table class="admin-table crsdg-member-table" id="participantsTable">
+                    <thead>
+                        <tr>
+                            <th class="col-th-num sortable-th" data-sort="num" title="คลิกเพื่อเรียงลำดับตามแถว">
+                                <div class="th-content"><span>#</span><span class="sort-icon">⇅</span></div>
+                            </th>
+                            <th class="col-th-photo">รูป</th>
+                            <th class="col-th-empid sortable-th" data-sort="id"
+                                title="คลิกเพื่อเรียงลำดับตามรหัสพนักงาน">
+                                <div class="th-content"><span>รหัสพนักงาน</span><span class="sort-icon">⇅</span></div>
+                            </th>
+                            <th class="col-th-name sortable-th" data-sort="name"
+                                title="คลิกเพื่อเรียงลำดับตามชื่อ-นามสกุล">
+                                <div class="th-content"><span>ชื่อ-นามสกุล</span><span class="sort-icon">⇅</span></div>
+                            </th>
+                            <th class="col-th-dept sortable-th" data-sort="group"
+                                title="คลิกเพื่อเรียงลำดับตามกลุ่มสังกัด">
+                                <div class="th-content"><span>กลุ่ม (Group)</span><span class="sort-icon">⇅</span></div>
+                            </th>
+                            <th class="col-th-team sortable-th" data-sort="team" title="คลิกเพื่อเรียงลำดับตามทีมแข่ง">
+                                <div class="th-content"><span>ทีมแข่ง</span><span class="sort-icon">⇅</span></div>
+                            </th>
+                            <th class="col-th-regtime sortable-th" data-sort="regTime"
+                                title="คลิกเพื่อเรียงลำดับตามเวลาลงทะเบียน">
+                                <div class="th-content"><span>เวลาลงทะเบียน</span><span class="sort-icon">⇅</span></div>
+                            </th>
+                            <th class="col-th-chosen sortable-th" data-sort="chosen"
+                                title="คลิกเพื่อเรียงลำดับตามทีมที่เลือกโหวต">
+                                <div class="th-content"><span>โหวตทีม</span><span class="sort-icon">⇅</span></div>
+                            </th>
+                            <th class="col-th-status sortable-th" data-sort="prize"
+                                title="คลิกเพื่อเรียงลำดับตามผลสุ่มรางวัล">
+                                <div class="th-content"><span>ผลสุ่มรางวัล</span><span class="sort-icon">⇅</span>
+                                </div>
+                            </th>
+                            <th class="col-th-actions">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="participantsTableBody">
+                        <!-- Dynamic Content Rendered by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             TAB 0: ลงทะเบียน (Registration Dashboard & Group Stacked Bar Chart)
+             ======================================================== -->
+        <section class="admin-tab-pane" id="tab-registration">
+            <!-- Top Action & Stat Header -->
+            <div class="table-top-action-bar" style="margin-bottom: 16px;">
+                <div class="table-title-group">
+                    <h2 class="admin-card-title">
+                        แดชบอร์ดการลงทะเบียนผู้ร่วมงาน <code class="table-name-badge">crsdg_member</code>
+                    </h2>
+                    <p class="admin-card-desc">สถิติและสถานะการลงทะเบียนเข้าร่วมกิจกรรมแยกตามกลุ่ม</p>
+                </div>
+                <div class="table-primary-actions">
+                    <button type="button" class="btn-primary btn-qr-trigger" id="btnOpenRegQrModal"
+                        title="เปิด QR Code สำหรับให้พนักงานสแกนลงทะเบียน">
+                        <svg class="btn-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span>QR Code ลงทะเบียน</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Registration Metrics Grid -->
+            <div class="reg-metrics-grid">
+                <div class="reg-metric-card">
+                    <div class="reg-metric-icon">👥</div>
+                    <div class="reg-metric-body">
+                        <div class="reg-metric-val" id="regTotalCount">0</div>
+                        <div class="reg-metric-lbl">สมาชิกทั้งหมด</div>
+                    </div>
+                </div>
+                <div class="reg-metric-card card-highlight-success">
+                    <div class="reg-metric-icon">✅</div>
+                    <div class="reg-metric-body">
+                        <div class="reg-metric-val" id="regSuccessCount">0</div>
+                        <div class="reg-metric-lbl">
+                            ลงทะเบียนสำเร็จแล้ว <span id="regSuccessPct"
+                                style="color: #34d399; font-weight: 600;">(0%)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="reg-metric-card card-highlight-pending">
+                    <div class="reg-metric-icon">⏳</div>
+                    <div class="reg-metric-body">
+                        <div class="reg-metric-val" id="regPendingCount">0</div>
+                        <div class="reg-metric-lbl">
+                            ยังไม่ได้ลงทะเบียน <span id="regPendingPct"
+                                style="color: #fbbf24; font-weight: 600;">(0%)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="reg-metric-card">
+                    <div class="reg-metric-icon">🏢</div>
+                    <div class="reg-metric-body">
+                        <div class="reg-metric-val" id="regGroupsCount">0</div>
+                        <div class="reg-metric-lbl">จำนวนกลุ่มทั้งหมด</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registration Charts: 2 Columns Row (60% / 40%) -->
+            <div class="reg-charts-2col-grid">
+                <!-- Column 1 (Left 60%): Stacked Bar Chart Card by Group -->
+                <div class="admin-card chart-card-box">
+                    <div class="chart-card-header">
+                        <div class="chart-title-area">
+                            <h3 class="admin-card-title">📊 กราฟแท่งสัดส่วนผู้ลงทะเบียนแยกตามกลุ่ม</h3>
+                            <p class="admin-card-desc">จำนวนผู้ลงทะเบียนแล้ว และยังไม่ลงทะเบียน (รวมในแท่งเดียวกัน)</p>
+                        </div>
+                        <div class="chart-legend-row">
+                            <span class="legend-item"><span class="legend-dot dot-reg"></span> ลงทะเบียนแล้ว</span>
+                            <span class="legend-item"><span class="legend-dot dot-unreg"></span> ยังไม่ลงทะเบียน</span>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Vertical Stacked Bar Chart Container -->
+                    <div class="stacked-bar-chart-container" id="regStackedBarChart">
+                        <!-- Rendered dynamically by JS -->
+                    </div>
+                </div>
+
+                <!-- Column 2 (Right 40%): 24-Hour Registration Timeline Line Chart -->
+                <div class="admin-card chart-card-box">
+                    <div class="chart-card-header">
+                        <div class="chart-title-area">
+                            <h3 class="admin-card-title">📈 กราฟเส้นช่วงเวลาลงทะเบียน (24 ชั่วโมง)</h3>
+                            <p class="admin-card-desc">สถิติจำนวนผู้ลงทะเบียนในแต่ละช่วงชั่วโมงของวัน (00:00 - 23:00 น.)
+                            </p>
+                        </div>
+                        <div class="chart-peak-badge" id="regPeakHourBadge">
+                            <span class="peak-icon">⚡</span> <span id="regPeakHourText">ช่วงเวลาสูงสุด: -</span>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic SVG 24-Hour Line Chart Container -->
+                    <div class="line-chart-container" id="reg24hLineChartContainer">
+                        <!-- Rendered dynamically by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group Breakdown Summary Table -->
+            <div class="admin-card" style="margin-bottom: 24px;">
+                <div class="admin-card-header">
+                    <h3 class="admin-card-title">📋 สรุปยอดลงทะเบียนรายกลุ่ม</h3>
+                    <div class="table-count-tag" id="regTableCountTag">ทั้งหมด 0 กลุ่ม</div>
+                </div>
+                <div class="table-responsive-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">กลุ่ม (Group)</th>
+                                <th style="width: 15%; text-align: center;">สมาชิกทั้งหมด</th>
+                                <th style="width: 18%; text-align: center;">ลงทะเบียนแล้ว ✅</th>
+                                <th style="width: 18%; text-align: center;">ยังไม่ลงทะเบียน ⏳</th>
+                                <th style="width: 24%;">ความคืบหน้าการลงทะเบียน</th>
+                            </tr>
+                        </thead>
+                        <tbody id="regGroupSummaryTableBody">
+                            <!-- Rendered dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             TAB 1.5: ทีมแข่งขัน (Competition Teams & Players - crsdg_player)
+             ======================================================== -->
+        <section class="admin-tab-pane" id="tab-competition-teams">
+            <!-- Top Action Bar & Stat Header -->
+            <div class="table-top-action-bar" style="margin-bottom: 16px;">
+                <div class="table-title-group">
+                    <h2 class="admin-card-title">
+                        โหวตทีมแข่งขัน / ให้คะแนน <code class="table-name-badge">crsdg_player</code>
+                    </h2>
+                </div>
+                <div class="table-primary-actions comp-stat-pill-row">
+                    <div class="comp-stat-pill">
+                        <span class="pill-label">👥 สมาชิกทั้งหมด:</span>
+                        <span class="pill-value" id="playerTotalCount">0</span>
+                        <span class="pill-unit">คน</span>
+                    </div>
+                    <div class="comp-stat-pill">
+                        <span class="pill-label">👑 หัวหน้าทีม:</span>
+                        <span class="pill-value" id="playerCaptainCount">0</span>
+                        <span class="pill-unit">คน</span>
+                    </div>
+                    <div class="comp-stat-pill highlight-gold">
+                        <span class="pill-label">💰 เงินโหวตรวม:</span>
+                        <span class="pill-value" id="playerTotalVoteMoney">0 บาท</span>
+                    </div>
+                    <div class="comp-stat-pill highlight-blue">
+                        <span class="pill-label">🎟️ ผู้ให้เงินรวม:</span>
+                        <span class="pill-value" id="playerTotalVoterCount">0</span>
+                        <span class="pill-unit">คน</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two Columns Split Layout (กว้างแถวละ 50%) -->
+            <div class="comp-teams-split-layout">
+
+                <!-- ========================================================
+                     LEFT COLUMN (50%): ตารางข้อมูลทีมที่เข้าแข่งขัน crsdg_player
+                     ======================================================== -->
+                <div class="comp-teams-left-panel">
+                    <div class="admin-card comp-panel-card">
+                        <div class="admin-card-header">
+                            <div>
+                                <h3 class="admin-card-title">
+                                    📋 ตารางข้อมูลทีมที่เข้าแข่งขัน <code class="table-name-badge">crsdg_player</code>
+                                </h3>
+                                <p class="admin-card-desc">คลิกเลือกแถวเพื่อแสดงรายละเอียดและแก้ไข</p>
+                            </div>
+                            <div class="card-header-actions">
+                                <span class="badge-count" id="playerTableBadge">พบ 0 รายการ</span>
+                                <button type="button" class="btn-secondary btn-sm" id="btnExportPlayersExcel"
+                                    title="ส่งออกตาราง crsdg_player เป็นไฟล์ Excel">
+                                    📤 ส่งออก Excel
+                                </button>
+                                <button type="button" class="btn-danger btn-sm" id="btnOpenResetPlayerVotesModal"
+                                    title="รีเซ็ตเงินโหวตและผู้ให้เงินของทุกทีมให้เป็น 0">
+                                    🔄 Reset เงินโหวต
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Filter & Search Toolbar -->
+                        <div class="comp-filter-row">
+                            <div class="search-input-wrapper" style="flex: 1;">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" id="searchPlayerInput" class="form-input search-input"
+                                    placeholder="ค้นหาชื่อทีม หรือรายชื่อสมาชิก...">
+                            </div>
+                        </div>
+
+                        <!-- Budget Config & Voting Control Bar -->
+                        <div class="comp-budget-toolbar"
+                            style="display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.65); padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.3); margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <label for="adminCompVoteBudgetInput"
+                                    style="font-size: 0.82rem; font-weight: 600; color: #93c5fd;">
+                                    💰 งบลงทุน:
+                                </label>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <input type="number" id="adminCompVoteBudgetInput" class="form-input" min="10000"
+                                        step="50000" value="1000000"
+                                        style="width: 145px; padding: 5px 10px; font-weight: 700; text-align: right; color: #34d399; font-size: 0.9rem;">
+                                    <span style="font-size: 0.82rem; color: #cbd5e1;">บาท</span>
+                                    <button type="button" class="btn-primary btn-sm" id="btnSaveCompVoteBudget"
+                                        title="บันทึกจำนวนเงินงบประมาณเริ่มต้น">
+                                        💾 บันทึกงบ
+                                    </button>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <button type="button" class="btn-invest-master-toggle is-open"
+                                    id="btnToggleCompVoteOpen" title="คลิกเพื่อสลับเปิด/ปิดการลงทุน">
+                                    🟢 เปิดการลงทุน
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Table Wrapper -->
+                        <div class="table-wrapper comp-table-wrapper">
+                            <table class="admin-table comp-table" id="compPlayersTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 36px; text-align: center;">#</th>
+                                        <th style="width: 46px; text-align: center;">รูปทีม</th>
+                                        <th>ชื่อทีม</th>
+                                        <th style="text-align: center; width: 62px;">สมาชิก</th>
+                                        <th style="text-align: right; width: 85px;">เงินโหวต</th>
+                                        <th style="text-align: center; width: 65px;">ผู้ให้เงิน</th>
+                                        <th style="text-align: center; width: 75px;">สถานะ</th>
+                                        <th style="text-align: center; width: 55px;">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="playerTableBody">
+                                    <!-- Rendered dynamically by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Table Summary Footer -->
+                        <div class="comp-table-footer" id="compTableFooter">
+                            <span>แสดง: <strong id="compFooterCount">0</strong> ทีม</span>
+                            <span>สมาชิกทั้งหมด: <strong id="compFooterMembers" style="color: #38bdf8;">0</strong>
+                                คน</span>
+                            <span>เงินโหวตรวม: <strong id="compFooterMoney" style="color: #34d399;">0
+                                    บาท</strong></span>
+                            <span>ผู้ให้เงินรวม: <strong id="compFooterVoters" style="color: #60a5fa;">0</strong>
+                                คน</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================================
+                     RIGHT COLUMN (50%): รายละเอียดของทีมที่เลือกจากฝั่งซ้ายมือ & แก้ไขข้อมูล
+                     ======================================================== -->
+                <div class="comp-teams-right-panel">
+                    <div class="admin-card comp-panel-card comp-edit-card">
+                        <div class="admin-card-header">
+                            <div>
+                                <h3 class="admin-card-title">
+                                    📝 รายละเอียดทีมที่เข้าแข่งขัน & สมาชิก
+                                </h3>
+                                <p class="admin-card-desc" id="playerFormModeDesc">
+                                    คลิกแถวทางฝั่งซ้ายเพื่อแก้ไข หรือกดปุ่มด้านขวามือบนเพื่อเพิ่มรายการใหม่
+                                </p>
+                            </div>
+                            <!-- ที่ขวามือบนให้มีปุ่มเพิ่มรายการใหม่ด้วย -->
+                            <div class="card-header-actions">
+                                <button type="button" class="btn-primary btn-add-new-player" id="btnAddNewPlayer"
+                                    title="คลิกเพื่อล้างฟอร์มและเตรียมเพิ่มทีมแข่งขันใหม่">
+                                    <svg class="btn-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                    <span>+ เพิ่มรายการใหม่</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Empty State Box (กล่องว่างรอการคลิกแก้ไขที่ด้านซ้าย) -->
+                        <div class="comp-empty-state-box" id="playerEmptyPlaceholderBox" style="display: flex;">
+                            <div class="comp-empty-placeholder-icon">👈</div>
+                            <h4 class="comp-empty-placeholder-title">กรุณาคลิกเลือกทีมจากตารางด้านซ้าย</h4>
+                            <p class="comp-empty-placeholder-desc">
+                                เลือกทีมแข่งขันที่คุณต้องการดูหรือแก้ไขข้อมูลจากรายการตารางฝั่งซ้ายมือ
+                                หรือกดปุ่มด้านล่างเพื่อเพิ่มทีมใหม่
+                            </p>
+                            <button type="button" class="btn-primary btn-sm" id="btnEmptyAddNewPlayer">
+                                ➕ เพิ่มทีมแข่งขันใหม่
+                            </button>
+                        </div>
+
+                        <!-- Form Container (ซ่อนอยู่เมื่อยังไม่เลือกทีม) -->
+                        <div id="playerFormContainer" style="display: none;">
+                            <!-- Current Mode Indicator Pill -->
+                            <div class="player-mode-indicator-bar" id="playerModeIndicatorBar">
+                                <span class="mode-pill" id="playerModePill">✏️ กำลังแก้ไขข้อมูล</span>
+                                <span class="mode-selected-name" id="playerModeSelectedName">-</span>
+                            </div>
+
+                            <!-- Player / Team Edit Form -->
+                            <form id="playerDetailForm" class="comp-player-form" autocomplete="off">
+                                <input type="hidden" id="playerEditId" value="">
+
+                                <!-- Row 1: ลำดับที่ & ช่องกรอกชื่อทีมเอง (ไม่ต้องเชื่อมกับตารางสมาชิกทีม) -->
+                                <div class="form-row-2col">
+                                    <div class="form-group">
+                                        <label for="playerOrderNo">ลำดับที่ <span class="required-star">*</span></label>
+                                        <input type="number" id="playerOrderNo" class="form-input" min="1"
+                                            placeholder="1" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="playerTeamName">
+                                            ชื่อทีมแข่งขัน <span class="required-star">*</span>
+                                            <span class="label-subtext">(กรอกชื่อทีมเองได้อิสระ)</span>
+                                        </label>
+                                        <input type="text" id="playerTeamName" class="form-input"
+                                            placeholder="พิมพ์ชื่อทีมแข่งขัน เช่น IT Dragons..." required>
+                                    </div>
+                                </div>
+
+                                <!-- Row 2: ตัวเลขเงินโหวต & จำนวนผู้ให้เงิน & สถานะการรับโหวต -->
+                                <div class="form-row-2col">
+                                    <div class="form-group">
+                                        <label for="playerVoteAmount">
+                                            💰 จำนวนเงินที่ได้จากผู้โหวต (บาท)
+                                        </label>
+                                        <input type="number" id="playerVoteAmount" class="form-input" min="0" step="50"
+                                            placeholder="0">
+                                        <div class="field-preview-badge" id="previewVoteAmount">0.00 บาท</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="playerVoterCount">
+                                            🎟️ จำนวนผู้ให้เงิน (คน)
+                                        </label>
+                                        <input type="number" id="playerVoterCount" class="form-input" min="0" step="1"
+                                            placeholder="0">
+                                        <div class="field-preview-badge" id="previewVoterCount">0 คน</div>
+                                    </div>
+                                    <div class="form-group" style="grid-column: span 2;">
+                                        <label for="playerVoteStatus">
+                                            ⚡ สถานะการรับโหวต / ลงทุนของทีมนี้
+                                        </label>
+                                        <select id="playerVoteStatus" class="form-input"
+                                            style="padding: 8px 12px; font-weight: 700;">
+                                            <option value="open">🟢 เปิดรับการโหวต/ลงทุน (Open)</option>
+                                            <option value="closed">🔒 ปิดรับการโหวต/ลงทุนทีมนี้ (Locked/Closed)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Row 3: รูปภาพทีมรวม 1 ภาพ (ครอปภาพได้ ซูมย่อ/ขยายได้ ลดขนาดภาพไม่เกิน 200KB) -->
+                                <div class="comp-team-photo-card">
+                                    <div class="comp-team-photo-header">
+                                        <div>
+                                            <label class="form-label" style="margin-bottom: 2px;">
+                                                🖼️ รูปภาพทีมแข่งขัน
+                                            </label>
+                                            <p class="admin-card-desc"
+                                                style="font-size: 0.72rem; margin: 0; color: #94a3b8;">
+                                                อัปโหลดรูปภาพทีมแข่งขัน
+                                            </p>
+                                        </div>
+                                        <div class="comp-team-photo-btns">
+                                            <input type="file" id="compTeamPhotoFileInput" accept="image/*"
+                                                style="display: none;">
+                                            <button type="button" class="btn-secondary btn-sm" id="btnUploadTeamPhoto">
+                                                📁 เลือกรูปภาพ
+                                            </button>
+                                            <button type="button" class="btn-danger btn-sm" id="btnRemoveTeamPhoto"
+                                                style="display: none;">
+                                                🗑️ นำรูปออก
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Interactive Cropper Canvas Container (400px x 400px) -->
+                                    <div class="team-crop-canvas-wrapper" id="teamCropCanvasWrapper">
+                                        <canvas id="teamCropCanvas" width="400" height="400"></canvas>
+                                        <div class="team-crop-guide-overlay" id="teamCropGuideOverlay">
+                                            <div class="team-crop-guide-box"></div>
+                                        </div>
+                                        <div class="team-crop-empty-hint" id="teamCropEmptyHint"
+                                            onclick="document.getElementById('compTeamPhotoFileInput').click()">
+                                            <span
+                                                style="font-size: 2.2rem; display: block; margin-bottom: 6px;">🖼️</span>
+                                            <span
+                                                style="font-size: 0.86rem; font-weight: 600; color: #60a5fa;">คลิกเพื่ออัปโหลดรูปภาพทีมแข่งขัน</span>
+                                            <span
+                                                style="font-size: 0.72rem; color: #94a3b8; display: block; margin-top: 4px;">สัดส่วน
+                                                400px × 400px (บีบอัดอัตโนมัติไม่เกิน 200KB)</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Cropper Controls (Zoom Slider, Rotate, Reset) -->
+                                    <div class="team-crop-controls-bar" id="teamCropControlsBar" style="display: none;">
+                                        <div class="team-crop-zoom-group">
+                                            <button type="button" class="btn-crop-tool" id="btnTeamZoomOut"
+                                                title="ย่อขนาด (-)">🔍-</button>
+                                            <input type="range" id="teamZoomRangeInput" min="0.30" max="3.00"
+                                                step="0.05" value="1.00" class="crop-zoom-slider">
+                                            <button type="button" class="btn-crop-tool" id="btnTeamZoomIn"
+                                                title="ขยายขนาด (+)">🔍+</button>
+                                            <span class="crop-zoom-badge" id="teamZoomLevelText">100%</span>
+                                        </div>
+                                        <div class="team-crop-action-group">
+                                            <button type="button" class="btn-crop-tool btn-crop-rotate"
+                                                id="btnTeamRotateCrop" title="หมุนภาพ 90 องศา">
+                                                🔄 หมุน 90°
+                                            </button>
+                                            <button type="button" class="btn-crop-tool btn-crop-reset"
+                                                id="btnTeamResetCrop" title="รีเซ็ตตำแหน่งและขนาด">
+                                                ↺ รีเซ็ต
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="team-crop-helper-text">
+                                        💡 ลากเมาส์/สัมผัสเพื่อเลื่อนตำแหน่ง
+                                    </div>
+
+                                    <input type="hidden" id="compTeamPhotoBase64" value="">
+                                </div>
+
+                                <!-- Row 4: รายละเอียดโครงการ (textarea) -->
+                                <div class="form-group" style="margin-top: 14px; margin-bottom: 14px;">
+                                    <label for="playerProjectDesc">
+                                        📝 รายละเอียดโครงการ <span
+                                            class="label-subtext">(อธิบายรายละเอียดผลงานหรือโครงการของทีม)</span>
+                                    </label>
+                                    <textarea id="playerProjectDesc" class="form-input" rows="4"
+                                        placeholder="กรอกรายละเอียดโครงการ เช่น จุดเด่นของนวัตกรรม AI, วัตถุประสงค์ หรือเป้าหมายของทีม..."
+                                        style="resize: vertical; min-height: 90px;"></textarea>
+                                </div>
+
+                                <!-- ========================================================
+                                     สมาชิกทีม (TEAM MEMBERS ROSTER SECTION)
+                                     ======================================================== -->
+                                <div class="comp-members-section-box">
+                                    <div class="comp-members-section-title">
+                                        <span>👥 สมาชิกในทีม (<span id="teamMembersCountBadge">0</span> คน)</span>
+                                    </div>
+
+                                    <!-- 1. เหนือแถวสมาชิก ให้แสดงรูปสมาชิกทีม -->
+                                    <div class="team-members-avatars-row" id="teamMembersAvatarsRow"
+                                        title="รูปสมาชิกในทีม">
+                                        <!-- Rendered dynamically: member avatars with crown for captain -->
+                                    </div>
+
+                                    <!-- 2. ใต้รูปแสดง การเพิ่มสมาชิก (กรอกเฉพาะรหัสพนักงาน ดึงชื่อ-นามสกุล/สังกัดอัตโนมัติ กำหนดหัวหน้าทีมได้) -->
+                                    <div class="team-add-member-panel">
+                                        <div
+                                            style="font-size: 0.78rem; font-weight: 600; color: #00e5ff; margin-bottom: 4px;">
+                                            ➕ เพิ่มสมาชิกเข้าทีม
+                                        </div>
+                                        <div class="add-member-input-row">
+                                            <div style="flex: 1; min-width: 160px;">
+                                                <input type="text" id="compNewMemberEmpId" class="form-input"
+                                                    list="playerMemberDatalist" placeholder="กรอกรหัสพนักงาน"
+                                                    autocomplete="off">
+                                            </div>
+                                            <label class="add-member-captain-label" title="กำหนดเป็นหัวหน้าทีม">
+                                                <input type="checkbox" id="compNewMemberIsCaptain">
+                                                <span>👑 หัวหน้าทีม</span>
+                                            </label>
+                                            <button type="button" class="btn-primary btn-sm btn-add-member-btn"
+                                                id="btnAddMemberToTeam">
+                                                ➕ เพิ่มสมาชิก
+                                            </button>
+                                        </div>
+                                        <datalist id="playerMemberDatalist">
+                                            <!-- Populated dynamically with crsdg_member -->
+                                        </datalist>
+                                        <!-- Real-time feedback for member lookup -->
+                                        <div id="addMemberLookupHint" class="add-member-preview-box">
+                                            💡 กรอกรหัสพนักงาน ระบบจะดึงข้อมูลมาแสดงอัตโนมัติ
+                                        </div>
+                                    </div>
+
+                                    <!-- 3. แถวต่อไปแสดงรายชื่อสมาชิก สามารถลบได้ -->
+                                    <div class="table-wrapper comp-inner-roster-wrapper">
+                                        <table class="admin-table comp-inner-roster-table">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 42px; text-align: center;">รูป</th>
+                                                    <th>รหัส</th>
+                                                    <th>ชื่อ-นามสกุล</th>
+                                                    <th>สังกัดเดิม</th>
+                                                    <th style="text-align: center; width: 85px;">หัวหน้าทีม</th>
+                                                    <th style="text-align: center; width: 45px;">ลบ</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="teamMembersTableBody">
+                                                <!-- List of team members with delete button [🗑️] -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Form Action Buttons -->
+                                <div class="comp-form-actions">
+                                    <button type="submit" class="btn-primary btn-save-player" id="btnSavePlayer">
+                                        💾 บันทึกข้อมูลทีม
+                                    </button>
+                                    <button type="button" class="btn-danger btn-delete-player" id="btnDeletePlayer"
+                                        style="display: none;">
+                                        🗑️ ลบทีมนี้
+                                    </button>
+                                    <button type="button" class="btn-secondary btn-reset-player" id="btnResetPlayer">
+                                        ↺ ล้างฟอร์ม
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================================
+             TAB 2: สมาชิกของแต่ละทีม (Team Roster & Assignment)
+             ======================================================== -->
+        <section class="admin-tab-pane" id="tab-teams">
+            <!-- Top Action Bar for Teams (crsdg_team & crsdg_nameteam) -->
+            <div class="table-top-action-bar" style="margin-bottom: 16px;">
+                <div class="table-title-group">
+                    <h2 class="admin-card-title">
+                        ทีมแข่งขันเกม 4 ต่อ 4 <code class="table-name-badge">crsdg_team</code>
+                        & รายชื่อทีม <code class="table-name-badge">crsdg_nameteam</code>
+                        (<span id="statTeamsCountBadge">6</span> ทีม)
+                    </h2>
+                </div>
+                <div class="table-primary-actions"
+                    style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <!-- Game Vote Open/Close Control for 4v4 -->
+                    <div
+                        style="display: flex; align-items: center; gap: 8px; background: rgba(15, 23, 42, 0.6); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <span style="font-size: 0.8rem; color: #93c5fd; font-weight: 600;">🗳️ โหวตทายผล 4 ต่อ 4:</span>
+                        <span class="vote-status-badge" id="teamsTabGameVoteBadge"
+                            style="font-size: 0.75rem; padding: 2px 8px;">🟢 เปิดรับโหวต</span>
+                        <button type="button" class="btn-sm btn-danger" id="btnToggleGameVoteTeamsTab"
+                            style="font-size: 0.75rem; padding: 3px 8px; font-weight: 600;">
+                            🔒 ปิดรับโหวต
+                        </button>
+                    </div>
+
+                    <button type="button" class="btn-primary btn-add-team-trigger" id="btnOpenAddTeamModal"
+                        title="เพิ่มทีมแข่งขันใหม่ลงตาราง crsdg_nameteam">
+                        <svg class="btn-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>+ เพิ่มทีมแข่งขันใหม่</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Datalist for Employee ID Autocomplete in Team Cards -->
+            <datalist id="participantsDatalist">
+                <!-- Populated dynamically with all employees -->
+            </datalist>
+
+
+
+            <!-- Teams 6 Boards Grid (Responsive 2x3 or 3x2) -->
+            <div class="teams-roster-grid" id="teamsRosterGrid">
+                <!-- Rendered dynamically by JS for each of the 6 teams -->
+            </div>
+        </section>
+
+
+
+        <!-- ========================================================
+             TAB 1.5: ทีมแข่งขัน (Competition Teams & Players - crsdg_player)
+             ======================================================== -->
+
+        <!-- ========================================================
+             TAB 2.5: เกมคำถาม (Quiz Game - crsdg_quiz)
+             ======================================================== -->
+        <section class="admin-tab-pane" id="tab-quiz">
+            <div class="table-top-action-bar" style="margin-bottom: 16px;">
+                <div class="table-title-group">
+                    <h2 class="admin-card-title">
+                        ชุดข้อคำถามเกมโชว์ <code class="table-name-badge">crsdg_quiz</code>
+                        (<span id="statQuizCountBadge">0</span> ข้อ)
+                    </h2>
+                    <p class="admin-card-desc"
+                        style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">
+                        จัดการหัวข้อคำถาม ตัวเลือกคำตอบ และกำหนดคะแนนในแต่ละข้อสำหรับการแข่งขันเกมโชว์
+                    </p>
+                </div>
+                <div class="table-primary-actions">
+                    <button type="button" class="btn-primary" id="btnOpenAddQuizModal"
+                        title="เพิ่มข้อคำถามใหม่ลงตาราง crsdg_quiz">
+                        <svg class="btn-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>+ เพิ่มข้อคำถามใหม่</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quiz Questions Grid -->
+            <div class="quiz-questions-grid" id="quizQuestionsGrid">
+                <!-- Dynamic quiz cards rendered by JS -->
+            </div>
+        </section>
+
+        <!-- ========================================================
+             TAB 0.5: โหวตทีมชนะ (Vote Prediction Dashboard - crsdg_vote)
+             ======================================================== -->
+        <section class="admin-tab-pane" id="tab-vote">
+            <!-- Top Control Bar (เปิด/ปิดการโหวต) -->
+            <div class="table-top-action-bar" style="margin-bottom: 16px;">
+                <div class="table-title-group">
+                    <h2 class="admin-card-title">
+                        ระบบโหวตทายผลทีมชนะ <code class="table-name-badge">crsdg_vote</code>
+                    </h2>
+                    <p class="admin-card-desc">ควบคุมการเปิด/ปิดโหวต และดูสถิติการทายผลทีมที่จะชนะ</p>
+                </div>
+                <div class="table-primary-actions"
+                    style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                    <!-- Vote Budget Setting Control -->
+                    <div
+                        style="display: flex; align-items: center; gap: 6px; background: rgba(15, 23, 42, 0.6); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <span style="font-size: 0.8rem; color: #93c5fd; font-weight: 600;">💰 งบลงทุน AI ต่อคน:</span>
+                        <input type="number" id="tabVoteBudgetInput" class="form-input" min="10000" step="50000"
+                            value="1000000"
+                            style="width: 125px; padding: 4px 8px; font-weight: 700; text-align: right; color: #34d399; font-size: 0.85rem;">
+                        <span style="font-size: 0.78rem; color: #cbd5e1;">บาท</span>
+                        <button type="button" class="btn-primary btn-sm" id="btnSaveTabVoteBudget"
+                            style="padding: 4px 10px; font-size: 0.78rem;">บันทึก</button>
+                    </div>
+
+                    <!-- Vote Open/Close Toggle Control -->
+                    <div class="vote-toggle-control-box">
+                        <span class="vote-status-badge" id="voteStatusBadge">🟢 เปิดรับโหวตอยู่</span>
+                        <label class="switch-toggle" title="คลิกเพื่อเปิดหรือปิดระบบรับโหวต">
+                            <input type="checkbox" id="voteToggleCheckbox" checked>
+                            <span class="slider-round"></span>
+                        </label>
+                    </div>
+
+                    <!-- ปุ่มสุ่มรางวัลทีมชนะโหวต -->
+                    <button type="button" class="btn-primary btn-vote-draw-trigger" id="btnOpenVoteDrawModal"
+                        title="เปิดระบบสุ่มรางวัลสำหรับทีมที่ชนะโหวต (Lightbox กว้าง 90%)"
+                        style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); border: none; font-weight: 700; padding: 6px 16px; border-radius: 8px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: #ffffff; font-size: 0.88rem;">
+                        <span>🎲</span>
+                        <span>สุ่มรางวัล</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Two-Column Vote Dashboard Grid -->
+            <div class="vote-dashboard-grid">
+                <!-- Left Column: กราฟแนวนอน นับจำนวนทั้งหมด และจำนวนผู้โหวตเลือกทีมในแท่งเดียวกัน -->
+                <div class="admin-card vote-chart-card">
+                    <div class="chart-card-header">
+                        <div class="chart-title-area">
+                            <h3 class="admin-card-title">📊 สถิติการโหวตทีมแยกตามกลุ่ม (แนวนอน)</h3>
+                            <p class="admin-card-desc">แสดงจำนวนพนักงานทั้งหมดตามกลุ่ม
+                                และแถบสีเขียวแสดงผู้ที่โหวตเลือกทีมแล้ว</p>
+                        </div>
+                        <div class="chart-legend-row">
+                            <span class="legend-item"><span class="legend-dot dot-reg"></span> โหวตเลือกทีมแล้ว</span>
+                            <span class="legend-item"><span class="legend-dot dot-unreg"></span> ยังไม่โหวต</span>
+                        </div>
+                    </div>
+
+                    <div class="horizontal-bars-container" id="voteHorizontalBarsContainer">
+                        <!-- Rendered dynamically by JS -->
+                    </div>
+                </div>
+
+                <!-- Right Column (60%): กราฟแท่งแสดงผลคะแนนและสัดส่วนทีมที่ได้เลือก -->
+                <div class="admin-card vote-chart-card">
+                    <div class="chart-card-header">
+                        <div class="chart-title-area">
+                            <h3 class="admin-card-title">📊 ผลการโหวตเลือกทีมแข่งขัน</h3>
+                            <p class="admin-card-desc">กราฟแท่งแสดงผลคะแนนและสัดส่วนการโหวตทีมชนะของผู้ร่วมงานทั้งหมด
+                            </p>
+                        </div>
+                        <div class="vote-header-actions" style="display: flex; align-items: center; gap: 8px;">
+                            <div class="vote-total-badge" id="voteTotalBadgeTag">0 คนโหวต</div>
+                            <button type="button" class="btn-icon-expand" id="btnExpandVoteDonut"
+                                title="คลิกเพื่อขยายดูกราฟขนาดใหญ่ (Lightbox 80%)" aria-label="ขยายภาพกราฟ">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    class="expand-icon-svg">
+                                    <polyline points="15 3 21 3 21 9"></polyline>
+                                    <polyline points="9 21 3 21 3 15"></polyline>
+                                    <line x1="21" y1="3" x2="14" y2="10"></line>
+                                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                                </svg>
+                                <span>ขยายกราฟ</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="vote-team-barchart-wrapper" id="voteTeamBarChartContainer">
+                        <!-- Vertical Bar Chart rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             TAB 2.8: แดชบอร์ดแบบประเมินผลกิจกรรม (crsdg_evaluations)
+             ======================================================== -->
+        <section class="admin-tab-pane" id="tab-evaluations">
+            <!-- Top Action Bar -->
+            <div class="table-top-action-bar" style="margin-bottom: 16px;">
+                <div class="table-title-group">
+                    <h2 class="admin-card-title">
+                        แดชบอร์ดแบบประเมินผลกิจกรรม <code class="table-name-badge">crsdg_evaluations</code>
+                        (<span id="statEvalsCountBadge">0</span> ท่าน)
+                    </h2>
+                    <p class="admin-card-desc">สถิติความพึงพอใจ คำติชม และรายงานผลการประเมินจากผู้ร่วมกิจกรรม CRSDG New
+                        Year 2027</p>
+                </div>
+                <div class="table-primary-actions"
+                    style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn-secondary" id="btnSyncEvaluationsFirebase"
+                        title="ดึงข้อมูลผลการประเมินล่าสุดจาก Firebase Firestore (crsdg_evaluations)">
+                        <svg class="btn-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M21.5 15a4.5 4.5 0 0 0-1.88-8.6A6 6 0 0 0 8 7a5 5 0 0 0-4 4.9A4.5 4.5 0 0 0 8.5 20h12a3.5 3.5 0 0 0 1-5z">
+                            </path>
+                        </svg>
+                        <span>☁️ ซิงค์ Firebase</span>
+                    </button>
+                    <button type="button" class="btn-primary" id="btnExportEvaluationsExcel"
+                        title="ส่งออกรายงานผลการประเมินเป็นไฟล์ Excel">
+                        <svg class="btn-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>📥 ส่งออก Excel</span>
+                    </button>
+                    <button type="button" class="btn-danger" id="btnClearAllEvaluations"
+                        title="ล้างข้อมูลผลการประเมินทั้งหมด">
+                        <svg class="btn-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                            </path>
+                        </svg>
+                        <span>ล้างข้อมูล</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Summary Cards (4 Cards Grid) -->
+            <div class="eval-admin-kpi-grid"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 18px;">
+                <div class="admin-card eval-kpi-card"
+                    style="display: flex; align-items: center; gap: 14px; padding: 16px 18px;">
+                    <div
+                        style="width: 48px; height: 48px; border-radius: 12px; background: rgba(0, 86, 255, 0.15); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">
+                        👥</div>
+                    <div>
+                        <div style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 2px;">
+                            ผู้ร่วมประเมินทั้งหมด</div>
+                        <div style="font-size: 1.4rem; font-weight: 700; color: #ffffff;"><span
+                                id="kpiEvalTotalCount">0</span> <span
+                                style="font-size: 0.85rem; font-weight: 400; color: var(--text-secondary);">คน</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-card eval-kpi-card"
+                    style="display: flex; align-items: center; gap: 14px; padding: 16px 18px;">
+                    <div
+                        style="width: 48px; height: 48px; border-radius: 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">
+                        ⭐</div>
+                    <div>
+                        <div style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 2px;">
+                            คะแนนเฉลี่ยภาพรวม</div>
+                        <div style="font-size: 1.4rem; font-weight: 700; color: #fbbf24;"><span
+                                id="kpiEvalAvgScore">0.0</span> <span
+                                style="font-size: 0.85rem; font-weight: 400; color: var(--text-secondary);">/ 5.0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-card eval-kpi-card"
+                    style="display: flex; align-items: center; gap: 14px; padding: 16px 18px;">
+                    <div
+                        style="width: 48px; height: 48px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">
+                        💬</div>
+                    <div>
+                        <div style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 2px;">
+                            ข้อเสนอแนะเพิ่มเติม</div>
+                        <div style="font-size: 1.4rem; font-weight: 700; color: #34d399;"><span
+                                id="kpiEvalFeedbackCount">0</span> <span
+                                style="font-size: 0.85rem; font-weight: 400; color: var(--text-secondary);">ข้อคิดเห็น</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-card eval-kpi-card"
+                    style="display: flex; align-items: center; gap: 14px; padding: 16px 18px;">
+                    <div
+                        style="width: 48px; height: 48px; border-radius: 12px; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">
+                        🏆</div>
+                    <div style="min-width: 0; flex: 1;">
+                        <div style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 2px;">
+                            ไฮไลต์ประทับใจยอดนิยม</div>
+                        <div style="font-size: 0.95rem; font-weight: 700; color: #c084fc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                            id="kpiEvalTopHighlight">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================================
+                 GRAPHS & CHARTS SECTION: กราฟสรุปผลการประเมินแยกตามข้อ
+                 ======================================================== -->
+            <!-- แถวที่ 1: กราฟข้อ 1 (ภาพรวม 1-5 ดาว) และ กราฟข้อ 3 (สิ่งที่ประทับใจมากที่สุด) -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                <!-- กราฟข้อ 1: ความพึงพอใจในภาพรวมของกิจกรรม (1 - 5 ดาว) -->
+                <div class="admin-card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <h3 class="admin-card-title" style="margin: 0;">
+                                ⭐ ข้อ 1: กราฟการกระจายคะแนนภาพรวม (1 - 5 ดาว)
+                            </h3>
+                            <p class="admin-card-desc" style="margin-top: 2px;">สัดส่วนคะแนนดาวความพึงพอใจของกิจกรรม</p>
+                        </div>
+                        <span
+                            style="font-size: 0.8rem; font-weight: 600; color: #fbbf24; background: rgba(251, 191, 36, 0.12); padding: 3px 10px; border-radius: 999px;">
+                            เฉลี่ย: <strong id="chartAvgScoreOverall" style="color: #f59e0b;">0.0</strong> / 5.0
+                        </span>
+                    </div>
+                    <div id="evalStarDistributionChartContainer"
+                        style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- กราฟข้อ 3: สิ่งที่ประทับใจมากที่สุดในงาน (ไฮไลต์ยอดนิยม) -->
+                <div class="admin-card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <h3 class="admin-card-title" style="margin: 0;">
+                                ✨ ข้อ 3: กราฟจัดอันดับสิ่งที่ประทับใจมากที่สุด
+                            </h3>
+                            <p class="admin-card-desc" style="margin-top: 2px;">อันดับและสัดส่วนคะแนนโหวตไฮไลต์ในงาน</p>
+                        </div>
+                        <span
+                            style="font-size: 0.8rem; font-weight: 600; color: #34d399; background: rgba(16, 185, 129, 0.12); padding: 3px 10px; border-radius: 999px;">
+                            โหวตรวม: <strong id="chartTotalTagVotes" style="color: #10b981;">0</strong> ครั้ง
+                        </span>
+                    </div>
+                    <div id="evalHighlightsAdminContainer" style="display: flex; flex-direction: column; gap: 9px;">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- แถวที่ 2: กราฟข้อ 2 (การประเมิน 4 กิจกรรมย่อย 2.1 - 2.4) -->
+            <div class="admin-card" style="margin-bottom: 20px;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+                    <div>
+                        <h3 class="admin-card-title" style="margin: 0;">
+                            📊 ข้อ 2: กราฟสถิติความพึงพอใจในแต่ละกิจกรรมย่อย (4 ด้าน)
+                        </h3>
+                        <p class="admin-card-desc" style="margin-top: 2px;">
+                            กราฟสัดส่วนระดับความพึงพอใจและเปอร์เซ็นต์ของผู้ร่วมกิจกรรมแยกตามมิติ
+                        </p>
+                    </div>
+                    <div class="eval-legend-bar"
+                        style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.75rem;">
+                        <span style="display: flex; align-items: center; gap: 5px;"><span
+                                style="width: 10px; height: 10px; border-radius: 2px; background: #10b981; display: inline-block;"></span>
+                            ดีเยี่ยม / มากที่สุด</span>
+                        <span style="display: flex; align-items: center; gap: 5px;"><span
+                                style="width: 10px; height: 10px; border-radius: 2px; background: #38bdf8; display: inline-block;"></span>
+                            ดีมาก / ดี</span>
+                        <span style="display: flex; align-items: center; gap: 5px;"><span
+                                style="width: 10px; height: 10px; border-radius: 2px; background: #f59e0b; display: inline-block;"></span>
+                            ปานกลาง</span>
+                        <span style="display: flex; align-items: center; gap: 5px;"><span
+                                style="width: 10px; height: 10px; border-radius: 2px; background: #f87171; display: inline-block;"></span>
+                            ควรปรับปรุง</span>
+                    </div>
+                </div>
+                <div id="evalDimensionsStatsContainer"
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+                    <!-- Rendered by JS -->
+                </div>
+            </div>
+
+            <!-- แถวที่ 3: ข้อ 4 ข้อคิดเห็นและข้อเสนอแนะเพิ่มเติม -->
+            <div class="admin-card" style="margin-bottom: 20px;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                    <div>
+                        <h3 class="admin-card-title" style="margin: 0;">
+                            💬 ข้อ 4: ข้อคิดเห็นและข้อเสนอแนะเพิ่มเติมเพื่อการพัฒนา
+                        </h3>
+                        <p class="admin-card-desc" style="margin-top: 2px;">ความคิดเห็นและมุมมองจากผู้ร่วมกิจกรรม</p>
+                    </div>
+                    <span
+                        style="font-size: 0.8rem; font-weight: 600; color: #a78bfa; background: rgba(139, 92, 246, 0.12); padding: 3px 10px; border-radius: 999px;">
+                        มีผู้แสดงความเห็น: <strong id="chartFeedbackUserCount" style="color: #c084fc;">0</strong> ท่าน
+                    </span>
+                </div>
+                <div id="evalFeedbackStreamContainer"
+                    style="max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px;">
+                    <!-- Rendered by JS -->
+                </div>
+            </div>
+
+            <!-- Data Table Card with Filter Toolbar -->
+            <div class="admin-card table-card">
+                <div class="table-card-header"
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <input type="text" id="evalSearchInput" class="form-input"
+                            placeholder="🔍 ค้นหาชื่อ, สังกัด หรือข้อคิดเห็น..."
+                            style="width: 250px; font-size: 0.85rem; padding: 6px 12px;">
+                        <select id="evalStarFilterSelect" class="form-select"
+                            style="font-size: 0.85rem; padding: 6px 12px;">
+                            <option value="">คะแนนภาพรวมทั้งหมด</option>
+                            <option value="5">⭐⭐⭐⭐⭐ (5 ดาว)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 ดาว)</option>
+                            <option value="3">⭐⭐⭐ (3 ดาว)</option>
+                            <option value="1-2">⭐⭐ หรือ ⭐ (1-2 ดาว)</option>
+                        </select>
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                        แสดง <strong id="evalShowingCountBadge" style="color: #38bdf8;">0</strong> รายการ
+                    </div>
+                </div>
+
+                <!-- Evaluation Respondents Data Table -->
+                <div class="table-responsive">
+                    <table class="admin-table eval-data-table" id="evaluationsAdminTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px; text-align: center;">#</th>
+                                <th style="width: 140px;">เวลาที่ส่ง</th>
+                                <th style="width: 180px;">ผู้ร่วมประเมิน</th>
+                                <th style="width: 130px; text-align: center;">คะแนนภาพรวม</th>
+                                <th style="width: 240px;">ผลประเมิน 4 กิจกรรมย่อย</th>
+                                <th style="min-width: 180px;">สิ่งที่ประทับใจ</th>
+                                <th style="min-width: 200px;">ข้อคิดเห็น / ข้อเสนอแนะ</th>
+                                <th style="width: 70px; text-align: center;">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="evaluationsTableBody">
+                            <!-- Populated dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+
+
+        <!-- ========================================================
+             TAB 1.5: ทีมแข่งขัน (Competition Teams & Players - crsdg_player)
+             ======================================================== -->
+
+        <!-- ========================================================
+             TAB 3: จัดการของรางวัล (Prizes Management)
+             ======================================================== -->
+        <!-- ========================================================
+             TAB 3: จัดการรายการของรางวัล (AL_Reward) - Strictly Image 1
+             ======================================================== -->
+        <section class="admin-tab-pane" id="tab-prizes">
+            <!-- 4 KPI Summary Cards for Prizes (crsdg_reward) -->
+            <div class="winner-kpi-grid prize-kpi-grid" style="margin-bottom: 20px;">
+                <div class="winner-kpi-card card-kpi-orange">
+                    <div class="kpi-icon-box">🎁</div>
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">รายการของรางวัลทั้งหมด</div>
+                        <div class="kpi-number" id="kpiPrizeItemsCount">0</div>
+                        <div class="kpi-subtext">รายการใน crsdg_reward</div>
+                    </div>
+                </div>
+                <div class="winner-kpi-card card-kpi-blue">
+                    <div class="kpi-icon-box">📦</div>
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">จำนวนของรางวัลรวม</div>
+                        <div class="kpi-number" id="kpiPrizeTotalQty">0</div>
+                        <div class="kpi-subtext">จำนวนชิ้นของรางวัลทั้งหมด</div>
+                    </div>
+                </div>
+                <div class="winner-kpi-card card-kpi-green">
+                    <div class="kpi-icon-box">✓</div>
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">สุ่มมอบรางวัลแล้ว</div>
+                        <div class="kpi-number" id="kpiPrizeDrawnQty">0</div>
+                        <div class="kpi-subtext" id="kpiPrizeDrawnPercent">0% สุ่มรางวัลแล้ว</div>
+                    </div>
+                </div>
+                <div class="winner-kpi-card card-kpi-cyan"
+                    style="background: rgba(14, 165, 233, 0.12); border-color: rgba(14, 165, 233, 0.35);">
+                    <div class="kpi-icon-box" style="color: #38bdf8; background: rgba(14, 165, 233, 0.2);">✨</div>
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">ของรางวัลคงเหลือ</div>
+                        <div class="kpi-number" id="kpiPrizeRemainingQty" style="color: #38bdf8;">0</div>
+                        <div class="kpi-subtext">พร้อมสำหรับการสุ่มต่อไป</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card al-reward-card">
+                <div class="table-top-action-bar reward-top-bar">
+                    <div class="table-title-group">
+                        <h2 class="admin-card-title">
+                            จัดการรายการของรางวัล (crsdg_reward)
+                        </h2>
+                        <p class="admin-card-desc">
+                            กำหนดลำดับ รายการ จำนวน และลิงก์รูปภาพ เชื่อมต่อกับตัวเลือกระบบสุ่มรางวัลอัตโนมัติ
+                        </p>
+                    </div>
+                    <div class="table-primary-actions reward-filter-actions">
+                        <div class="filter-group-inline">
+                            <label for="prizeGroupFilter" class="filter-label-inline">กรองกลุ่ม:</label>
+                            <select id="prizeGroupFilter" class="form-input select-filter-group">
+                                <option value="all">ทุกกลุ่ม (All)</option>
+                                <option value="Group Extra">Group Extra</option>
+                                <option value="Management">Management</option>
+                                <option value="Group-1">Group-1</option>
+                                <option value="Group-2">Group-2</option>
+                                <option value="Group-3">Group-3</option>
+                                <option value="Group-4">Group-4</option>
+                                <option value="Group-5">Group-5</option>
+                                <option value="Group-6">Group-6</option>
+                                <option value="Group-7">Group-7</option>
+                                <option value="Group-8">Group-8</option>
+                                <option value="Group-9">Group-9</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn-secondary" id="btnRefreshPrizes" title="รีเฟรชข้อมูลของรางวัล">
+                            🔄 รีเฟรช
+                        </button>
+                        <button type="button" class="btn-primary" id="btnOpenAddPrizeModal" title="เพิ่มของรางวัลใหม่">
+                            + เพิ่มของรางวัลใหม่
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="admin-table al-reward-table" id="alRewardTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 55px; text-align: center;">ลำดับ</th>
+                                <th style="width: 70px; text-align: center;">รูปรางวัล</th>
+                                <th style="width: 155px;">กลุ่ม (Group)</th>
+                                <th style="min-width: 200px;">รายการของรางวัล</th>
+                                <th style="width: 70px; text-align: center;">รูปผู้บริหาร</th>
+                                <th style="width: 140px;">เจ้าของรางวัล</th>
+                                <th style="width: 115px; text-align: center;">ตำแหน่ง</th>
+                                <th style="width: 95px; text-align: center;">จำนวนทั้งหมด</th>
+                                <th style="width: 90px; text-align: center;">สุ่มแล้ว</th>
+                                <th style="width: 90px; text-align: center;">คงเหลือ</th>
+                                <th style="width: 75px; text-align: center;">เรียงลำดับ</th>
+                                <th style="width: 110px; text-align: center;">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prizesTableBody">
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             TAB 4: รายชื่อผู้ได้รับรางวัลทั้งหมด (Prize Winners Roster) - Strictly Image 2
+             ======================================================== -->
+        <section class="admin-tab-pane" id="tab-winners">
+            <!-- 3 KPI Cards at Top -->
+            <div class="winner-kpi-grid">
+                <div class="winner-kpi-card card-kpi-orange">
+                    <div class="kpi-icon-box">🎁</div>
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">มอบรางวัลแล้วทั้งหมด</div>
+                        <div class="kpi-number" id="kpiTotalWinners">0</div>
+                        <div class="kpi-subtext">บันทึกลงตาราง crsdg_member</div>
+                    </div>
+                </div>
+                <div class="winner-kpi-card card-kpi-blue">
+                    <div class="kpi-icon-box">👥</div>
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">ผู้มีสิทธิ์สุ่มรางวัล</div>
+                        <div class="kpi-number" id="kpiEligibleCount">0</div>
+                        <div class="kpi-subtext">ลงทะเบียนแล้ว & มีชื่อพนักงาน</div>
+                    </div>
+                </div>
+                <div class="winner-kpi-card card-kpi-green">
+                    <div class="kpi-icon-box">✓</div>
+                    <div class="kpi-info-box">
+                        <div class="kpi-label">รับรางวัลเรียบร้อยแล้ว</div>
+                        <div class="kpi-number" id="kpiDeliveredCount">0</div>
+                        <div class="kpi-subtext" id="kpiDeliveredPercent">0% รับของรางวัลแล้ว</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Winners Roster Table Card -->
+            <div class="admin-card winner-roster-card">
+                <div class="table-top-action-bar winner-roster-top-bar">
+                    <div class="table-title-group">
+                        <h2 class="admin-card-title">
+                            รายชื่อผู้ได้รับรางวัลทั้งหมด (crsdg_member)
+                        </h2>
+                    </div>
+                    <div class="table-primary-actions winner-action-toolbar">
+                        <button type="button" class="btn-outline-blue" id="btnExportWinnersExcel"
+                            title="ส่งออกรายชื่อผู้ได้รับรางวัลเป็น Excel">
+                            📥 Load Excel
+                        </button>
+                        <button type="button" class="btn-outline-red" id="btnResetWinners"
+                            title="รีเซ็ตผลการสุ่มรางวัลทั้งหมด">
+                            🔄 Reset ผู้รับรางวัล
+                        </button>
+                        <div class="draw-mode-checkboxes">
+                            <label class="checkbox-mode-label">
+                                <input type="checkbox" id="chkDrawNormal" checked>
+                                <span>สุ่มปกติ</span>
+                            </label>
+                            <label class="checkbox-mode-label">
+                                <input type="checkbox" id="chkDrawFast" checked>
+                                <span>สุ่มเร็ว</span>
+                            </label>
+                        </div>
+                        <a href="reward.html" target="_blank" class="btn-gradient-blue" id="btnGoToRewardStage"
+                            title="เปิดหน้าจอเวทีสุ่มรางวัล (reward.html)">
+                            🎁 สุ่มรางวัล
+                        </a>
+                        <a href="remote-reward.html" target="_blank" class="btn-gradient-orange"
+                            id="btnGoToRewardRemote" title="เปิดหน้ารีโมตควบคุมการสุ่มรางวัล (remote-reward.html)">
+                            📱 รีโมตควบคุม
+                        </a>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="admin-table winner-roster-table" id="winnersRosterTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 45px; text-align: center;">#</th>
+                                <th style="width: 180px;">เวลาที่สุ่ม</th>
+                                <th style="width: 100px;">รหัสพนักงาน</th>
+                                <th>ชื่อ - นามสกุล</th>
+                                <th style="width: 80px; text-align: center;">ตำแหน่ง</th>
+                                <th style="width: 120px;">กลุ่ม</th>
+                                <th style="width: 90px; text-align: center;">สาขา / โซน</th>
+                                <th style="width: 140px;">ชื่อรางวัล</th>
+                                <th style="width: 130px; text-align: center;">สถานะการรับรางวัล</th>
+                                <th style="width: 50px; text-align: center;">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="winnersTableBody" class="winners-table-body">
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+
+
+        <!-- ========================================================
+             TAB 1.5: ทีมแข่งขัน (Competition Teams & Players - crsdg_player)
+             ======================================================== -->
+
+        <!-- ========================================================
+         LIGHTBOX: ADD / EDIT PRIZE MODAL (AL_Reward)
+         ======================================================== -->
+        <div class="modal-overlay" id="prizeEditModal" style="display: none;">
+            <div class="admin-card modal-card-box prize-edit-lightbox" style="width: 70vw; max-width: 70vw;">
+                <div class="admin-card-header">
+                    <h3 class="admin-card-title" id="prizeModalTitle">แก้ไขข้อมูลของรางวัล</h3>
+                    <button type="button" class="btn-modal-close" id="closePrizeModalBtn">✕</button>
+                </div>
+
+                <form id="prizeModalForm" class="lightbox-body-content">
+                    <input type="hidden" id="editPrizeId" value="">
+
+                    <!-- Row 1: Order & Quantity (50% / 50%) -->
+                    <div class="form-grid-2col">
+                        <div class="form-group">
+                            <label for="editPrizeOrder">ลำดับ (Order) *</label>
+                            <input type="number" id="editPrizeOrder" class="form-input" min="1" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPrizeQuantity">จำนวนรางวัล (Quantity) *</label>
+                            <input type="number" id="editPrizeQuantity" class="form-input" min="1" value="1" required>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Group Select & Group Name (50% / 50%) -->
+                    <div class="form-grid-2col">
+                        <div class="form-group">
+                            <label for="editPrizeGroupSelect">กลุ่มของรางวัล (Group) *</label>
+                            <select id="editPrizeGroupSelect" class="form-input">
+                                <option value="Group Extra">Group Extra</option>
+                                <option value="Group-1">Group-1</option>
+                                <option value="Group-2">Group-2</option>
+                                <option value="Group-3">Group-3</option>
+                                <option value="Group-4">Group-4</option>
+                                <option value="Group-5">Group-5</option>
+                                <option value="Group-6">Group-6</option>
+                                <option value="Group-7">Group-7</option>
+                                <option value="Group-8">Group-8</option>
+                                <option value="Group-9">Group-9</option>
+                                <option value="custom">+ ระบุกลุ่มเอง...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPrizeGroupName" class="label-with-hint">
+                                <span>ชื่อกลุ่ม (Group Name)</span>
+                                <span class="label-hint">(แสดงผลหน้าสุ่มรางวัล)</span>
+                            </label>
+                            <input type="text" id="editPrizeGroupName" class="form-input" placeholder="Management"
+                                value="Management">
+                        </div>
+                    </div>
+
+                    <!-- Custom Group Input Row (if + ระบุกลุ่มเอง... selected) -->
+                    <div class="form-group" id="customGroupInputRow" style="display: none;">
+                        <label for="editPrizeGroupCustom">ระบุชื่อกลุ่มเอง (Custom Group Name)</label>
+                        <input type="text" id="editPrizeGroupCustom" class="form-input" placeholder="เช่น VIP Group">
+                    </div>
+
+                    <!-- Row 3: Prize Name (Full Width) -->
+                    <div class="form-group">
+                        <label for="editPrizeTitle">รายการของรางวัล (Prize Name) *</label>
+                        <input type="text" id="editPrizeTitle" class="form-input" placeholder="Lucky Draw" required>
+                    </div>
+
+                    <!-- Row 4: Sponsor Name & Position (50% / 50%) -->
+                    <div class="form-grid-2col">
+                        <div class="form-group">
+                            <label for="editSponsorName">ผู้ที่เป็นเจ้าของรางวัล (ชื่อผู้บริหาร / เจ้าของรางวัล)</label>
+                            <input type="text" id="editSponsorName" class="form-input" placeholder="เช่น พี่เอก">
+                        </div>
+                        <div class="form-group">
+                            <label for="editSponsorPosition">ตำแหน่ง (Position)</label>
+                            <input type="text" id="editSponsorPosition" class="form-input"
+                                placeholder="เช่น EVP, Head of AL...">
+                        </div>
+                    </div>
+
+                    <!-- Row 5: Photo URLs & Previews Side-by-Side (50% / 50%) -->
+                    <div class="form-grid-2col photo-preview-grid">
+                        <!-- Left: Executive Photo & Preview -->
+                        <div class="photo-column-box">
+                            <div class="form-group">
+                                <label for="editSponsorPhoto">ลิงก์รูปผู้บริหาร (Executive Photo URL)</label>
+                                <input type="text" id="editSponsorPhoto" class="form-input"
+                                    placeholder="./images/P Eak.png">
+                                <div class="form-field-hint">รองรับ URL หรือ path รูปในโฟลเดอร์ images</div>
+                            </div>
+                            <div class="photo-preview-section">
+                                <div class="preview-label">ตัวอย่างรูปผู้บริหาร:</div>
+                                <div class="sponsor-preview-circle">
+                                    <img src="" id="sponsorPreviewImg" alt="Executive Preview" style="display: none;">
+                                    <div class="sponsor-preview-fallback" id="sponsorPreviewFallback">ผบ</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Prize Photo & Preview -->
+                        <div class="photo-column-box">
+                            <div class="form-group">
+                                <label for="editPrizePhoto">ลิงก์รูปของรางวัล (Prize Image URL)</label>
+                                <input type="text" id="editPrizePhoto" class="form-input"
+                                    placeholder="https:// หรือ /images/ หรือ 🎁">
+                                <div class="form-field-hint">รองรับ URL, path รูป หรืออิโมจิไอคอน</div>
+                            </div>
+                            <div class="photo-preview-section">
+                                <div class="preview-label">ตัวอย่างรูปของรางวัล:</div>
+                                <div class="prize-preview-box">
+                                    <img src="" id="prizePreviewImg" alt="Prize Preview" style="display: none;">
+                                    <div class="prize-preview-fallback" id="prizePreviewFallback">🎁</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer Actions -->
+                    <div class="modal-footer-actions">
+                        <button type="button" class="btn-secondary" id="cancelPrizeModalBtn">ยกเลิก</button>
+                        <button type="submit" class="btn-primary-blue" id="savePrizeModalBtn">บันทึกของรางวัล</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- ========================================================
+         LIGHTBOX 1: UPLOAD EXCEL FILE MODAL (Browse File & Import)
+         ======================================================== -->
+    <div class="modal-overlay" id="excelUploadModal" style="display: none;">
+        <div class="admin-card modal-card-box excel-upload-lightbox">
+            <div class="admin-card-header">
+                <div class="lightbox-header-title">
+                    <span class="lightbox-icon">📊</span>
+                    <h3 class="admin-card-title">อัปโหลดข้อมูลพนักงานจากไฟล์ Excel (.xlsx / .xls / .csv)</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeExcelUploadModalBtn">✕</button>
+            </div>
+
+            <div class="lightbox-body-content">
+                <p class="modal-instruction-text">
+                    กรุณาเลือกไฟล์ Excel เพื่อนำเข้าข้อมูลพนักงานลงในตาราง <code
+                        class="table-name-badge">crsdg_member</code> ระบบจะอ่านข้อมูล 3 คอลัมน์หลักตามรูปแบบ:
+                </p>
+
+                <!-- Structure Chips -->
+                <div class="excel-structure-chips" style="margin-bottom: 16px;">
+                    <span class="structure-chip chip-col-a">คอลัมน์ A: EmployeeID</span>
+                    <span class="structure-chip chip-col-b">คอลัมน์ B: EmpName</span>
+                    <span class="structure-chip chip-col-c">คอลัมน์ C: Group</span>
+                </div>
+
+                <!-- Dropzone / Browse Box inside Lightbox -->
+                <div class="excel-modal-dropzone" id="excelModalDropzone">
+                    <div class="excel-drop-icon">📂</div>
+                    <div class="excel-drop-main-text">
+                        <strong>ลากไฟล์มาวางในกรอบนี้</strong> หรือคลิกปุ่มเพื่อเลือกไฟล์จากเครื่อง
+                    </div>
+                    <button type="button" class="btn-primary btn-browse-action" id="btnBrowseExcelFile">
+                        📁 Browse File (เลือกไฟล์ Excel)
+                    </button>
+                    <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" style="display: none;">
+
+                    <!-- Selected File Info Badge -->
+                    <div class="selected-file-badge" id="selectedFileBadge" style="display: none;">
+                        <span class="file-icon">📄</span>
+                        <span class="file-name" id="selectedFileName">-</span>
+                        <span class="file-size" id="selectedFileSize">(-)</span>
+                    </div>
+                </div>
+
+                <!-- Import Mode Radios -->
+                <div class="modal-import-mode-bar">
+                    <span class="mode-label">รูปแบบการนำเข้า:</span>
+                    <label class="radio-label">
+                        <input type="radio" name="importModeRadio" value="append" checked>
+                        <span>➕ นำเข้าเพิ่มต่อท้าย / อัปเดตข้อมูลเดิม (Append)</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="importModeRadio" value="replace">
+                        <span>🔄 ล้างและแทนที่ข้อมูลทั้งหมดในตาราง crsdg_member (Replace)</span>
+                    </label>
+                </div>
+
+                <!-- Parsed Preview Box inside Modal -->
+                <div class="excel-parsed-preview" id="excelParsedPreview" style="display: none;">
+                    <div class="preview-title" id="excelParsedSummary">
+                        พบข้อมูลพนักงานทั้งหมด <strong>0</strong> รายการ:
+                    </div>
+                    <div class="table-responsive" style="max-height: 180px; overflow-y: auto;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 45px; text-align: center;">#</th>
+                                    <th style="width: 110px;">EmployeeID</th>
+                                    <th>EmpName</th>
+                                    <th style="width: 100px;">Group</th>
+                                </tr>
+                            </thead>
+                            <tbody id="excelModalPreviewTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Text/CSV Paste Alternative Link -->
+                <div style="margin-top: 10px; text-align: right;">
+                    <button type="button" class="btn-link-sm" id="btnSwitchToTextPaste">
+                        📋 หรือวางข้อมูลแบบข้อความ (Text / CSV Paste)
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-actions-bar">
+                <button type="button" class="btn-secondary" id="cancelExcelUploadBtn">ยกเลิก</button>
+                <button type="button" class="btn-primary" id="confirmExcelUploadBtn" disabled>
+                    💾 ยืนยันบันทึกลงตาราง crsdg_member
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX 2: CONFIRM DELETE ALL MEMBERS MODAL
+         ======================================================== -->
+    <div class="modal-overlay" id="confirmDeleteAllModal" style="display: none;">
+        <div class="admin-card modal-card-box delete-confirm-lightbox">
+            <div class="admin-card-header">
+                <div class="lightbox-header-title">
+                    <span class="lightbox-icon" style="color: #ef4444;">⚠️</span>
+                    <h3 class="admin-card-title" style="color: #f87171;">ยืนยันการลบข้อมูลพนักงานทั้งหมด</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeDeleteAllModalBtn">✕</button>
+            </div>
+
+            <div class="lightbox-body-content">
+                <div class="delete-warning-banner">
+                    <div class="warning-icon-large">🗑️</div>
+                    <div class="warning-text-group">
+                        <div class="warning-main-heading">คุณต้องการลบข้อมูลพนักงานทั้งหมดออกจากระบบใช่หรือไม่?</div>
+                        <div class="warning-count-highlight">
+                            จำนวนพนักงานที่จะถูกลบ: <strong id="deleteModalCount">0</strong> ท่าน
+                        </div>
+                    </div>
+                </div>
+
+                <div class="delete-warning-notice">
+                    <p>⚠️ <strong>คำเตือน:</strong> การดำเนินการนี้จะทำการล้างข้อมูลพนักงานทั้งหมดในตาราง
+                        <code>crsdg_member</code> และปลดสมาชิกทั้งหมดออกจากทีมแข่งขัน
+                    </p>
+                    <p style="margin: 4px 0 0; color: #fca5a5;">ข้อมูลที่ลบแล้วจะไม่สามารถกู้คืนได้</p>
+                </div>
+
+                <!-- Password Confirmation Input (PIN: 111111) -->
+                <div
+                    style="margin-top: 16px; padding: 14px 16px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 10px;">
+                    <label for="deleteAdminPasswordInput"
+                        style="display: block; font-size: 0.88rem; color: #fca5a5; font-weight: 500; margin-bottom: 8px;">
+                        🔒 กรุณากรอกรหัสผ่านเพื่อยืนยันการลบ <span
+                            style="font-size: 0.78rem; color: #94a3b8;">(รหัสผ่าน: 111111)</span>
+                    </label>
+                    <input type="password" id="deleteAdminPasswordInput" class="form-input"
+                        placeholder="กรอกรหัสผ่าน 111111" maxlength="10" autocomplete="off"
+                        style="text-align: center; font-size: 1.15rem; font-weight: 700; letter-spacing: 4px; border-color: rgba(239, 68, 68, 0.5);">
+                    <div id="deletePasswordErrorMsg"
+                        style="color: #f87171; font-size: 0.82rem; margin-top: 6px; text-align: center; display: none;">
+                        ❌ รหัสผ่านไม่ถูกต้อง กรุณากรอก 111111
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions-bar">
+                <button type="button" class="btn-secondary" id="cancelDeleteAllModalBtn">ยกเลิก</button>
+                <button type="button" class="btn-danger" id="confirmDeleteAllBtn" disabled
+                    style="opacity: 0.45; cursor: not-allowed;">
+                    🗑️ ยืนยันการลบพนักงานทั้งหมด
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX 3: PHOTO ZOOM, SCALE, ROTATE & CROP MODAL
+         ======================================================== -->
+    <div class="modal-overlay" id="photoCropModal" style="display: none;">
+        <div class="admin-card modal-card-box crop-modal-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">📷 ปรับลด-ขยาย ซูม & เลื่อนตำแหน่งรูปภาพพนักงาน</h3>
+                <button type="button" class="btn-modal-close" id="closeCropModalBtn">✕</button>
+            </div>
+
+            <div class="crop-modal-body">
+                <div class="crop-editor-layout">
+                    <!-- Interactive Canvas Viewport -->
+                    <div class="crop-canvas-wrapper" id="cropCanvasWrapper">
+                        <canvas id="cropCanvas" width="280" height="280"></canvas>
+                        <div class="crop-guide-overlay">
+                            <div class="crop-circle-guide"></div>
+                        </div>
+                    </div>
+
+                    <!-- Live Circular Avatar Preview Column -->
+                    <div class="crop-preview-column">
+                        <div class="crop-preview-label">ตัวอย่างผลลัพธ์ (Avatar):</div>
+                        <div class="crop-circle-preview-box">
+                            <canvas id="cropPreviewCanvas" width="84" height="84"></canvas>
+                        </div>
+                        <div class="crop-target-info">
+                            <div class="crop-target-name" id="cropEmpName">-</div>
+                            <div class="crop-target-id" id="cropEmpId">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Zoom Slider and Navigation Controls -->
+                <div class="zoom-controls-panel">
+                    <div class="zoom-slider-row">
+                        <button type="button" class="btn-zoom-step" id="btnZoomOut" title="ซูมออก">−</button>
+                        <input type="range" id="zoomRangeInput" min="0.30" max="3.5" step="0.05" value="1.0"
+                            class="zoom-slider">
+                        <button type="button" class="btn-zoom-step" id="btnZoomIn" title="ซูมเข้า">+</button>
+                        <span class="zoom-level-text" id="zoomLevelText">100%</span>
+                    </div>
+
+                    <div class="crop-helper-actions">
+                        <button type="button" class="btn-secondary btn-sm" id="btnRotateCrop">🔄 หมุน 90°</button>
+                        <button type="button" class="btn-secondary btn-sm" id="btnResetCrop">⏪
+                            รีเซ็ตซูมและตำแหน่ง</button>
+                        <span class="drag-hint-text">💡 คลิกค้างแล้วลากเพื่อเลื่อนตำแหน่งรูปภาพ</span>
+                    </div>
+                </div>
+            </div>
+
+            <input type="file" id="modalCropFileInput" accept="image/*" style="display: none;">
+
+            <div class="modal-actions-bar">
+                <button type="button" class="btn-secondary" id="btnChooseAnotherPhoto">📂 เลือกรูปอื่น...</button>
+                <button type="button" class="btn-secondary" id="cancelCropBtn">ยกเลิก</button>
+                <button type="button" class="btn-primary" id="saveCropBtn">💾 บันทึกรูปภาพลง crsdg_member</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX 4: EDIT MEMBER MODAL (crsdg_member with Integrated Photo Zoom/Crop)
+         ======================================================== -->
+    <div class="modal-overlay" id="editMemberModal" style="display: none;">
+        <div class="admin-card modal-card-box edit-member-lightbox" style="width: 70vw; max-width: 70vw;">
+            <div class="admin-card-header">
+                <div class="lightbox-header-title">
+                    <span class="lightbox-icon">✏️</span>
+                    <h3 class="admin-card-title">แก้ไขข้อมูลพนักงาน & จัดการรูปภาพ (<code
+                            class="table-name-badge">crsdg_member</code>)</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeEditModalBtn">✕</button>
+            </div>
+            <form id="editMemberForm">
+                <input type="hidden" id="editOriginalEmpId">
+                <div class="edit-member-grid-layout">
+                    <!-- Left Column: Built-in Interactive Photo Zoom & Crop Editor -->
+                    <div class="edit-photo-panel">
+                        <div class="panel-section-title">📷 จัดการรูปภาพพนักงาน (ซูม/ย่อ/เลื่อนตำแหน่ง)</div>
+
+                        <!-- Canvas Viewport -->
+                        <div class="crop-canvas-wrapper" id="editCropCanvasWrapper"
+                            style="width: 260px; height: 260px; margin: 0 auto; border-radius: 12px;">
+                            <canvas id="editCropCanvas" width="260" height="260"></canvas>
+                            <div class="crop-guide-overlay">
+                                <div class="crop-circle-guide"></div>
+                            </div>
+                        </div>
+
+                        <!-- Photo Buttons -->
+                        <div class="photo-btn-toolbar"
+                            style="display: flex; gap: 8px; justify-content: center; margin-top: 10px;">
+                            <button type="button" class="btn-secondary btn-sm" id="btnEditBrowsePhoto">
+                                📂 เลือกรูปภาพ...
+                            </button>
+                            <button type="button" class="btn-secondary btn-sm" id="btnEditRemovePhoto"
+                                style="color: #fca5a5;">
+                                ✕ นำรูปออก
+                            </button>
+                            <input type="file" id="editPhotoFileInput" accept="image/*" style="display: none;">
+                        </div>
+
+                        <!-- Zoom Slider (Down to -70% / 0.30x up to 3.0x) -->
+                        <div class="zoom-controls-panel"
+                            style="margin-top: 10px; padding: 10px 12px; background: rgba(0, 0, 0, 0.28); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div class="zoom-slider-row" style="display: flex; align-items: center; gap: 8px;">
+                                <button type="button" class="btn-zoom-step" id="btnEditZoomOut"
+                                    title="ซูมออก (ย่อขนาดภาพ)">−</button>
+                                <input type="range" id="editZoomRangeInput" min="0.30" max="3.0" step="0.05" value="1.0"
+                                    class="zoom-slider">
+                                <button type="button" class="btn-zoom-step" id="btnEditZoomIn"
+                                    title="ซูมเข้า">+</button>
+                                <span class="zoom-level-text" id="editZoomLevelText"
+                                    style="width: 80px; text-align: right; font-size: 0.78rem;">100%</span>
+                            </div>
+                            <div class="crop-helper-actions"
+                                style="margin-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+                                <button type="button" class="btn-secondary btn-sm" id="btnEditRotateCrop"
+                                    style="font-size: 0.74rem; padding: 3px 8px;">🔄 หมุน 90°</button>
+                                <button type="button" class="btn-secondary btn-sm" id="btnEditResetCrop"
+                                    style="font-size: 0.74rem; padding: 3px 8px;">⏪ รีเซ็ต</button>
+                                <span class="drag-hint-text" style="font-size: 0.72rem; color: #94a3b8;">💡
+                                    ลากเพื่อเลื่อนตำแหน่ง</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Employee Info & Live Circular Preview -->
+                    <div class="edit-fields-panel">
+                        <!-- Live Preview Card -->
+                        <div class="live-preview-chip"
+                            style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; margin-bottom: 14px;">
+                            <div class="crop-circle-preview-box"
+                                style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; border: 2px solid #00e5ff; flex-shrink: 0;">
+                                <canvas id="editCropPreviewCanvas" width="48" height="48"></canvas>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; color: #94a3b8;">ตัวอย่างแสดงผล Avatar ในระบบ:</div>
+                                <div style="font-size: 0.82rem; font-weight: 500; color: #ffffff;"
+                                    id="editPreviewNameDisplay">-</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="editEmpIdInput">EmployeeID (รหัสพนักงาน) *</label>
+                            <input type="text" id="editEmpIdInput" class="form-input" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="editEmpNameInput">EmpName (ชื่อ - นามสกุล) *</label>
+                            <input type="text" id="editEmpNameInput" class="form-input" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="editGroupInput">Group (กลุ่ม / ทีม) *</label>
+                            <input type="text" id="editGroupInput" class="form-input"
+                                placeholder="เช่น Team A, Team B, Team C" required>
+                        </div>
+
+                        <div class="form-row-2col"
+                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                            <div class="form-group">
+                                <label for="editChosenTeamSelect">เลือกทีม (ทายผลชนะ)</label>
+                                <select id="editChosenTeamSelect" class="form-select">
+                                    <option value="">-- ยังไม่ได้เลือกทีม --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="editRegisteredStatusSelect">สถานะการลงทะเบียน</label>
+                                <select id="editRegisteredStatusSelect" class="form-select">
+                                    <option value="yes">ลงทะเบียนแล้ว ✅</option>
+                                    <option value="no">ยังไม่ลงทะเบียน ✕</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="edit-save-box"
+                            style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: flex-end; gap: 10px;">
+                            <button type="button" class="btn-secondary" id="cancelEditModalBtn">ยกเลิก</button>
+                            <button type="submit" class="btn-primary" id="saveEditModalBtn">💾 บันทึกการแก้ไขลงตาราง
+                                crsdg_member</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX 5: BULK IMPORT MODAL (CSV / Text Paste)
+         ======================================================== -->
+    <div class="modal-overlay" id="importModal" style="display: none;">
+        <div class="admin-card modal-card-box">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">นำเข้ารายชื่อแบบข้อความ (Text / CSV)</h3>
+                <button type="button" class="btn-modal-close" id="importCloseBtn">✕</button>
+            </div>
+            <p class="modal-instruction-text">
+                วางรายชื่อในรูปแบบ <code>EmployeeID, EmpName, Group</code> (1 บรรทัดต่อ 1 คน) สามารถคัดลอกจาก Excel
+                มาวางได้โดยตรง:
+            </p>
+            <textarea id="importTextarea" class="form-input modal-textarea" rows="8"
+                placeholder="14065, จีรวรรณ์ ประจงมูล, Team A&#10;20699, ณัฏฐา รัตนจรัสกุล, Team A&#10;49965, สุพิชญา เอกจริยกร, Team B"></textarea>
+            <div class="modal-actions-bar">
+                <button type="button" class="btn-secondary" id="importCancelBtn">ยกเลิก</button>
+                <button type="button" class="btn-primary" id="importSubmitBtn">บันทึกลงตาราง crsdg_member</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden File Input for Direct Row Photo Upload -->
+    <input type="file" id="tablePhotoInput" accept="image/*" style="display: none;">
+
+    <!-- ========================================================
+         LIGHTBOX 6: ADD TEAM MODAL (crsdg_nameteam)
+         ======================================================== -->
+    <div class="modal-overlay" id="addTeamModal" style="display: none;">
+        <div class="admin-card modal-card-box" style="max-width: 480px; width: 92%;">
+            <div class="admin-card-header">
+                <div class="lightbox-header-title">
+                    <span class="lightbox-icon">🛡️</span>
+                    <h3 class="admin-card-title">เพิ่มทีมแข่งขันใหม่ (<code
+                            class="table-name-badge">crsdg_nameteam</code>)</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeAddTeamModalBtn">✕</button>
+            </div>
+            <form id="addTeamForm">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="newTeamNameInput">ชื่อทีมแข่งขัน *</label>
+                    <input type="text" id="newTeamNameInput" class="form-input"
+                        placeholder="เช่น Cyber Dragons, Blue Stars" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="newTeamDeptInput">ฝ่าย / แผนก / คำอธิบายทีม *</label>
+                    <input type="text" id="newTeamDeptInput" class="form-input"
+                        placeholder="เช่น ฝ่ายเทคโนโลยีสารสนเทศ (IT)" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="newTeamColorInput">สีประจำทีม</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="color" id="newTeamColorInput" value="#3b82f6" class="form-color-picker"
+                            style="width: 44px; height: 38px; border: none; border-radius: 6px; cursor: pointer; background: transparent;">
+                        <span id="newTeamColorCode"
+                            style="font-family: 'Kanit', sans-serif; font-size: 0.85rem; color: #00e5ff;">#3b82f6</span>
+                    </div>
+                </div>
+                <div class="modal-actions-bar">
+                    <button type="button" class="btn-secondary" id="cancelAddTeamModalBtn">ยกเลิก</button>
+                    <button type="submit" class="btn-primary">💾 บันทึกทีมลงตาราง crsdg_nameteam</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX 7: EDIT TEAM MODAL (crsdg_nameteam)
+         ======================================================== -->
+    <div class="modal-overlay" id="editTeamModal" style="display: none;">
+        <div class="admin-card modal-card-box" style="max-width: 480px; width: 92%;">
+            <div class="admin-card-header">
+                <div class="lightbox-header-title">
+                    <span class="lightbox-icon">✏️</span>
+                    <h3 class="admin-card-title">แก้ไขข้อมูลทีมแข่งขัน (<code
+                            class="table-name-badge">crsdg_nameteam</code>)</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeEditTeamModalBtn">✕</button>
+            </div>
+            <form id="editTeamForm">
+                <input type="hidden" id="editTeamIdInput">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="editTeamNameInput">ชื่อทีมแข่งขัน *</label>
+                    <input type="text" id="editTeamNameInput" class="form-input" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="editTeamDeptInput">ฝ่าย / แผนก / คำอธิบายทีม *</label>
+                    <input type="text" id="editTeamDeptInput" class="form-input" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="editTeamColorInput">สีประจำทีม</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="color" id="editTeamColorInput" value="#3b82f6" class="form-color-picker"
+                            style="width: 44px; height: 38px; border: none; border-radius: 6px; cursor: pointer; background: transparent;">
+                        <span id="editTeamColorCode"
+                            style="font-family: 'Kanit', sans-serif; font-size: 0.85rem; color: #00e5ff;">#3b82f6</span>
+                    </div>
+                </div>
+                <div class="modal-actions-bar">
+                    <button type="button" class="btn-secondary" id="cancelEditTeamModalBtn">ยกเลิก</button>
+                    <button type="submit" class="btn-primary">💾 บันทึกการแก้ไข (crsdg_nameteam)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX 8: CONFIRM DELETE TEAM MODAL
+         ======================================================== -->
+    <div class="modal-overlay" id="confirmDeleteTeamModal" style="display: none;">
+        <div class="admin-card modal-card-box delete-confirm-lightbox" style="max-width: 460px; width: 92%;">
+            <div class="admin-card-header">
+                <div class="lightbox-header-title">
+                    <span class="lightbox-icon" style="color: #ef4444;">⚠️</span>
+                    <h3 class="admin-card-title" style="color: #f87171;">ยืนยันการลบทีมแข่งขัน</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeDeleteTeamModalBtn">✕</button>
+            </div>
+            <div class="lightbox-body-content">
+                <input type="hidden" id="deleteTargetTeamId">
+                <div class="delete-warning-banner">
+                    <div class="warning-icon-large">🛡️</div>
+                    <div class="warning-text-group">
+                        <div class="warning-main-heading">ต้องการลบทีม <strong id="deleteTeamNameHighlight"
+                                style="color: #ffffff;">-</strong> ใช่หรือไม่?</div>
+                        <div class="warning-count-highlight" id="deleteTeamMemberCountText">
+                            สมาชิกในทีมจะถูกปลดออกจากทีมนี้</div>
+                    </div>
+                </div>
+                <div class="delete-warning-notice">
+                    <p>ทีมนี้จะถูกลบออกจากตาราง <code>crsdg_nameteam</code> และข้อมูลสมาชิกของทีมจะถูกลบออกจากตาราง
+                        <code>crsdg_team</code>
+                    </p>
+                </div>
+            </div>
+            <div class="modal-actions-bar">
+                <button type="button" class="btn-secondary" id="cancelDeleteTeamModalBtn">ยกเลิก</button>
+                <button type="button" class="btn-danger" id="confirmDeleteTeamBtn">🗑️ ยืนยันการลบทีม</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================================
+         LIGHTBOX: RESET REGISTRATION CONFIRMATION MODAL
+         ======================================================== -->
+    <div class="modal-overlay" id="resetRegModal" style="display: none;">
+        <div class="admin-card modal-card-box warning-box" style="max-width: 480px;">
+            <div class="admin-card-header">
+                <div class="lightbox-header-title">
+                    <span class="lightbox-icon" style="color: #f59e0b;">🔄</span>
+                    <h3 class="admin-card-title">ยืนยันการ Reset การลงทะเบียนทั้งหมด</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeResetRegModalBtn">✕</button>
+            </div>
+            <div style="padding: 10px 0 16px;">
+                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 12px;">
+                    คุณต้องการรีเซ็ตสถานะการลงทะเบียนของพนักงานทั้งหมดในตาราง <code
+                        class="table-name-badge">crsdg_member</code> (<span id="resetRegModalCount"
+                        class="warning-count-highlight">0</span> ท่าน) ใช่หรือไม่?
+                </p>
+                <div class="warning-banner"
+                    style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 10px; padding: 12px; font-size: 0.82rem; color: #fde68a;">
+                    ⚠️ เมื่อรีเซ็ตแล้ว:
+                    <ul style="margin: 6px 0 0 18px; padding: 0;">
+                        <li>สถานะการลงทะเบียนของทุกคนจะเปลี่ยนเป็น <strong>"ยังไม่ลงทะเบียน"</strong></li>
+                        <li>ข้อมูลวันและเวลาลงทะเบียนจะถูกล้างออกทั้งหมด</li>
+                        <li>ข้อมูลรหัสพนักงาน ชื่อ และสังกัดยังคงอยู่เหมือนเดิม</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-actions-right"
+                style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px;">
+                <button type="button" class="btn-secondary" id="cancelResetRegModalBtn">ยกเลิก</button>
+                <button type="button" class="btn-primary" id="confirmResetRegBtn"
+                    style="background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #fbbf24; color: #000; font-weight: 600;">
+                    🔄 ยืนยัน Reset การลงทะเบียน
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX: QUIZ QUESTION MODAL (Add / Edit Question & Answers)
+         ======================================================== -->
+    <div class="modal-overlay" id="quizModal" style="display: none;">
+        <div class="admin-card modal-card-box" style="max-width: 680px; width: 95%;">
+            <div class="admin-card-header">
+                <div class="lightbox-header-title">
+                    <span class="lightbox-icon" id="quizModalIcon">❓</span>
+                    <h3 class="admin-card-title" id="quizModalTitle">เพิ่มข้อคำถามใหม่ (<code
+                            class="table-name-badge">crsdg_quiz</code>)</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeQuizModalBtn">✕</button>
+            </div>
+
+            <form id="quizForm">
+                <input type="hidden" id="quizIdInput">
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="quizTitleInput">หัวข้อคำถาม (Question Title) *</label>
+                    <input type="text" id="quizTitleInput" class="form-input"
+                        placeholder="เช่น ของขวัญปีใหม่ยอดนิยมที่พนักงานอยากได้มากที่สุด" required>
+                </div>
+
+                <div class="form-row-2col"
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <div class="form-group">
+                        <label for="quizScoreInput">คะแนนรวมของข้อนี้ (คำนวณอัตโนมัติจากตัวเลือก) *</label>
+                        <input type="number" id="quizScoreInput" class="form-input" min="0" step="1" value="100"
+                            readonly
+                            style="background: rgba(0, 229, 255, 0.08); border-color: rgba(0, 229, 255, 0.4); color: #00e5ff; font-weight: 600; cursor: default;"
+                            title="ระบบคำนวณจากผลคะแนนของตัวเลือกย่อยด้านล่างโดยอัตโนมัติ" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="quizMaxAnswersInput">กำหนดจำนวนคำตอบในข้อนี้ *</label>
+                        <input type="number" id="quizMaxAnswersInput" class="form-input" min="1" max="20" step="1"
+                            value="4" required>
+                    </div>
+                </div>
+
+                <!-- Answer Choices Builder -->
+                <div class="quiz-answers-builder-container"
+                    style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 0.85rem; font-weight: 500; color: #00e5ff;">📝 ตัวเลือกคำตอบในชุดนี้
+                            (พร้อมระบุคะแนน)</span>
+                        <button type="button" class="btn-action-sm btn-secondary" id="btnAddQuizAnswerRow">
+                            + เพิ่มตัวเลือก
+                        </button>
+                    </div>
+
+                    <div id="quizAnswersRowsContainer" style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Dynamic rows appended by JS -->
+                    </div>
+                </div>
+
+                <div class="modal-actions-right"
+                    style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px;">
+                    <button type="button" class="btn-secondary" id="cancelQuizModalBtn">ยกเลิก</button>
+                    <button type="submit" class="btn-primary" id="saveQuizModalBtn">
+                        💾 บันทึกลงตาราง crsdg_quiz
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX: CONFIRM DELETE QUIZ MODAL
+         ======================================================== -->
+    <div class="modal-overlay" id="confirmDeleteQuizModal" style="display: none;">
+        <div class="admin-card modal-card-box warning-box" style="max-width: 450px;">
+            <div class="admin-card-header">
+                <div class="lightbox-header-title">
+                    <span class="lightbox-icon" style="color: #ef4444;">🗑️</span>
+                    <h3 class="admin-card-title">ยืนยันการลบข้อคำถาม</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeDeleteQuizModalBtn">✕</button>
+            </div>
+            <div style="padding: 10px 0 16px;">
+                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                    คุณต้องการลบข้อคำถาม <strong id="deleteQuizTitleHighlight" style="color: #ffffff;"></strong>
+                    ออกจากตาราง <code class="table-name-badge">crsdg_quiz</code> ใช่หรือไม่?
+                </p>
+            </div>
+            <input type="hidden" id="deleteTargetQuizId">
+            <div class="modal-actions-right"
+                style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px;">
+                <button type="button" class="btn-secondary" id="cancelDeleteQuizModalBtn">ยกเลิก</button>
+                <button type="button" class="btn-danger" id="confirmDeleteQuizBtn">
+                    🗑️ ยืนยันการลบ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX: REGISTRATION QR CODE MODAL
+         ======================================================== -->
+    <div class="modal-overlay" id="registrationQrModal" style="display: none;">
+        <div class="admin-card modal-card-box qr-modal-lightbox"
+            style="width: 65vw; max-width: 65vw; text-align: center;">
+            <div class="admin-card-header">
+                <div class="lightbox-header-title">
+                    <span class="lightbox-icon">📱</span>
+                    <h3 class="admin-card-title">QR Code ลงทะเบียน & โหวตทีมชนะ</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeRegQrModalBtn">✕</button>
+            </div>
+
+            <div class="qr-modal-body" style="padding: 24px 20px 20px; text-align: center;">
+                <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6;">
+                    สแกน QR Code ด้วยกล้องสมาร์ทโฟน เพื่อเข้าสู่หน้าลงทะเบียนเข้าร่วมกิจกรรม และโหวตทายผลทีมที่จะชนะ
+                </p>
+
+                <!-- High-Res QR Code Display Box -->
+                <div class="qr-display-box" id="qrDisplayBox"
+                    style="background: #ffffff; padding: 22px; border-radius: 20px; display: inline-block; box-shadow: 0 8px 30px rgba(0,0,0,0.35); margin-bottom: 22px;">
+                    <div id="qrCodeGraphicContainer" class="qr-graphic-container">
+                        <img id="regQrCodeImg" src="" alt="QR Code ลงทะเบียน"
+                            style="width: 280px; height: 280px; display: block; margin: 0 auto; border-radius: 12px;">
+                    </div>
+                </div>
+
+                <!-- ปิดหน้าต่าง Button -->
+                <div class="qr-modal-footer" style="display: flex; justify-content: center; margin-top: 10px;">
+                    <button type="button" class="btn-secondary" id="btnCloseQrModalAction"
+                        style="min-width: 160px; padding: 10px 28px; font-size: 0.95rem; font-weight: 500; border-radius: 10px;">
+                        ✕ ปิดหน้าต่าง
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX: EXPANDED VOTE DONUT CHART MODAL (80% WIDTH)
+         ======================================================== -->
+    <div class="modal-overlay" id="expandVoteDonutModal" style="display: none;">
+        <div class="admin-card modal-card-box expand-vote-donut-lightbox"
+            style="width: 80vw; max-width: 80vw; text-align: center;">
+            <div class="admin-card-header">
+                <div class="lightbox-header-title">
+                    <span class="lightbox-icon">📊</span>
+                    <h3 class="admin-card-title">สถิติผลการโหวตเลือกทีมแข่งขัน (ขนาดขยาย 80%)</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeExpandVoteDonutBtn">✕</button>
+            </div>
+
+            <div class="expand-donut-modal-body" style="padding: 24px 28px;">
+                <div class="expand-vote-barchart-wrapper" id="expandVoteBarChartContainer">
+                    <!-- Expanded Vertical Bar Chart rendered dynamically in large size -->
+                </div>
+
+                <div class="modal-footer" style="display: flex; justify-content: center; margin-top: 24px;">
+                    <button type="button" class="btn-secondary" id="btnCloseExpandDonutAction"
+                        style="min-width: 160px; padding: 10px 28px; font-size: 0.95rem; font-weight: 500; border-radius: 10px;">
+                        ✕ ปิดหน้าต่าง
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX: RESET PLAYER VOTES CONFIRMATION MODAL (crsdg_player)
+         ======================================================== -->
+    <div class="modal-overlay" id="confirmResetPlayerVotesModal" style="display: none;">
+        <div class="admin-card modal-card-box warning-box" style="max-width: 480px; width: 92%;">
+            <div class="admin-card-header">
+                <div class="lightbox-header-title">
+                    <span class="lightbox-icon" style="color: #ef4444;">🔄</span>
+                    <h3 class="admin-card-title" style="color: #f87171;">ยืนยันการ Reset เงินโหวตทั้งหมด</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeResetPlayerVotesModalBtn">✕</button>
+            </div>
+            <div style="padding: 10px 0 16px;">
+                <div class="delete-warning-banner"
+                    style="background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.3);">
+                    <div class="warning-icon-large">💰</div>
+                    <div class="warning-text-group">
+                        <div class="warning-main-heading" style="color: #fca5a5;">
+                            รีเซ็ต <strong>เงินโหวต (บาท)</strong> และ <strong>ผู้ให้เงิน</strong> ทั้งหมด
+                        </div>
+                        <div class="warning-count-highlight" id="resetPlayerVotesHighlightText">
+                            ทุกทีมในตาราง crsdg_player จะมีค่าเป็น 0
+                        </div>
+                    </div>
+                </div>
+                <div class="delete-warning-notice" style="margin-top: 12px;">
+                    <p>ระบบจะทำการรีเซ็ต <strong>เงินโหวต (บาท)</strong> และ <strong>จำนวนผู้ให้เงิน (คน)</strong>
+                        ของทุกทีมแข่งขันในตาราง <code>crsdg_player</code> ให้กลับเป็น <strong>0</strong> ทั้งหมด
+                        โดยรายชื่อทีมและสมาชิกจะยังคงอยู่ครบถ้วน</p>
+                </div>
+            </div>
+            <div class="modal-actions-bar">
+                <button type="button" class="btn-secondary" id="cancelResetPlayerVotesBtn">ยกเลิก</button>
+                <button type="button" class="btn-danger" id="confirmResetPlayerVotesBtn">🔄 ยืนยันการ Reset เป็น
+                    0</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX: แจ้งเตือนยืนยันการบันทึกข้อมูลทีมสำเร็จ
+         ======================================================== -->
+    <div class="modal-overlay modal-backdrop" id="playerSaveSuccessModal"
+        style="display: none; position: fixed; inset: 0; background: rgba(5, 10, 24, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 99999; align-items: center; justify-content: center; padding: 20px;">
+        <div class="admin-modal-card comp-save-success-card"
+            style="position: relative; max-width: 440px; width: 100%; text-align: center; padding: 32px 24px; background: #0f172a; border: 1.5px solid rgba(16, 185, 129, 0.5); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 35px rgba(16, 185, 129, 0.25); border-radius: 20px; font-family: 'Kanit', sans-serif;">
+            <div class="comp-save-success-icon" style="font-size: 3.6rem; line-height: 1; margin-bottom: 14px;">✅</div>
+            <h3 class="comp-save-success-title"
+                style="font-size: 1.35rem; font-weight: 700; color: #34d399; margin: 0 0 10px 0;">
+                ยืนยันการบันทึกรายการแล้ว!</h3>
+            <p class="comp-save-success-desc" id="playerSaveSuccessMsg"
+                style="font-size: 0.92rem; color: #cbd5e1; line-height: 1.6; margin: 0 0 24px 0;">
+                บันทึกข้อมูลทีมและรายละเอียดโครงการเรียบร้อยแล้ว
+            </p>
+            <button type="button" class="btn-primary" id="btnClosePlayerSaveSuccessModal"
+                style="min-width: 150px; padding: 10px 24px; font-size: 0.95rem; font-weight: 600; margin: 0 auto; display: inline-flex; align-items: center; justify-content: center;">
+                ✓ ตกลง
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX: สุ่มรางวัลทีมชนะโหวต (Vote Winning Team Draw Lightbox 90%)
+         ======================================================== -->
+    <div class="modal-overlay vote-draw-modal-backdrop" id="voteDrawModal" style="display: none;">
+        <div class="admin-card vote-draw-modal-container">
+            <!-- Modal Header -->
+            <div class="modal-header vote-draw-modal-header">
+                <div class="vote-draw-header-info">
+                    <div class="vote-draw-header-icon">🎲</div>
+                    <div>
+                        <h3 class="modal-title"
+                            style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #f8fafc;">
+                            ระบบสุ่มรางวัลทีมชนะโหวต (Vote Winning Team Draw)
+                        </h3>
+                        <p style="margin: 2px 0 0; font-size: 0.82rem; color: #94a3b8;">
+                            สุ่มมอบรางวัลแก่ผู้ร่วมงานที่ทายผลและจัดสรรเงินลงทุนให้กับทีมที่ชนะการแข่งขัน
+                        </p>
+                    </div>
+                </div>
+                <button type="button" class="btn-modal-close" id="btnCloseVoteDrawModal"
+                    aria-label="ปิดหน้าต่าง">✕</button>
+            </div>
+
+            <!-- Top Team Selector Row (ด้านบนให้เลือกทีมที่จะทำการสุ่ม) -->
+            <div class="vote-draw-team-selector-bar">
+                <div class="team-select-label-group">
+                    <span class="team-select-icon">🏆</span>
+                    <label for="voteDrawTeamSelect" class="team-select-label">เลือกทีมที่จะทำการสุ่มรางวัล
+                        (ทีมชนะโหวต):</label>
+                </div>
+                <div class="team-select-input-wrap">
+                    <select id="voteDrawTeamSelect" class="form-input vote-draw-select-field">
+                        <option value="">-- กำลังโหลดรายชื่อทีมแข่งขัน --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Main Content Area: Split 40% Left / 60% Right -->
+            <div class="vote-draw-split-body">
+                <!-- Left Column (40%): สรุปข้อมูลทีมชนะโหวต สิทธิ์ และการควบคุมการสุ่ม -->
+                <div class="vote-draw-col-left">
+                    <div class="vote-draw-card-box">
+                        <div class="vote-draw-box-title">
+                            <span>📊</span> สรุปสถิติทีมที่ชนะโหวต
+                        </div>
+
+                        <!-- Team Info Summary Banner -->
+                        <div class="vote-draw-team-banner" id="voteDrawTeamBanner">
+                            <div class="team-banner-avatar" id="voteDrawTeamAvatar">🛡️</div>
+                            <div class="team-banner-meta">
+                                <div class="team-banner-name" id="voteDrawTeamName">-</div>
+                                <div class="team-banner-sub" id="voteDrawTeamSub">กรุณาเลือกทีมด้านบน</div>
+                            </div>
+                        </div>
+
+                        <!-- KPI Summary Cards (จำนวนพนักงานที่ได้สิทธิ์ & จำนวนเงินที่ลงทุน) -->
+                        <div class="vote-draw-stats-grid">
+                            <div class="vote-draw-stat-tile tile-eligible">
+                                <div class="stat-tile-icon">👥</div>
+                                <div class="stat-tile-body">
+                                    <div class="stat-tile-label">จำนวนพนักงานที่ได้สิทธิ์</div>
+                                    <div class="stat-tile-number" id="voteDrawEligibleCount">0</div>
+                                    <div class="stat-tile-unit">คน (ผู้ร่วมโหวต/ลงทุน)</div>
+                                </div>
+                            </div>
+                            <div class="vote-draw-stat-tile tile-money">
+                                <div class="stat-tile-icon">💰</div>
+                                <div class="stat-tile-body">
+                                    <div class="stat-tile-label">จำนวนเงินที่ลงทุน</div>
+                                    <div class="stat-tile-number" id="voteDrawTotalInvested">0</div>
+                                    <div class="stat-tile-unit">บาท</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Draw Control Box (กล่องใส่จำนวนที่จะสุ่ม และปุ่มสุ่ม) -->
+                        <div class="vote-draw-control-panel">
+                            <label for="voteDrawCountInput" class="draw-control-label">
+                                <span>🎯</span> กำหนดจำนวนที่จะสุ่ม (คน):
+                            </label>
+                            <div class="draw-input-row">
+                                <button type="button" class="btn-step-count" id="btnVoteDrawMinus"
+                                    title="ลด 1">-</button>
+                                <input type="number" id="voteDrawCountInput" class="form-input draw-count-input" min="1"
+                                    max="999" value="1">
+                                <button type="button" class="btn-step-count" id="btnVoteDrawPlus"
+                                    title="เพิ่ม 1">+</button>
+                                <div class="quick-preset-btns">
+                                    <button type="button" class="btn-preset-pill" data-qty="1">1</button>
+                                    <button type="button" class="btn-preset-pill" data-qty="3">3</button>
+                                    <button type="button" class="btn-preset-pill" data-qty="5">5</button>
+                                    <button type="button" class="btn-preset-pill" data-qty="10">10</button>
+                                    <button type="button" class="btn-preset-pill" id="btnVoteDrawAll">ทั้งหมด</button>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn-execute-vote-draw" id="btnExecuteVoteDraw">
+                                <span class="draw-btn-icon">🎲</span>
+                                <span class="draw-btn-text">ทำการสุ่มรายชื่อ</span>
+                            </button>
+                            <p class="draw-hint-text">
+                                💡 หากลบรายชื่อทางขวามือ เมื่อกดสุ่มใหม่ ระบบจะสุ่มเฉพาะรายการที่ยังไม่ครบเท่านั้น
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column (60%): ผลการสุ่มรายชื่อผู้โชคดี พร้อมปุ่มลบรายบุคคล -->
+                <div class="vote-draw-col-right">
+                    <div class="vote-draw-card-box" style="height: 100%; display: flex; flex-direction: column;">
+                        <div class="vote-draw-box-title"
+                            style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span>🏆</span> ผลการสุ่มรายชื่อผู้ได้รับรางวัล
+                                <span class="vote-drawn-count-badge" id="voteDrawnCountBadge">0 / 0 ท่าน</span>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" class="btn-sm btn-outline-blue" id="btnExportVoteDrawExcel"
+                                    title="ส่งออกรายชื่อเป็น Excel">
+                                    📥 โหลด Excel
+                                </button>
+                                <button type="button" class="btn-sm btn-outline-red" id="btnClearVoteDrawList"
+                                    title="ล้างผลการสุ่มทั้งหมด">
+                                    🔄 ล้างผลสุ่ม
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Results List Container -->
+                        <div class="vote-drawn-list-container" id="voteDrawnListContainer">
+                            <div class="vote-draw-empty-state">
+                                <div style="font-size: 2.5rem; margin-bottom: 8px;">🎁</div>
+                                <div style="font-size: 1rem; font-weight: 600; color: #f8fafc;">ยังไม่มีผลการสุ่มรายชื่อ
+                                </div>
+                                <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 4px;">
+                                    กรุณาเลือกทีมและกำหนดจำนวนผู้โชคดีทางด้านซ้ายมือ แล้วกดปุ่ม
+                                    <strong>"ทำการสุ่มรายชื่อ"</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts: SheetJS first, then Firebase, state, audio, and admin controller -->
+    <script src="js/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script src="js/firebase-storage.js"></script>
+    <script src="js/firebase-sync.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+
+</html>

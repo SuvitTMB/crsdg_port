@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRSDG AI Showcase & New Year Celebration</title>
+
+    <!-- Google Fonts Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS Stylesheets -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/reward.css">
+</head>
+
+<body class="reward-body">
+    <!-- Background overlay & festive glow -->
+    <div class="reward-backdrop-glow"></div>
+
+    <!-- Fireworks & Confetti Canvas -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- ========================================================
+         TOP NAVIGATION BAR - Strictly matching Image 3
+         ======================================================== -->
+    <header class="reward-header">
+        <div class="header-left">
+            <a href="index.html" class="nav-btn-back" id="backBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" class="nav-icon">
+                    <path d="m15 18-6-6 6-6" />
+                </svg>
+                <span>หน้าลงทะเบียน</span>
+            </a>
+            <div class="room-code-badge" title="รหัสห้องควบคุมสำหรับรีโมต">
+                <span class="room-key-icon">🔑</span>
+                <span>ห้อง: <strong>AL2026</strong></span>
+            </div>
+            <div class="live-status-pill" id="liveStatusPill">
+                <span class="live-dot"></span>
+                <span>Real-time Live (Firestore)</span>
+            </div>
+        </div>
+
+        <div class="header-center">
+            <div class="stage-title-pill">
+                <span>ระบบสุ่มเลือกผู้รับรางวัล</span>
+            </div>
+            <div class="stage-group-pill" id="stageGroupIndicator">
+                Management (1/19)
+            </div>
+        </div>
+
+        <div class="header-right">
+            <button type="button" class="btn-top-tool" id="btnOpenQrModal" title="เปิด QR Code สแกนรีโมต">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                    <rect width="18" height="18" x="3" y="3" rx="2" />
+                    <path d="M7 7h.01M17 7h.01M7 17h.01M17 17h.01" />
+                </svg>
+                <span>QR Code</span>
+            </button>
+            <a href="remote-reward.html" target="_blank" class="btn-top-tool btn-remote-top" id="btnOpenRemote"
+                title="เปิดหน้ารีโมตควบคุม (remote-reward.html)">
+                <span style="font-size: 1rem;">📱</span>
+                <span>Remote</span>
+            </a>
+            <button type="button" class="btn-top-tool btn-top-reroll" id="btnTopReroll" title="สุ่มใหม่ (ลบชื่อและสุ่มใหม่)" style="display: none;">
+                <span>🔄</span>
+                <span>สุ่มใหม่</span>
+            </button>
+            <div class="badge-eligible-tag" id="eligibleCountTag">
+                ผู้มีสิทธิ์: 78 คน
+            </div>
+            <button type="button" class="btn-top-tool btn-icon-only" id="soundToggleBtn" title="เปิด/ปิดเสียง">
+                <span id="soundIcon">🔊</span>
+            </button>
+            <button type="button" class="btn-top-tool btn-icon-only" id="fullscreenToggleBtn" title="ขยายเต็มจอ">
+                <span id="fsIcon">⛶</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ========================================================
+         MAIN STAGE ARENA - Golden Marquee & 2 Columns
+         ======================================================== -->
+    <main class="reward-stage-main">
+        <!-- Stage 2 Columns Center Area -->
+        <div class="stage-center-container">
+            <!-- Left Column: Executive / Sponsor Showcase -->
+            <div class="sponsor-showcase-column">
+                <div class="sponsor-stage-title">CRSDG AI Showcase &amp; New Year Celebration</div>
+                <div class="sponsor-portrait-wrapper">
+                    <div class="sponsor-golden-halo"></div>
+                    <div class="sponsor-portrait-frame">
+                        <img src="images/P Ole.png" alt="Sponsor" id="sponsorAvatarImg" class="sponsor-avatar-large">
+                        <div class="sponsor-avatar-fallback" id="sponsorAvatarFallback" style="display: none;">ผบ</div>
+                    </div>
+                </div>
+                <div class="sponsor-text-info">
+                    <h2 class="sponsor-name-text" id="sponsorNameText">พี่โอเล่</h2>
+                    <div class="sponsor-position-badge" id="sponsorPositionText">ผู้บริหารระดับสูง</div>
+                </div>
+            </div>
+
+            <!-- Right Column: Lucky Draw Card & Digital Slot -->
+            <div class="draw-card-column">
+                <div class="glass-draw-card">
+                    <!-- Top-Right Reroll Icon Button (Only shown when prize is drawn) -->
+                    <button type="button" class="btn-card-reroll-top" id="btnCardRerollTop" title="สุ่มใหม่ (ลบชื่อผู้ได้รับรางวัลและสุ่มใหม่ทันที)" style="display: none;">
+                        <span class="reroll-top-icon">🔄</span>
+                        <span class="reroll-top-text">สุ่มใหม่</span>
+                    </button>
+
+                    <div class="card-top-group-badge" id="cardGroupBadge">
+                        MANAGEMENT
+                    </div>
+                    <div class="card-prize-subtitle" id="cardPrizeSubtitle">
+                        จำนวนทั้งหมด 1 รางวัล • ยังไม่ได้สุ่ม (0/1)
+                    </div>
+
+                    <!-- Inner Digital Slot Machine Frame -->
+                    <div class="slot-display-frame">
+                        <div class="slot-field-header">
+                            <span class="field-icon">🏷️</span>
+                            <span class="field-title">รหัสพนักงาน</span>
+                        </div>
+
+                        <!-- 5-digit rolling slot numbers -->
+                        <div class="slot-digits-container" id="slotDigitsContainer">
+                            <div class="digit-box"><span class="digit-val" id="d0">0</span></div>
+                            <div class="digit-box"><span class="digit-val" id="d1">0</span></div>
+                            <div class="digit-box"><span class="digit-val" id="d2">0</span></div>
+                            <div class="digit-box"><span class="digit-val" id="d3">0</span></div>
+                            <div class="digit-box"><span class="digit-val" id="d4">0</span></div>
+                        </div>
+
+                        <div class="slot-winner-label">
+                            <span class="field-icon">🏆</span>
+                            <span>ชื่อ-นามสกุล ผู้ได้รับการสุ่มเลือก</span>
+                        </div>
+
+                        <!-- Golden Highlight Winner Name Box -->
+                        <div class="winner-name-golden-box" id="winnerNameBox">
+                            <span class="winner-name-content" id="winnerNameText">---- รอลุ้นผู้โชคดี ----</span>
+                        </div>
+
+                        <!-- Winner Metadata details -->
+                        <div class="winner-meta-pill" id="winnerMetaPill" style="display: none;">
+                            <span id="winnerMetaDept">สังกัด: QC</span>
+                            <span class="meta-separator">•</span>
+                            <span id="winnerMetaTime">เวลาสุ่ม: 2026-11-17 20:30:28</span>
+                        </div>
+                    </div>
+
+                    <!-- Card Action Controls -->
+                    <div class="card-action-bar" id="cardActionBar">
+                        <button type="button" class="btn-spin-action" id="spinActionBtn">
+                            <span class="spin-btn-icon" id="spinBtnIcon">🎲</span>
+                            <span class="spin-btn-text" id="spinBtnText">เริ่มสุ่มรางวัล (START SPIN)</span>
+                        </button>
+                        <button type="button" class="btn-reroll-action" id="rerollActionBtn" style="display: none;">
+                            <span>🔄 สุ่มใหม่</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ========================================================
+         BOTTOM PRIZE CAROUSEL - 19 Management Prize Cards
+         ======================================================== -->
+    <footer class="reward-bottom-footer">
+        <div class="carousel-section-header">
+            <div class="carousel-title" id="carouselGroupTitle">
+                รายการของรางวัลในกลุ่ม Management
+            </div>
+            <div class="carousel-count-badge" id="carouselCountBadge">
+                19 รายการ
+            </div>
+        </div>
+
+        <div class="carousel-scroll-wrapper" id="carouselScrollWrapper">
+            <div class="carousel-cards-strip" id="prizeCarouselStrip">
+                <!-- 19 Prize Cards dynamically populated -->
+            </div>
+        </div>
+    </footer>
+
+    <!-- Reroll Confirmation Lightbox Modal -->
+    <div class="modal-overlay" id="rerollModal" style="display: none;">
+        <div class="modal-dialog reroll-modal-card">
+            <div class="modal-header-bar">
+                <div class="modal-title-wrap">
+                    <span class="modal-warn-badge">⚠️</span>
+                    <h3 class="modal-title-text">ยืนยันการลบผลรางวัลและสุ่มใหม่</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeRerollModalBtn" title="ปิดหน้าต่าง">✕</button>
+            </div>
+            <div class="modal-body-content">
+                <div class="reroll-winner-preview-box">
+                    <div class="reroll-preview-label">ผู้ได้รับรางวัลปัจจุบันที่จะถูกลบ:</div>
+                    <div class="reroll-preview-user">
+                        <span class="reroll-user-icon">👤</span>
+                        <span class="reroll-user-name" id="rerollModalWinnerName">--</span>
+                        <span class="reroll-user-empid" id="rerollModalEmpId"></span>
+                    </div>
+                    <div class="reroll-preview-prize" id="rerollModalPrizeName">รางวัล: Lucky Draw</div>
+                </div>
+
+                <div class="reroll-notice-callout">
+                    <div class="callout-icon">ℹ️</div>
+                    <div class="callout-text">
+                        ระบบจะ<strong>ลบรายชื่อผู้ได้รับรางวัลนี้</strong>ออกจากรายการ
+                        เพื่อคืนสิทธิ์ให้ผู้ได้รับรางวัลเดิม
+                        และระบบจะ<strong>เริ่มทำการหมุนสุ่มเลือกผู้โชคดีท่านใหม่โดยทันที</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions-footer">
+                <button type="button" class="btn-cancel-modal" id="btnCancelRerollModal">
+                    ยกเลิก
+                </button>
+                <button type="button" class="btn-confirm-reroll-modal" id="btnConfirmRerollModal">
+                    <span>🔄 ยืนยันการลบและเริ่มสุ่มใหม่</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Lightbox Modal -->
+    <div class="modal-overlay" id="qrModal" style="display: none;">
+        <div class="admin-card qr-lightbox-card">
+            <div class="admin-card-header">
+                <h3 class="admin-card-title">📱 สแกนเพื่อเข้าใช้งานรีโมตควบคุม</h3>
+                <button type="button" class="btn-modal-close" id="closeQrModalBtn">✕</button>
+            </div>
+            <div class="qr-modal-body">
+                <img src="images/qr.png" alt="Remote QR Code" class="qr-image-display"
+                    onerror="this.onerror=null; this.src='https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=' + encodeURIComponent(window.location.origin + '/remote-reward.html'); this.onerror=function(){this.onerror=null; this.style.display='none';};">
+                <p class="qr-instruction-text">
+                    สแกน QR Code เพื่อเปิดลุ้นรางวัล
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/confetti.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script src="js/firebase-storage.js"></script>
+    <script src="js/firebase-sync.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/reward.js"></script>
+</body>
+
+</html>

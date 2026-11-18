@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4 ต่อ 4 CRSDG Game - หน้าหลัก</title>
+    <!-- Google Fonts Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS Stylesheets -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/game.css">
+</head>
+
+<body>
+    <!-- ========================================================
+         TOP LEFT CONTROLS (Navigation: Admin, ทีมแข่งขัน, Leaderboard)
+         ======================================================== -->
+    <div class="top-left-controls">
+        <!-- กลับไปหน้า Admin -->
+        <a href="admin.html" class="btn-pill-dark" id="adminLink">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m15 18-6-6 6-6" />
+            </svg>
+            <span>หน้า Admin</span>
+        </a>
+    </div>
+
+    <!-- Background Music Audio Element -->
+    <audio id="bgmAudio" loop preload="auto">
+        <source src="assets/sounds/game-bgm.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- ========================================================
+         TOP RIGHT CONTROLS: ปุ่มเปิด-ปิดเสียง & ปุ่มขยายหน้าจอ
+         ======================================================== -->
+    <div class="top-right-controls">
+        <!-- ปุ่มเปิด-ปิดเสียง (Sound Toggle) -->
+        <button type="button" class="btn-pill-dark" id="soundToggleBtn" title="เปิด/ปิดเสียง (M)">
+            <svg class="btn-icon" id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+            </svg>
+            <span id="soundText">เสียง: เปิด</span>
+        </button>
+
+        <!-- ปุ่มขยายหน้าจอ (Fullscreen Button) -->
+        <button type="button" class="btn-fullscreen" id="fullscreenBtn" title="ขยายเต็มจอ (F)">
+            <svg class="btn-icon" id="fullscreenIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path
+                    d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+            </svg>
+            <span id="fullscreenText">เต็มจอ</span>
+        </button>
+    </div>
+
+    <!-- ========================================================
+         CENTER VIEWPORT: BACKGROUND IMAGE SCALED BY HEIGHT
+         ======================================================== -->
+    <main class="stage-viewport" id="stageViewport">
+        <div class="stage-content-wrapper">
+            <!-- Stage Image (เริ่มต้นเป็น background.jpg, เมื่อกดเริ่มการแข่งขันจะเปลี่ยนเป็น background-game.jpg) -->
+            <img src="assets/images/background.jpg" alt="4 ต่อ 4 CRSDG Game Show" class="stage-image" id="mainStageImg">
+
+            <!-- ปุ่ม เริ่มการแข่งขัน หน้าแรก (วางตำแหน่งตรงกลาง ใต้ข้อความ CRSDG Game) -->
+            <div class="stage-start-container" id="stageStartBox">
+                <button type="button" class="btn-start-competition" id="startCompBtn">
+                    <svg class="start-btn-icon" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                    </svg>
+                    <span>เริ่มการแข่งขัน</span>
+                </button>
+            </div>
+
+            <!-- ========================================================
+                 ARENA MATCH SELECTION (แสดงเมื่อคลิก เริ่มการแข่งขัน)
+                 ======================================================== -->
+            <div class="match-arena-overlay" id="matchArenaOverlay">
+                <!-- แถวแรก: แสดง เลือกทีมที่จะแข่งขัน -->
+                <div class="arena-row-1">
+                    <button type="button" class="btn-back-stage" id="btnBackIntro" title="ย้อนกลับหน้าหลัก">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m15 18-6-6 6-6" />
+                        </svg>
+                        <span>ย้อนกลับ</span>
+                    </button>
+                    <h2 class="arena-title">เลือกทีมที่จะแข่งขัน</h2>
+                    <div style="width: 70px;"></div>
+                </div>
+
+                <!-- แถวล่าง: แบ่งแถวออกเป็น 2 แถว กว้างแถวละ 50% -->
+                <div class="arena-row-3-split">
+                    <!-- ด้านซ้าย 50%: แสดงรายชื่อทีมให้เลือก (ทีมฝั่งซ้าย) -->
+                    <div class="arena-col-50 col-team-left">
+                        <div class="team-spotlight-podium podium-blue">
+                            <span class="podium-side-tag">🔵 ทีมฝั่งซ้าย (Blue Team)</span>
+                            <div class="podium-team-name" id="spotlightTeamLeft">IT Dragons</div>
+                            <!-- รูปหัวหน้าทีม และชื่อ-นามสกุลหัวหน้าทีม -->
+                            <div class="podium-captain-box" id="spotlightCaptainBoxLeft">
+                                <div class="podium-captain-avatar" id="spotlightCaptainAvatarLeft"></div>
+                                <div class="podium-captain-info">
+                                    <span class="podium-captain-label">👑 หัวหน้าทีม</span>
+                                    <div class="podium-captain-name" id="spotlightCaptainNameLeft">คุณสมชาย วงศ์สวัสดิ์
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="team-names-grid" id="gridTeamsLeft">
+                            <!-- รายชื่อทีมฝั่งซ้าย (เฉพาะชื่อทีม) -->
+                        </div>
+                    </div>
+
+                    <!-- สัญลักษณ์ VS ตรงกลางการแข่งขัน -->
+                    <div class="arena-vs-divider">
+                        <div class="vs-circle">VS</div>
+                    </div>
+
+                    <!-- ด้านขวา 50%: แสดงรายชื่อทีมให้เลือก (ทีมฝั่งขวา) -->
+                    <div class="arena-col-50 col-team-right">
+                        <div class="team-spotlight-podium podium-orange">
+                            <span class="podium-side-tag">🟠 ทีมฝั่งขวา (Orange Team)</span>
+                            <div class="podium-team-name" id="spotlightTeamRight">Marketing Fire</div>
+                            <!-- รูปหัวหน้าทีม และชื่อ-นามสกุลหัวหน้าทีม -->
+                            <div class="podium-captain-box" id="spotlightCaptainBoxRight">
+                                <div class="podium-captain-avatar" id="spotlightCaptainAvatarRight"></div>
+                                <div class="podium-captain-info">
+                                    <span class="podium-captain-label">👑 หัวหน้าทีม</span>
+                                    <div class="podium-captain-name" id="spotlightCaptainNameRight">คุณกนกวรรณ
+                                        จิตต์เที่ยง</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="team-names-grid" id="gridTeamsRight">
+                            <!-- รายชื่อทีมฝั่งขวา (เฉพาะชื่อทีม) -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ด้านล่าง: เป็นปุ่ม สุ่มเลือกทีมแข่งขัน และปุ่ม เลือกชุดคำถาม -->
+                <div class="arena-row-4-bottom">
+                    <div class="arena-bottom-buttons-row">
+                        <button type="button" class="btn-random-teams" id="btnRandomTeams" title="คลิกเพื่อสุ่มเลือกทีมทั้งสองฝั่ง">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                                <path d="M16 8h.01M8 8h.01M8 16h.01M16 16h.01M12 12h.01" />
+                            </svg>
+                            <span>🎲 สุ่มเลือกทีมแข่งขัน</span>
+                        </button>
+                        <button type="button" class="btn-start-match-action" id="btnGoToQuizSelect">
+                            <svg class="start-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                            <span>เลือกชุดคำถาม ❯</span>
+                        </button>
+                        <button type="button" class="btn-reset-eliminated" id="btnResetEliminated" title="รีเซ็ตสถานะทีมตกรอบทั้งหมดเพื่อเริ่มใหม่">
+                            <span>↺ รีเซ็ตทีมตกรอบ</span>
+                        </button>
+                    </div>
+                    <div class="arena-summary-text" id="arenaSummaryText">
+                        รอบ: <strong>รอบที่ 1: คัดเลือกสาย A</strong> • คู่แข่งขัน: <strong>IT Dragons VS Marketing
+                            Fire</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================================
+                 QUIZ SELECTION OVERLAY (Step 2: เลือกชุดคำถาม)
+                 ======================================================== -->
+            <div class="quiz-select-overlay" id="quizSelectOverlay">
+                <div class="quiz-select-container">
+                    <!-- Row 1: Header -->
+                    <div class="quiz-select-header">
+                        <button type="button" class="btn-back-stage" id="btnBackToTeams" title="ย้อนกลับไปเลือกทีม">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="m15 18-6-6 6-6" />
+                            </svg>
+                            <span>ย้อนกลับ</span>
+                        </button>
+                        <div class="quiz-select-title-box">
+                            <h2 class="quiz-select-title">เลือกชุดคำถามสำหรับการแข่งขัน</h2>
+                            <div class="quiz-match-summary" id="quizMatchSummary">
+                                รอบ: <strong>รอบที่ 1: คัดเลือกสาย A</strong> • คู่แข่งขัน: <span id="quizTeamA"
+                                    style="color:#60a5fa; font-weight:600;">IT Dragons</span> VS <span id="quizTeamB"
+                                    style="color:#fb923c; font-weight:600;">Marketing Fire</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-reset-used-quizzes" id="btnResetUsedQuizzes"
+                            title="รีเซ็ตสถานะคำถามที่ถูกเลือกแล้วทั้งหมด">
+                            🔄 รีเซ็ตคำถาม
+                        </button>
+                    </div>
+
+                    <!-- Row 2: Grid of all Quizzes -->
+                    <div class="quiz-cards-grid" id="quizCardsGrid">
+                        <!-- รายชื่อชุดคำถามทั้งหมด Render จาก crsdg_quiz -->
+                    </div>
+
+                    <!-- Row 3: Bottom Action Bar (ปุ่ม สุ่มคำถาม & ปุ่ม เริ่มการแข่งขัน) -->
+                    <div class="quiz-select-bottom-bar">
+                        <button type="button" class="btn-random-quiz" id="btnRandomQuiz">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                                <path d="M16 8h.01M8 8h.01M8 16h.01M16 16h.01M12 12h.01" />
+                            </svg>
+                            <span>🎲 สุ่มคำถาม</span>
+                        </button>
+
+                        <button type="button" class="btn-start-match-action" id="btnStartQuizGame" disabled>
+                            <svg class="start-btn-icon" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                            </svg>
+                            <span>เริ่มการแข่งขัน</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================================
+                 QUESTION GAME SHOW STAGE (Step 3: ส่วนของเกมคำถาม 4 ต่อ 4)
+                 ======================================================== -->
+            <div class="quiz-game-stage-overlay" id="quizGameStageOverlay">
+                <div class="quiz-stage-container">
+                    <!-- Top Nav Bar -->
+                    <div class="stage-top-bar">
+                        <button type="button" class="btn-back-stage" id="btnBackToQuizSelect"
+                            title="ย้อนกลับไปเลือกชุดคำถาม">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="m15 18-6-6 6-6" />
+                            </svg>
+                            <span>ย้อนกลับ</span>
+                        </button>
+                        <!-- การแข่งขัน 3 ครั้งในแต่ละรอบ (วางไว้ตรงกลางในหน้าแข่งขัน) -->
+                        <div class="match-games-progress-bar" id="matchGamesProgressBar">
+                            <div class="match-game-box is-current" id="matchGameBox1" data-game="1" title="การแข่งขัน ครั้งที่ 1">
+                                <span class="match-game-dot">●</span>
+                                <span>การแข่งขัน ครั้งที่ 1</span>
+                            </div>
+                            <div class="match-game-box is-pending" id="matchGameBox2" data-game="2" title="การแข่งขัน ครั้งที่ 2">
+                                <span class="match-game-dot">○</span>
+                                <span>การแข่งขัน ครั้งที่ 2</span>
+                            </div>
+                            <div class="match-game-box is-pending" id="matchGameBox3" data-game="3" title="การแข่งขัน ครั้งที่ 3">
+                                <span class="match-game-dot">○</span>
+                                <span>การแข่งขัน ครั้งที่ 3</span>
+                            </div>
+                        </div>
+                        <div style="width: 105px;"></div>
+                    </div>
+
+                    <!-- Scoreboard Row -->
+                    <div class="quiz-stage-scoreboard">
+                        <!-- Blue Team (Left) -->
+                        <div class="game-team-card team-card-blue turn-active" id="gameTeamCardBlue"
+                            title="คลิกเพื่อเลือกให้ทีมฝั่งซ้ายเป็นทีมที่กำลังแข่งขัน">
+                            <div class="game-team-meta">
+                                <div class="podium-captain-avatar" id="gameBlueAvatar"
+                                    style="width: 38px; height: 38px;"></div>
+                                <div>
+                                    <div class="game-team-name-title" id="gameBlueTeamName">IT Dragons</div>
+                                    <div class="game-team-cap-sub" id="gameBlueCapName">👑 คุณสมชาย วงศ์สวัสดิ์</div>
+                                </div>
+                            </div>
+                            <div class="game-team-score-box">
+                                <div class="game-team-score-num" id="gameBlueScore">0</div>
+                                <div class="score-stepper-btn-group">
+                                    <button type="button" class="score-mini-btn" id="btnBluePlus10">+10</button>
+                                    <button type="button" class="score-mini-btn" id="btnBlueMinus10">-10</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Center Bank Score (เอา Strikes ออก ย้ายไปไว้ใต้ตัวเลือกตรงกลาง) -->
+                        <div class="game-center-bank-box">
+                            <div class="bank-score-badge">
+                                <div class="bank-score-label">คะแนนรวมข้อนี้</div>
+                                <div class="bank-score-val" id="gameBankScore">0</div>
+                            </div>
+                        </div>
+
+                        <!-- Orange Team (Right) -->
+                        <div class="game-team-card team-card-orange turn-inactive" id="gameTeamCardOrange"
+                            title="คลิกเพื่อเลือกให้ทีมฝั่งขวาเป็นทีมที่กำลังแข่งขัน">
+                            <div class="game-team-score-box">
+                                <div class="game-team-score-num" id="gameOrangeScore">0</div>
+                                <div class="score-stepper-btn-group">
+                                    <button type="button" class="score-mini-btn" id="btnOrangePlus10">+10</button>
+                                    <button type="button" class="score-mini-btn" id="btnOrangeMinus10">-10</button>
+                                </div>
+                            </div>
+                            <div class="game-team-meta" style="flex-direction: row-reverse; text-align: right;">
+                                <div class="podium-captain-avatar" id="gameOrangeAvatar"
+                                    style="width: 38px; height: 38px;"></div>
+                                <div>
+                                    <div class="game-team-name-title" id="gameOrangeTeamName">Marketing Fire</div>
+                                    <div class="game-team-cap-sub" id="gameOrangeCapName">👑 คุณกนกวรรณ จิตต์เที่ยง
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Center Play Area (Question & Answer Flip Board & Strikes) -->
+                    <div class="stage-center-play-area">
+                        <!-- Question Title Banner -->
+                        <div class="game-question-banner">
+                            <h2 class="game-question-title" id="gameQuestionTitle">
+                                คำถาม: กำลังโหลดชุดคำถาม...
+                            </h2>
+                        </div>
+
+                        <!-- 4 ต่อ 4 Answer Flip Board (กล่องตัวเลือกความสูงพอดี ไม่สูงเกินไป) -->
+                        <div class="answers-flip-board" id="gameAnswersBoard">
+                            <!-- Answer Flip Cards render here -->
+                        </div>
+
+                        <!-- แถบแสดงสถานะช่วงขโมยคะแนน (แสดงเมื่อตอบผิดครบ 3 ครั้งแล้วสิทธิ์ตกเป็นของทีมคู่แข่งขัน) -->
+                        <div class="steal-phase-action-bar" id="stealPhaseActionBar" style="display: none;">
+                            <div class="steal-phase-info">
+                                <span class="steal-phase-icon">⚔️</span>
+                                <span class="steal-phase-txt" id="stealPhaseBannerTxt">
+                                    สิทธิ์ขโมยคะแนน: <strong>ทีมคู่แข่งขัน</strong> มีสิทธิ์ตอบ 1 คำตอบเพื่อขโมยคะแนนสะสมทั้งหมด
+                                </span>
+                            </div>
+                            <button type="button" class="btn-steal-failed" id="btnStealFailed" title="คลิกเมื่อทีมขโมยทายคำตอบผิด (กากบาท 1 รูป และโอนคะแนนให้ทีมที่เริ่ม)">
+                                ✕ ตอบผิด (โอนคะแนนให้ทีมที่เริ่ม)
+                            </button>
+                        </div>
+
+                        <!-- แถบปุ่มกดสรุปผลรอบนี้ (แสดงเมื่อตอบถูกหรือตอบผิดช่วงขโมยคะแนน เพื่อให้กดก่อนแสดง lightbox สรุปผล) -->
+                        <div class="round-summary-action-bar" id="roundSummaryActionBar" style="display: none;">
+                            <div class="round-summary-info">
+                                <span class="round-summary-icon" id="roundSummaryIcon">🏆</span>
+                                <span class="round-summary-txt" id="roundSummaryTxt">
+                                    การแข่งขันครั้งนี้จบแล้ว คลิกปุ่มด้านขวาเพื่อดูสรุปผล
+                                </span>
+                            </div>
+                            <button type="button" class="btn-trigger-round-summary" id="btnTriggerRoundSummary" title="คลิกเพื่อเปิดหน้าต่างสรุปผลคะแนนรอบนี้">
+                                📊 สรุปผลรอบนี้ ❯
+                            </button>
+                        </div>
+
+                        <!-- กล่อง กากบาททั้งกล่อง ย้ายลงมาไว้ที่ด้านล่างใต้ตัวเลือกไว้ตรงกลาง เอากรอบออก แต่ละกล่องเป็นสี่เหลี่ยม icon ใหญ่ขึ้นและเห็นชัด (margin-top: 40px) -->
+                        <div class="strikes-container stage-strikes-bottom">
+                            <button type="button" class="strike-x-btn" id="strikeBtn1"
+                                title="ผิดครั้งที่ 1 (กากบาท 1)">✕</button>
+                            <button type="button" class="strike-x-btn" id="strikeBtn2"
+                                title="ผิดครั้งที่ 2 (กากบาท 2)">✕</button>
+                            <button type="button" class="strike-x-btn" id="strikeBtn3"
+                                title="ผิดครั้งที่ 3 (กากบาท 3)">✕</button>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Game Action Controls -->
+                    <div class="game-bottom-actions-row">
+                        <button type="button" class="btn-reveal-all" id="btnRevealAllAnswers">
+                            👁️ เฉลยคำตอบทั้งหมด
+                        </button>
+
+                        <!-- ตรงกลาง: ปุ่มทีมฝั่งซ้าย (มี Radio ทางซ้าย) และปุ่มทีมฝั่งขวา (มี Radio ทางขวา) -->
+                        <div class="teams-action-center-group">
+                            <!-- ทีมฝั่งซ้าย (มี Radio ด้านซ้ายมือ) -->
+                            <div class="team-turn-combo-box blue-turn-combo">
+                                <label class="turn-radio-label turn-radio-left" for="turnRadioBlue"
+                                    title="เลือกให้ทีมฝั่งซ้ายเป็นทีมที่กำลังแข่งขัน">
+                                    <input type="radio" name="competingTeamTurn" id="turnRadioBlue" value="blue"
+                                        checked>
+                                    <span class="custom-radio-circle"></span>
+                                    <span class="turn-label-txt">กำลังแข่งขัน</span>
+                                </label>
+                                <button type="button" class="btn-game-award btn-award-blue" id="btnAwardBlue" disabled
+                                    title="ต้องเฉลยคำตอบครบทุกข้อก่อน จึงจะสามารถมอบคะแนนได้">
+                                    + มอบคะแนนให้ 🔵 ทีมฝั่งซ้าย
+                                </button>
+                            </div>
+
+                            <!-- ทีมฝั่งขวา (มี Radio ด้านขวามือ) -->
+                            <div class="team-turn-combo-box orange-turn-combo">
+                                <button type="button" class="btn-game-award btn-award-orange" id="btnAwardOrange" disabled
+                                    title="ต้องเฉลยคำตอบครบทุกข้อก่อน จึงจะสามารถมอบคะแนนได้">
+                                    + มอบคะแนนให้ 🟠 ทีมฝั่งขวา
+                                </button>
+                                <label class="turn-radio-label turn-radio-right" for="turnRadioOrange"
+                                    title="เลือกให้ทีมฝั่งขวาเป็นทีมที่กำลังแข่งขัน">
+                                    <span class="turn-label-txt">กำลังแข่งขัน</span>
+                                    <span class="custom-radio-circle"></span>
+                                    <input type="radio" name="competingTeamTurn" id="turnRadioOrange" value="orange">
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-finish-match" id="btnFinishMatch" disabled
+                            title="มอบคะแนนให้ทีมใดทีมหนึ่งก่อนจบข้อนี้">
+                            🏆 จบคู่นี้ / คู่ถัดไป ❯
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Subtle bottom keyboard shortcut hint -->
+    <div class="bottom-hint">
+        กด <kbd>Space</kbd> หรือคลิกปุ่มเพื่อเริ่มการแข่งขัน • กด <kbd>F</kbd> ขยายหน้าจอ • กด <kbd>M</kbd>
+        เปิด/ปิดเสียง
+    </div>
+
+    <!-- ========================================================
+         MODAL: LEADERBOARD (ตารางคะแนน - กว้าง 70%)
+         ======================================================== -->
+    <div class="modal-overlay" id="leaderboardModal">
+        <div class="game-modal-card">
+            <div class="game-modal-header">
+                <div class="game-modal-title">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="color: #ffd700;">
+                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                        <path d="M4 22h16" />
+                        <path d="M6 4h12a2 2 0 0 1 2 2v3a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6V6a2 2 0 0 1 2-2Z" />
+                    </svg>
+                    <span>ตารางคะแนนการแข่งขัน (Leaderboard)</span>
+                </div>
+                <button type="button" class="modal-close-btn" id="closeLeaderboardBtn">✕</button>
+            </div>
+
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th style="width: 70px; text-align: center;">อันดับ</th>
+                        <th>ชื่อทีมแข่งขัน</th>
+                        <th>ฝ่าย / สายงาน</th>
+                        <th style="text-align: center;">ชนะ (รอบ)</th>
+                        <th style="text-align: right;">คะแนนสะสม</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardTbody">
+                    <tr>
+                        <td style="text-align: center;"><span class="rank-badge rank-1">🥇 1</span></td>
+                        <td><strong>IT Dragons</strong></td>
+                        <td>ฝ่ายเทคโนโลยีและนวัตกรรม (IT & Cloud)</td>
+                        <td style="text-align: center;"><span class="badge badge-success">3 รอบ</span></td>
+                        <td style="text-align: right;"><span class="score-text">450</span></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="rank-badge rank-2">🥈 2</span></td>
+                        <td><strong>Marketing Fire</strong></td>
+                        <td>ฝ่ายการตลาดและสื่อสารองค์กร (Marketing)</td>
+                        <td style="text-align: center;"><span class="badge badge-success">2 รอบ</span></td>
+                        <td style="text-align: right;"><span class="score-text">380</span></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="rank-badge rank-3">🥉 3</span></td>
+                        <td><strong>Finance Hawks</strong></td>
+                        <td>ฝ่ายการเงินและบัญชี (Finance)</td>
+                        <td style="text-align: center;"><span class="badge badge-success">2 รอบ</span></td>
+                        <td style="text-align: right;"><span class="score-text">310</span></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="rank-badge rank-n">4</span></td>
+                        <td><strong>HR Superstars</strong></td>
+                        <td>ฝ่ายทรัพยากรบุคคล (HR & People)</td>
+                        <td style="text-align: center;"><span class="badge badge-info">1 รอบ</span></td>
+                        <td style="text-align: right;"><span class="score-text">240</span></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><span class="rank-badge rank-n">5</span></td>
+                        <td><strong>Sales & BD Thunder</strong></td>
+                        <td>ฝ่ายขายและพัฒนาธุรกิจ (Sales & BD)</td>
+                        <td style="text-align: center;"><span class="badge badge-info">1 รอบ</span></td>
+                        <td style="text-align: right;"><span class="score-text">190</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: QUIZ RANDOM RESULT LIGHTBOX (สุ่มได้ชุดคำถามแล้ว)
+         ======================================================== -->
+    <div class="modal-overlay" id="quizResultModal">
+        <div class="quiz-result-modal-card">
+            <div class="quiz-result-header-bar">
+                <span class="quiz-result-badge-top">🎲 สุ่มได้ชุดคำถามแล้ว!</span>
+                <button type="button" class="modal-close-btn" id="closeQuizResultBtn" title="ปิด">✕</button>
+            </div>
+            <div class="quiz-result-body">
+                <div class="quiz-result-number" id="quizResultNumber">ชุดที่ 1</div>
+                <h2 class="quiz-result-title" id="quizResultTitle">คำถาม</h2>
+                <div class="quiz-result-meta" id="quizResultMeta">📋 จำนวน 4 คำตอบ</div>
+            </div>
+            <div class="quiz-result-actions">
+                <button type="button" class="btn-quiz-modal-close" id="btnQuizResultClose">ปิดหน้าต่าง</button>
+                <button type="button" class="btn-quiz-modal-start" id="btnQuizResultStart">เริ่มการแข่งขันทันที
+                    ❯</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: TEAM RANDOM RESULT LIGHTBOX (สุ่มคู่แข่งขันสำเร็จ)
+         ======================================================== -->
+    <div class="modal-overlay" id="teamRandomResultModal">
+        <div class="quiz-result-modal-card" style="max-width: 620px;">
+            <div class="quiz-result-header-bar">
+                <span class="quiz-result-badge-top">🎲 สุ่มคู่แข่งขันสำเร็จ!</span>
+                <button type="button" class="modal-close-btn" id="closeTeamRandomResultBtn" title="ปิด">✕</button>
+            </div>
+            <div class="quiz-result-body" style="padding: 16px 20px 10px;">
+                <div style="font-size: 0.95rem; color: #ffd700; margin-bottom: 12px; font-weight: 500;" id="teamRandomModalRoundTitle">
+                    รอบที่ 1: คัดเลือกสาย A
+                </div>
+                <!-- 2 Teams VS Box -->
+                <div class="match-result-teams-row" style="margin-top: 6px; margin-bottom: 6px;">
+                    <!-- Team Left (Blue) -->
+                    <div class="match-result-team-col match-team-blue" style="padding: 14px 10px;">
+                        <div class="podium-side-tag" style="color: #93c5fd; font-size: 0.8rem; margin-bottom: 6px;">🔵 ทีมฝั่งซ้าย (Blue)</div>
+                        <div class="team-select-card-avatar" id="teamRandomAvatarLeft" style="width: 68px; height: 68px; margin: 0 auto 8px;"></div>
+                        <div class="match-result-team-name" id="teamRandomNameLeft" style="font-size: 1.15rem; margin-bottom: 4px;">ทีม A</div>
+                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.88);" id="teamRandomCapLeft">👑 กัปตัน A</div>
+                    </div>
+
+                    <div class="match-result-vs-divider">VS</div>
+
+                    <!-- Team Right (Orange) -->
+                    <div class="match-result-team-col match-team-orange" style="padding: 14px 10px;">
+                        <div class="podium-side-tag" style="color: #fdba74; font-size: 0.8rem; margin-bottom: 6px;">🟠 ทีมฝั่งขวา (Orange)</div>
+                        <div class="team-select-card-avatar" id="teamRandomAvatarRight" style="width: 68px; height: 68px; margin: 0 auto 8px;"></div>
+                        <div class="match-result-team-name" id="teamRandomNameRight" style="font-size: 1.15rem; margin-bottom: 4px;">ทีม B</div>
+                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.88);" id="teamRandomCapRight">👑 กัปตัน B</div>
+                    </div>
+                </div>
+            </div>
+            <div class="quiz-result-actions" style="margin-top: 14px;">
+                <button type="button" class="btn-quiz-modal-close" id="btnTeamRandomClose">ตกลง</button>
+                <button type="button" class="btn-quiz-modal-start" id="btnTeamRandomGoQuiz">ไปเลือกชุดคำถาม ❯</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: STRIKE BUZZER LIGHTBOX (กล่องสี่เหลี่ยม กากบาทใหญ่สีแดง แสดง 1, 2 หรือ 3 รูป)
+         ======================================================== -->
+    <div class="modal-overlay strike-buzzer-overlay" id="strikeBuzzerModal">
+        <div class="strike-buzzer-square-box" id="strikeBuzzerBox" title="คลิกเพื่อปิด">
+            <div class="strike-icons-row" id="strikeIconsRow">
+                <div class="strike-huge-x-icon">✕</div>
+            </div>
+            <div class="strike-buzzer-caption" id="strikeBuzzerCaption">คำตอบผิด!</div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: GAME END LIGHTBOX (สรุปผลการแข่งขันในแต่ละครั้ง ครั้งที่ 1, 2, 3)
+         ======================================================== -->
+    <div class="modal-overlay" id="gameIntermissionModal">
+        <div class="quiz-result-modal-card" style="max-width: 640px;">
+            <div class="quiz-result-header-bar">
+                <span class="quiz-result-badge-top" id="intermissionBadge">🎉 จบการแข่งขัน ครั้งที่ 1 แล้ว!</span>
+                <button type="button" class="modal-close-btn" id="closeIntermissionBtn" title="ปิด">✕</button>
+            </div>
+            <div class="quiz-result-body" style="padding: 18px 22px 12px;">
+                <!-- Winner Highlight Card in this single game -->
+                <div class="single-game-winner-banner" id="intermissionWinnerCard">
+                    <div class="single-winner-tag" id="intermissionWinnerTag">🏆 ทีมที่ชนะในครั้งนี้</div>
+                    <div class="single-winner-name" id="intermissionWinnerName">IT Dragons</div>
+                    <div class="single-winner-reason" id="intermissionWinnerReason">ขโมยคะแนนสำเร็จ!</div>
+                    <div class="single-winner-points-badge" id="intermissionWinnerPoints">+60 คะแนน</div>
+                </div>
+
+                <div style="font-size: 0.92rem; color: #ffd700; margin: 12px 0 8px; font-weight: 500; text-align: center;" id="intermissionSubTitle">
+                    สรุปคะแนนรวมสะสมของทั้ง 2 ทีม (แข่งขันทั้งหมด 3 ครั้ง)
+                </div>
+                <!-- 2 Teams Score Comparison Box -->
+                <div class="match-result-teams-row" style="margin-top: 6px; margin-bottom: 6px;">
+                    <!-- Team Left (Blue) -->
+                    <div class="match-result-team-col match-team-blue" id="intermissionColLeft" style="padding: 14px 10px;">
+                        <div class="podium-side-tag" style="color: #93c5fd; font-size: 0.8rem; margin-bottom: 6px;">🔵 ทีมฝั่งซ้าย (Blue)</div>
+                        <div class="team-select-card-avatar" id="intermissionAvatarLeft" style="width: 68px; height: 68px; margin: 0 auto 6px;"></div>
+                        <div class="match-result-team-name" id="intermissionNameLeft" style="font-size: 1.15rem; margin-bottom: 4px;">ทีม A</div>
+                        <div class="match-result-team-score" id="intermissionScoreLeft" style="font-size: 2rem; color: #60a5fa; font-weight: 700;">0</div>
+                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">คะแนนสะสมรวม</div>
+                    </div>
+
+                    <div class="match-result-vs-divider">VS</div>
+
+                    <!-- Team Right (Orange) -->
+                    <div class="match-result-team-col match-team-orange" id="intermissionColRight" style="padding: 14px 10px;">
+                        <div class="podium-side-tag" style="color: #fdba74; font-size: 0.8rem; margin-bottom: 6px;">🟠 ทีมฝั่งขวา (Orange)</div>
+                        <div class="team-select-card-avatar" id="intermissionAvatarRight" style="width: 68px; height: 68px; margin: 0 auto 6px;"></div>
+                        <div class="match-result-team-name" id="intermissionNameRight" style="font-size: 1.15rem; margin-bottom: 4px;">ทีม B</div>
+                        <div class="match-result-team-score" id="intermissionScoreRight" style="font-size: 2rem; color: #fb923c; font-weight: 700;">0</div>
+                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">คะแนนสะสมรวม</div>
+                    </div>
+                </div>
+            </div>
+            <div class="quiz-result-actions" style="margin-top: 14px;">
+                <button type="button" class="btn-quiz-modal-start" id="btnIntermissionNextGame" style="width: 100%; justify-content: center;">
+                    🎲 ไปสุ่มเลือกคำถามข้อต่อไป (ครั้งที่ 2) ❯
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: MATCH RESULT LIGHTBOX (สรุปผลการแข่งขันรอบนี้)
+         ======================================================== -->
+    <div class="modal-overlay" id="matchResultModal">
+        <div class="match-result-modal-card">
+            <div class="match-result-header-bar">
+                <span class="match-result-badge-top" id="matchResultRoundBadge">🏆 ผลการแข่งขัน</span>
+                <button type="button" class="modal-close-btn" id="closeMatchResultBtn" title="ปิด">✕</button>
+            </div>
+
+            <div class="match-result-trophy-icon">🏆</div>
+            <h2 class="match-result-title">สรุปผลการแข่งขันรอบนี้</h2>
+            <div class="match-result-winner-banner" id="matchResultWinnerBanner">
+                🎉 ทีมฝั่งซ้าย เป็นฝ่ายชนะ!
+            </div>
+
+            <!-- Scoreboard Comparison Box -->
+            <div class="match-result-teams-row">
+                <!-- Team Left (Blue) -->
+                <div class="match-result-team-col match-team-blue" id="matchResultColBlue">
+                    <div class="match-result-team-name" id="matchResultNameBlue">ทีมฝั่งซ้าย</div>
+                    <div class="match-result-team-score" id="matchResultScoreBlue">0</div>
+                    <div class="match-result-team-badge" id="matchResultBadgeBlue">คะแนน</div>
+                </div>
+
+                <div class="match-result-vs-divider">VS</div>
+
+                <!-- Team Right (Orange) -->
+                <div class="match-result-team-col match-team-orange" id="matchResultColOrange">
+                    <div class="match-result-team-name" id="matchResultNameOrange">ทีมฝั่งขวา</div>
+                    <div class="match-result-team-score" id="matchResultScoreOrange">0</div>
+                    <div class="match-result-team-badge" id="matchResultBadgeOrange">คะแนน</div>
+                </div>
+            </div>
+
+            <div class="match-result-actions">
+                <button type="button" class="btn-match-modal-close" id="btnMatchResultClose">อยู่ในหน้านี้ต่อ</button>
+                <button type="button" class="btn-match-modal-next" id="btnMatchResultNext">คู่ถัดไป / ไปหน้าเลือกทีม
+                    ❯</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: AWARD SCORE CONFIRMATION LIGHTBOX (ยืนยันการมอบคะแนน)
+         ======================================================== -->
+    <div class="modal-overlay" id="awardConfirmModal">
+        <div class="award-confirm-modal-card" id="awardConfirmCard">
+            <div class="award-confirm-header-bar">
+                <span class="award-confirm-badge-top" id="awardConfirmBadgeTop">⭐ ยืนยันการมอบคะแนน</span>
+                <button type="button" class="modal-close-btn" id="closeAwardConfirmBtn" title="ปิด">✕</button>
+            </div>
+
+            <div class="award-confirm-icon" id="awardConfirmIcon">🏆</div>
+            <h2 class="award-confirm-modal-title">ยืนยันการมอบคะแนนให้ทีม</h2>
+            <p class="award-confirm-modal-desc">กรุณาตรวจสอบและยืนยันการโอนคะแนนในข้อนี้ให้กับทีมที่เลือก</p>
+
+            <div class="award-confirm-team-box" id="awardConfirmTeamBox">
+                <div class="award-confirm-team-tag" id="awardConfirmTeamTag">🔵 ทีมฝั่งซ้าย</div>
+                <div class="award-confirm-avatar-box" id="awardConfirmAvatarBox"></div>
+                <h3 class="award-confirm-team-name" id="awardConfirmTeamName">Sales & BD Thunder</h3>
+                <div class="award-confirm-cap-name" id="awardConfirmCapName">👑 หัวหน้าทีม</div>
+
+                <div class="award-confirm-points-card">
+                    <span class="award-confirm-points-lbl">คะแนนที่จะได้รับในข้อนี้</span>
+                    <div class="award-confirm-points-val" id="awardConfirmPointsVal">+0 คะแนน</div>
+                </div>
+
+                <div class="award-confirm-calc-row" id="awardConfirmScoreCalc">
+                    คะแนนสะสมเดิม: <strong>0</strong> &nbsp;➔&nbsp; คะแนนหลังมอบ: <strong class="new-total-highlight">0</strong> คะแนน
+                </div>
+            </div>
+
+            <div class="award-confirm-actions">
+                <button type="button" class="btn-award-confirm-cancel" id="btnAwardConfirmCancel">
+                    ✕ ยกเลิก
+                </button>
+                <button type="button" class="btn-award-confirm-proceed" id="btnAwardConfirmProceed">
+                    ✓ ยืนยันมอบคะแนนให้ทีมนี้
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: AWARD SCORE LIGHTBOX (มอบคะแนนให้ทีมสำเร็จ)
+         ======================================================== -->
+    <div class="modal-overlay" id="awardScoreModal">
+        <div class="award-score-modal-card" id="awardScoreCard">
+            <div class="award-score-header-bar">
+                <span class="award-score-badge-top" id="awardScoreBadgeTop">⭐ มอบคะแนนสำเร็จ!</span>
+                <button type="button" class="modal-close-btn" id="closeAwardScoreBtn" title="ปิด">✕</button>
+            </div>
+
+            <div class="award-score-icon" id="awardScoreIcon">🎉</div>
+            <div class="award-score-label" id="awardScoreLabel">ทีมที่ได้รับคะแนนในข้อนี้</div>
+            <h2 class="award-score-team-name" id="awardScoreTeamName">Sales & BD Thunder</h2>
+            <div class="award-score-points-val" id="awardScorePointsVal">+0 คะแนน</div>
+            <div class="award-score-total-txt" id="awardScoreTotalTxt">คะแนนสะสมปัจจุบัน: 0 คะแนน</div>
+
+            <div class="award-score-actions">
+                <button type="button" class="btn-award-modal-ok" id="btnAwardScoreOk">ตกลง ❯</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: TURN PICKER LIGHTBOX (เลือกทีมที่ได้สิทธิ์ตอบคำถาม)
+         ======================================================== -->
+    <div class="modal-overlay" id="turnPickerModal">
+        <div class="turn-picker-modal-card">
+            <div class="turn-picker-header-bar">
+                <span class="turn-picker-badge-top">⚔️ เลือกสิทธิ์การตอบคำถาม</span>
+                <button type="button" class="modal-close-btn" id="closeTurnPickerBtn" title="ปิด">✕</button>
+            </div>
+
+            <h2 class="turn-picker-modal-title">เลือกทีมที่ได้สิทธิ์ตอบคำถาม</h2>
+            <p class="turn-picker-modal-desc">กรุณาเลือกว่าทีมใดเป็นทีมที่ได้ตอบคำถามก่อนในข้อนี้</p>
+
+            <div class="turn-picker-panels-grid">
+                <!-- แถบด้านซ้าย (สีน้ำเงิน) -->
+                <div class="turn-panel-col turn-panel-blue">
+                    <div class="turn-panel-tag">🔵 ทีมฝั่งซ้าย</div>
+                    <h3 class="turn-panel-team-name" id="turnPickerTeamBlue">ทีมฝั่งซ้าย</h3>
+                    <div class="turn-panel-avatar-box" id="turnPickerAvatarBlue"></div>
+                    <div class="turn-panel-cap-name" id="turnPickerCapBlue">👑 หัวหน้าทีม</div>
+                    <button type="button" class="btn-turn-pick btn-turn-blue" id="btnPickTurnBlue">
+                        เลือกเป็นทีมที่ตอบคำถาม
+                    </button>
+                </div>
+
+                <div class="turn-picker-vs-circle">VS</div>
+
+                <!-- แถบด้านขวา (สีส้ม) -->
+                <div class="turn-panel-col turn-panel-orange">
+                    <div class="turn-panel-tag">🟠 ทีมฝั่งขวา</div>
+                    <h3 class="turn-panel-team-name" id="turnPickerTeamOrange">ทีมฝั่งขวา</h3>
+                    <div class="turn-panel-avatar-box" id="turnPickerAvatarOrange"></div>
+                    <div class="turn-panel-cap-name" id="turnPickerCapOrange">👑 หัวหน้าทีม</div>
+                    <button type="button" class="btn-turn-pick btn-turn-orange" id="btnPickTurnOrange">
+                        เลือกเป็นทีมที่ตอบคำถาม
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: TURN ANNOUNCEMENT LIGHTBOX (แสดงทีมที่จะต้องตอบคำถาม เมื่อหน้ารีโมทกดเลือกฝั่ง)
+         ======================================================== -->
+    <div class="modal-overlay" id="turnAnnounceModal">
+        <div class="turn-announce-card" id="turnAnnounceCard">
+            <div class="turn-announce-badge">⚔️ สิทธิ์การตอบคำถาม (FACE-OFF)</div>
+            <div class="turn-announce-side-tag" id="turnAnnounceSideTag">🔵 ทีมฝั่งซ้าย</div>
+            <div class="turn-announce-avatar" id="turnAnnounceAvatar"></div>
+            <h2 class="turn-announce-team-name" id="turnAnnounceTeamName">ทีมฝั่งซ้าย</h2>
+            <div class="turn-announce-cap-name" id="turnAnnounceCapName">👑 หัวหน้าทีม</div>
+            <div class="turn-announce-desc">ได้สิทธิ์เป็นฝ่ายเริ่มตอบคำถามในข้อนี้! 🎯</div>
+            <button type="button" class="btn-turn-announce-start" id="btnTurnAnnounceClose">
+                เริ่มตอบคำถาม ❯
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: STEAL TURN LIGHTBOX (เปลี่ยนสิทธิ์ตอบคำถามเมื่อตอบผิด 3 ครั้ง)
+         ======================================================== -->
+    <div class="modal-overlay" id="stealTurnModal">
+        <div class="steal-turn-modal-card">
+            <div class="steal-turn-header-bar">
+                <span class="steal-turn-badge-top">⚡ สิทธิ์ขโมยคะแนน (STEAL TURN)</span>
+                <button type="button" class="modal-close-btn" id="closeStealTurnBtn" title="ปิด">✕</button>
+            </div>
+
+            <div class="steal-turn-icon">⚔️</div>
+            <h2 class="steal-turn-modal-title">สิทธิ์ตอบคำถามตกเป็นของทีมคู่แข่งขัน!</h2>
+            <p class="steal-turn-modal-desc" id="stealTurnModalDesc">
+                ตอบผิดครบ 3 ครั้งแล้ว — ทีมคู่แข่งขันได้รับสิทธิ์ในการตอบคำถาม
+            </p>
+
+            <div class="steal-turn-panels-grid">
+                <!-- แถบด้านซ้าย (ทีม Blue) -->
+                <div class="steal-panel-col" id="stealPanelBlue">
+                    <div class="steal-panel-tag" id="stealTagBlue">🔵 ทีมฝั่งซ้าย</div>
+                    <h3 class="steal-panel-team-name" id="stealTeamBlue">Sales & BD Thunder</h3>
+                    <div class="steal-panel-avatar-box" id="stealAvatarBlue"></div>
+                    <div class="steal-panel-cap-name" id="stealCapBlue">👑 หัวหน้าทีม</div>
+
+                    <div class="steal-banner-box" id="stealBannerBlue">
+                        <span class="steal-banner-sparkle">⭐</span>
+                        <div class="steal-banner-headline">1 คำตอบที่จะได้คะแนนทั้งหมด</div>
+                        <div class="steal-banner-sub">ตอบถูกเพียง 1 ข้อ ชิงคะแนนทั้งหมดในข้อนี้ทันที!</div>
+                    </div>
+                    <div class="steal-failed-box" id="stealFailedBlue">
+                        <span class="steal-failed-icon">❌</span>
+                        <div class="steal-failed-txt">ตอบผิดครบ 3 ครั้ง (เสียสิทธิ์)</div>
+                    </div>
+                </div>
+
+                <div class="steal-turn-vs-circle">VS</div>
+
+                <!-- แถบด้านขวา (ทีม Orange) -->
+                <div class="steal-panel-col" id="stealPanelOrange">
+                    <div class="steal-panel-tag" id="stealTagOrange">🟠 ทีมฝั่งขวา</div>
+                    <h3 class="steal-panel-team-name" id="stealTeamOrange">Finance Hawks</h3>
+                    <div class="steal-panel-avatar-box" id="stealAvatarOrange"></div>
+                    <div class="steal-panel-cap-name" id="stealCapOrange">👑 หัวหน้าทีม</div>
+
+                    <div class="steal-banner-box" id="stealBannerOrange">
+                        <span class="steal-banner-sparkle">⭐</span>
+                        <div class="steal-banner-headline">1 คำตอบที่จะได้คะแนนทั้งหมด</div>
+                        <div class="steal-banner-sub">ตอบถูกเพียง 1 ข้อ ชิงคะแนนทั้งหมดในข้อนี้ทันที!</div>
+                    </div>
+                    <div class="steal-failed-box" id="stealFailedOrange">
+                        <span class="steal-failed-icon">❌</span>
+                        <div class="steal-failed-txt">ตอบผิดครบ 3 ครั้ง (เสียสิทธิ์)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="steal-turn-actions">
+                <button type="button" class="btn-steal-turn-start" id="btnStealTurnStart">
+                    เริ่มการตอบคำถาม ❯
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: GAME CUSTOM DIALOG LIGHTBOX (Alert & Confirm)
+         ======================================================== -->
+    <div class="modal-overlay" id="gameDialogModal">
+        <div class="game-dialog-modal-card">
+            <div class="game-dialog-header-bar">
+                <button type="button" class="modal-close-btn" id="closeGameDialogBtn" title="ปิด">✕</button>
+            </div>
+            <span class="game-dialog-icon-top" id="gameDialogIcon">🔔</span>
+            <h2 class="game-dialog-title" id="gameDialogTitle">แจ้งเตือน</h2>
+            <div class="game-dialog-message" id="gameDialogMessage">ข้อความแจ้งเตือน</div>
+            <div class="game-dialog-actions" id="gameDialogActions">
+                <button type="button" class="btn-dialog-secondary" id="btnDialogCancel">ยกเลิก</button>
+                <button type="button" class="btn-dialog-primary" id="btnDialogConfirm">ตกลง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Cloud Firestore SDK & Central Sync -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script src="js/firebase-storage.js"></script>
+    <script src="js/firebase-sync.js"></script>
+
+    <!-- Interactive Script -->
+    <script src="js/state.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/game.js"></script>
+</body>
+
+</html>

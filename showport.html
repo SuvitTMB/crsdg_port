@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRSDG AI Showcase & New Year Celebration</title>
+    <!-- Google Fonts Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <!-- Base Investment Styles & ShowPort Dedicated Styles -->
+    <link rel="stylesheet" href="css/investment.css">
+    <link rel="stylesheet" href="css/showport.css">
+</head>
+
+<body>
+    <div class="showport-main-wrapper">
+        <!-- ========================================================
+             ROW 1: แถวบน แสดงเมนูต่างๆ (Top Navigation Bar - Matching Image 1)
+             ======================================================== -->
+        <header class="invest-top-bar">
+            <div class="top-bar-left">
+                <div class="brand-badge">💼</div>
+                <div class="brand-text-wrap">
+                    <h1 class="brand-title">
+                        <span>CRSDG AI Showcase</span>
+                        <span style="font-weight: 400; opacity: 0.7;">|</span>
+                        <span
+                            style="color: #38bdf8; background: #1e3a8a; padding: 2px 8px; border-radius: 6px;">นักลงทุน
+                            AI</span>
+                        <span class="live-pill"><span class="live-pulse-dot"></span> ถ่ายทอดสด Real-time</span>
+                    </h1>
+                    <p class="brand-sub">แดชบอร์ดติดตามการจัดสรรพอร์ตงบประมาณและดัชนีความลำเอียงเวที AI Pitching</p>
+                </div>
+            </div>
+
+            <nav class="top-bar-nav">
+                <a href="index.html" class="nav-link-btn" title="กลับไปหน้าหลัก">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span>หน้าหลัก</span>
+                </a>
+                <a href="game.html" class="nav-link-btn" title="ไปหน้าเกมโชว์ 4 ต่อ 4">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    <span>หน้าเกมโชว์</span>
+                </a>
+                <a href="investment.html" class="nav-link-btn" title="ไปหน้านักลงทุน AI เดิม">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <span>นักลงทุน AI</span>
+                </a>
+                <a href="admin.html" class="nav-link-btn" title="ไปหน้าจัดการระบบ Admin">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                    <span>แอดมิน</span>
+                </a>
+                <button type="button" class="icon-btn-ctrl" id="btnRefresh" title="รีเฟรชข้อมูลล่าสุด">
+                    🔄
+                </button>
+                <button type="button" class="icon-btn-ctrl" id="btnThemeToggle" title="สลับธีม สว่าง / มืด">
+                    🌓
+                </button>
+                <button type="button" class="icon-btn-ctrl" id="btnFullscreen" title="ขยายเต็มหน้าจอ (Fullscreen)">
+                    ⛶
+                </button>
+            </nav>
+        </header>
+
+        <!-- ========================================================
+             ROW 2: แถวที่ 2 แสดงกล่อง 5 กล่อง (KPI Summary Cards Grid - Matching Image 1)
+             ======================================================== -->
+        <section class="invest-kpi-grid">
+            <!-- กล่องที่ 1: ผู้มีสิทธิ์ลงทุนทั้งหมด -->
+            <div class="invest-kpi-card card-theme-blue">
+                <div class="kpi-icon-wrap">👥</div>
+                <div class="kpi-content">
+                    <div class="kpi-label">ผู้มีสิทธิ์ลงทุนทั้งหมด</div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-value" id="kpiTotalEligibleInvestors">0</span>
+                        <span class="kpi-unit">ท่าน</span>
+                    </div>
+                    <div class="kpi-sub-hint">(พนักงานที่ยืนยันสิทธิ์ในระบบ)</div>
+                </div>
+            </div>
+
+            <!-- กล่องที่ 2: เงินลงทุนเริ่มต้นทั้งหมด -->
+            <div class="invest-kpi-card card-theme-gold">
+                <div class="kpi-icon-wrap">💰</div>
+                <div class="kpi-content">
+                    <div class="kpi-label">เงินลงทุนเริ่มต้นทั้งหมด</div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-value" id="kpiTotalInitialBudget">0</span>
+                        <span class="kpi-unit">บาท</span>
+                    </div>
+                    <div class="kpi-sub-hint" id="kpiBudgetPerPersonHint">(งบคนละ 1,000,000 บาท)</div>
+                </div>
+            </div>
+
+            <!-- กล่องที่ 3: ผู้ที่ทำการลงทุนแล้ว -->
+            <div class="invest-kpi-card card-theme-green">
+                <div class="kpi-icon-wrap">🎯</div>
+                <div class="kpi-content">
+                    <div class="kpi-label">ผู้ที่ทำการลงทุนแล้ว</div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-value" id="kpiActiveInvestorsCount">0</span>
+                        <span class="kpi-unit">ท่าน</span>
+                    </div>
+                    <div class="kpi-sub-hint">คิดเป็น <strong id="kpiActiveInvestorsPct"
+                            style="color: #34d399;">0%</strong> ของผู้มีสิทธิ์</div>
+                </div>
+            </div>
+
+            <!-- กล่องที่ 4: ยอดเงินที่ลงทุนแล้วรวม -->
+            <div class="invest-kpi-card card-theme-purple">
+                <div class="kpi-icon-wrap">💼</div>
+                <div class="kpi-content">
+                    <div class="kpi-label">ยอดเงินที่ลงทุนแล้วรวม</div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-value" id="kpiTotalMoneyInvested">0</span>
+                        <span class="kpi-unit">บาท</span>
+                    </div>
+                    <div class="kpi-sub-hint"><strong id="kpiTotalMoneyInvestedPct" style="color: #c084fc;">0%</strong>
+                        เงินลงทุนเทียบในระบบ</div>
+                </div>
+            </div>
+
+            <!-- กล่องที่ 5: จำนวนเงินทุนคงเหลือ -->
+            <div class="invest-kpi-card card-theme-cyan">
+                <div class="kpi-icon-wrap">⏳</div>
+                <div class="kpi-content">
+                    <div class="kpi-label">จำนวนเงินทุนคงเหลือ</div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-value" id="kpiTotalRemainingBudget">0</span>
+                        <span class="kpi-unit">บาท</span>
+                    </div>
+                    <div class="kpi-sub-hint"><strong id="kpiTotalRemainingBudgetPct"
+                            style="color: #22d3ee;">0%</strong> เงินลงทุนที่ยังไม่ได้ลงทุน</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             ROW 3: กล่องแสดงผล 2 แถว กว้างแถวละ 50% เปรียบเทียบการลงทุนของทีมต่างๆ
+             (โดยปุ่มจะแสดง ทีมที่ 1-ทีมสุดท้าย ไม่ต้องแสดงชื่อทีม)
+             ======================================================== -->
+        <main class="showport-compare-grid">
+            <!-- ====================================================
+                 COLUMN 1 (50% ซ้าย): ทีมเปรียบเทียบชุดที่ 1
+                 ==================================================== -->
+            <section class="compare-col compare-col-1 theme-normal-default" id="compareCol1">
+                <!-- แถบปุ่มเลือกทีม (ทีมที่ 1 - ทีมสุดท้าย) ไม่แสดงชื่อทีม -->
+                <div class="team-picker-card">
+                    <div class="team-picker-header">
+                        <div class="team-picker-title">
+                            <span class="col-indicator-badge" id="colIndicatorBadge1">ทีมเปรียบเทียบที่ 1</span>
+                        </div>
+                        <div class="team-picker-meta" id="teamPickerMetaCol1">กำลังโหลด...</div>
+                    </div>
+                    <div class="team-picker-btns" id="teamButtonsCol1">
+                        <!-- Populated dynamically with ทีมที่ 1, ทีมที่ 2... by JS -->
+                    </div>
+                </div>
+
+                <!-- การ์ดข้อมูลทีม: รูปภาพ, ชื่อทีม, และหัวหน้าทีม (ไม่มีรายละเอียดกิจกรรม และไม่มีแถวสมาชิก) -->
+                <div class="team-hero-box">
+                    <div class="team-hero-top-row">
+                        <span class="team-ep-pill" id="dispTeamEpPillCol1">EP.1</span>
+                        <span class="team-status-pill open" id="dispTeamStatusPillCol1">🟢 เปิดรับการลงทุน</span>
+                    </div>
+                    <div class="team-hero-center">
+                        <div class="team-hero-photo-wrap" id="dispTeamPhotoWrapCol1">
+                            <span class="team-hero-photo-fallback">🛡️</span>
+                        </div>
+                        <div class="team-hero-meta">
+                            <h2 class="team-hero-title" id="dispTeamTitleCol1" title="ชื่อทีมแข่งขัน">ทีมที่ 1</h2>
+                            <!-- กล่องหัวหน้าทีม (ใต้ชื่อทีม) -->
+                            <div class="team-captain-card" id="dispTeamCaptainBoxCol1">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- แถวที่ 2: จำนวนผู้ลงทุน และ จำนวนเงินลงทุน (ตามรูป) -->
+                <div class="team-stats-2grid">
+                    <!-- กล่องผู้ลงทุน -->
+                    <div class="team-stat-tile tile-voters">
+                        <div class="stat-tile-symbol">👥</div>
+                        <div class="stat-tile-info">
+                            <div class="stat-tile-heading">จำนวนผู้ลงทุน</div>
+                            <div class="stat-tile-value" id="dispTeamVotersCountCol1">0 คน</div>
+                            <div class="stat-tile-sub">นักลงทุนที่ร่วมสนับสนุนทีมนี้</div>
+                        </div>
+                    </div>
+
+                    <!-- กล่องเงินลงทุน -->
+                    <div class="team-stat-tile tile-fund">
+                        <div class="stat-tile-symbol">💰</div>
+                        <div class="stat-tile-info">
+                            <div class="stat-tile-heading">จำนวนเงินลงทุน</div>
+                            <div class="stat-tile-value" id="dispTeamFundAmountCol1">0 บาท</div>
+                            <div class="stat-tile-sub">ยอดเงินทุนรวมที่ได้รับในพอร์ต</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- แถวที่ 3: ดัชนีวิเคราะห์ความลำเอียงและสัดส่วนพอร์ต (ตามรูปที่ 2) -->
+                <div class="gauges-card-section">
+                    <div class="gauges-section-title">
+                        <span>📊</span>
+                        <span>ดัชนีวิเคราะห์ความลำเอียงและสัดส่วนพอร์ต</span>
+                    </div>
+                    <div class="gauges-3grid">
+                        <!-- ดัชนีลำเอียง (Amber Ring) -->
+                        <div class="gauge-col-card">
+                            <div class="gauge-circle-wrap circle-amber" id="gaugeCircleBiasCol1">
+                                <div class="gauge-inner-core text-amber" id="gaugeValBiasCol1">0.0%</div>
+                            </div>
+                            <div class="gauge-title-text">ดัชนีลำเอียง</div>
+                            <div class="gauge-sub-text" id="gaugeSubBiasCol1">0 บาท</div>
+                        </div>
+
+                        <!-- ดัชนีเงินลงทุน (Blue Ring) -->
+                        <div class="gauge-col-card">
+                            <div class="gauge-circle-wrap circle-blue" id="gaugeCircleFundCol1">
+                                <div class="gauge-inner-core text-blue" id="gaugeValFundCol1">0.0%</div>
+                            </div>
+                            <div class="gauge-title-text">ดัชนีเงินลงทุน</div>
+                            <div class="gauge-sub-text" id="gaugeSubFundCol1">เทียบรวม 0</div>
+                        </div>
+
+                        <!-- ดัชนีผู้ลงทุน (Purple Ring) -->
+                        <div class="gauge-col-card">
+                            <div class="gauge-circle-wrap circle-purple" id="gaugeCircleVotersCol1">
+                                <div class="gauge-inner-core text-purple" id="gaugeValVotersCol1">0.0%</div>
+                            </div>
+                            <div class="gauge-title-text">ดัชนีผู้ลงทุน</div>
+                            <div class="gauge-sub-text" id="gaugeSubVotersCol1">จากรวม 0 คน</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- แถวที่ 4: ส่วนแสดงที่มาของเงินทุน สรุปตาม Group (มากไปน้อย) -->
+                <div class="fund-source-card-section">
+                    <div class="fund-source-header">
+                        <div class="fund-source-title">
+                            <span>🏢</span>
+                            <span>ที่มาของเงินทุน</span>
+                        </div>
+                        <span class="fund-source-count-badge" id="dispFundSourceCountCol1">0 กลุ่ม</span>
+                    </div>
+                    <div class="fund-source-list" id="dispFundSourceListCol1">
+                        <!-- Populated dynamically by JS (เรียงจากมากไปน้อย) -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ====================================================
+                 COLUMN 2 (50% ขวา): ทีมเปรียบเทียบชุดที่ 2
+                 (ทำเหมือนแถวที่ 1 ทุกอย่าง เมื่อกดปุ่มทีมของแต่ละปุ่มให้แสดงผลตามทีมนั้น)
+                 ==================================================== -->
+            <section class="compare-col compare-col-2 theme-normal-default" id="compareCol2">
+                <!-- แถบปุ่มเลือกทีม (ทีมที่ 1 - ทีมสุดท้าย) ไม่แสดงชื่อทีม -->
+                <div class="team-picker-card">
+                    <div class="team-picker-header">
+                        <div class="team-picker-title">
+                            <span class="col-indicator-badge" id="colIndicatorBadge2">ทีมเปรียบเทียบที่ 2</span>
+                        </div>
+                        <div class="team-picker-meta" id="teamPickerMetaCol2">กำลังโหลด...</div>
+                    </div>
+                    <div class="team-picker-btns" id="teamButtonsCol2">
+                        <!-- Populated dynamically with ทีมที่ 1, ทีมที่ 2... by JS -->
+                    </div>
+                </div>
+
+                <!-- การ์ดข้อมูลทีม: รูปภาพ, ชื่อทีม, และหัวหน้าทีม (ไม่มีรายละเอียดกิจกรรม และไม่มีแถวสมาชิก) -->
+                <div class="team-hero-box">
+                    <div class="team-hero-top-row">
+                        <span class="team-ep-pill" id="dispTeamEpPillCol2">EP.2</span>
+                        <span class="team-status-pill open" id="dispTeamStatusPillCol2">🟢 เปิดรับการลงทุน</span>
+                    </div>
+                    <div class="team-hero-center">
+                        <div class="team-hero-photo-wrap" id="dispTeamPhotoWrapCol2">
+                            <span class="team-hero-photo-fallback">🛡️</span>
+                        </div>
+                        <div class="team-hero-meta">
+                            <h2 class="team-hero-title" id="dispTeamTitleCol2" title="ชื่อทีมแข่งขัน">ทีมที่ 2</h2>
+                            <!-- กล่องหัวหน้าทีม (ใต้ชื่อทีม) -->
+                            <div class="team-captain-card" id="dispTeamCaptainBoxCol2">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- แถวที่ 2: จำนวนผู้ลงทุน และ จำนวนเงินลงทุน (ตามรูป) -->
+                <div class="team-stats-2grid">
+                    <!-- กล่องผู้ลงทุน -->
+                    <div class="team-stat-tile tile-voters">
+                        <div class="stat-tile-symbol">👥</div>
+                        <div class="stat-tile-info">
+                            <div class="stat-tile-heading">จำนวนผู้ลงทุน</div>
+                            <div class="stat-tile-value" id="dispTeamVotersCountCol2">0 คน</div>
+                            <div class="stat-tile-sub">นักลงทุนที่ร่วมสนับสนุนทีมนี้</div>
+                        </div>
+                    </div>
+
+                    <!-- กล่องเงินลงทุน -->
+                    <div class="team-stat-tile tile-fund">
+                        <div class="stat-tile-symbol">💰</div>
+                        <div class="stat-tile-info">
+                            <div class="stat-tile-heading">จำนวนเงินลงทุน</div>
+                            <div class="stat-tile-value" id="dispTeamFundAmountCol2">0 บาท</div>
+                            <div class="stat-tile-sub">ยอดเงินทุนรวมที่ได้รับในพอร์ต</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- แถวที่ 3: ดัชนีวิเคราะห์ความลำเอียงและสัดส่วนพอร์ต (ตามรูปที่ 2) -->
+                <div class="gauges-card-section">
+                    <div class="gauges-section-title">
+                        <span>📊</span>
+                        <span>ดัชนีวิเคราะห์ความลำเอียงและสัดส่วนพอร์ต</span>
+                    </div>
+                    <div class="gauges-3grid">
+                        <!-- ดัชนีลำเอียง (Amber Ring) -->
+                        <div class="gauge-col-card">
+                            <div class="gauge-circle-wrap circle-amber" id="gaugeCircleBiasCol2">
+                                <div class="gauge-inner-core text-amber" id="gaugeValBiasCol2">0.0%</div>
+                            </div>
+                            <div class="gauge-title-text">ดัชนีลำเอียง</div>
+                            <div class="gauge-sub-text" id="gaugeSubBiasCol2">0 บาท</div>
+                        </div>
+
+                        <!-- ดัชนีเงินลงทุน (Blue Ring) -->
+                        <div class="gauge-col-card">
+                            <div class="gauge-circle-wrap circle-blue" id="gaugeCircleFundCol2">
+                                <div class="gauge-inner-core text-blue" id="gaugeValFundCol2">0.0%</div>
+                            </div>
+                            <div class="gauge-title-text">ดัชนีเงินลงทุน</div>
+                            <div class="gauge-sub-text" id="gaugeSubFundCol2">เทียบรวม 0</div>
+                        </div>
+
+                        <!-- ดัชนีผู้ลงทุน (Purple Ring) -->
+                        <div class="gauge-col-card">
+                            <div class="gauge-circle-wrap circle-purple" id="gaugeCircleVotersCol2">
+                                <div class="gauge-inner-core text-purple" id="gaugeValVotersCol2">0.0%</div>
+                            </div>
+                            <div class="gauge-title-text">ดัชนีผู้ลงทุน</div>
+                            <div class="gauge-sub-text" id="gaugeSubVotersCol2">จากรวม 0 คน</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- แถวที่ 4: ส่วนแสดงที่มาของเงินทุน สรุปตาม Group (มากไปน้อย) -->
+                <div class="fund-source-card-section">
+                    <div class="fund-source-header">
+                        <div class="fund-source-title">
+                            <span>🏢</span>
+                            <span>ที่มาของเงินทุน</span>
+                        </div>
+                        <span class="fund-source-count-badge" id="dispFundSourceCountCol2">0 กลุ่ม</span>
+                    </div>
+                    <div class="fund-source-list" id="dispFundSourceListCol2">
+                        <!-- Populated dynamically by JS (เรียงจากมากไปน้อย) -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts: Firebase, State, Audio, and ShowPort Controller -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script src="js/firebase-storage.js"></script>
+    <script src="js/firebase-sync.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/showport.js"></script>
+</body>
+
+</html>
