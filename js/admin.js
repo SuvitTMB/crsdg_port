@@ -350,20 +350,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (confirmResetRegBtn) {
-        confirmResetRegBtn.addEventListener('click', () => {
+        confirmResetRegBtn.addEventListener('click', async () => {
             const res = state.resetAllRegistrations();
             showToast(res.message);
             if (sound) sound.playClick();
             if (resetRegModal) resetRegModal.style.display = 'none';
-            renderAll();
 
-            if (window.FirebaseSync && typeof window.FirebaseSync.resetAllMembersRegistrationInCloud === 'function') {
-                window.FirebaseSync.resetAllMembersRegistrationInCloud().then(() => {
-                    console.log('[Admin] Reset all member registrations in Firebase crsdg_member');
-                }).catch(err => {
+            if (window.FirebaseSync) {
+                try {
+                    if (typeof window.FirebaseSync.resetAllMembersRegistrationInCloud === 'function') {
+                        await window.FirebaseSync.resetAllMembersRegistrationInCloud();
+                        console.log('[Admin] Reset all member registrations in Firebase crsdg_member');
+                    }
+                    if (typeof window.FirebaseSync.clearAllUserInvestmentsFromCloud === 'function') {
+                        await window.FirebaseSync.clearAllUserInvestmentsFromCloud();
+                        console.log('[Admin] Cleared all user investments from Firebase');
+                    }
+                } catch (err) {
                     console.error('[Admin] Error resetting registrations in Firebase:', err);
-                });
+                }
             }
+            renderAll();
         });
     }
 
@@ -5766,15 +5773,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (cancelResetPlayerVotesBtn) cancelResetPlayerVotesBtn.addEventListener('click', hideResetVotesModal);
 
             if (confirmResetPlayerVotesBtn) {
-                confirmResetPlayerVotesBtn.addEventListener('click', () => {
+                confirmResetPlayerVotesBtn.addEventListener('click', async () => {
                     const res = state.resetAllPlayerVotes();
+                    if (window.FirebaseSync && typeof window.FirebaseSync.clearAllUserInvestmentsFromCloud === 'function') {
+                        try {
+                            await window.FirebaseSync.clearAllUserInvestmentsFromCloud();
+                        } catch (e) {
+                            console.warn('[Admin] Cloud clear error:', e);
+                        }
+                    }
                     confirmResetPlayerVotesModal.style.display = 'none';
                     renderPlayers();
                     if (playerEditId && playerEditId.value) {
                         selectPlayerForEdit(playerEditId.value, false);
                     }
                     if (sound) sound.playSuccess();
-                    alert(`รีเซ็ตเงินโหวต (บาท) และผู้ให้เงินของทีมแข่งขันทั้งหมด (${res.count} ทีม) เป็น 0 เรียบร้อยแล้ว`);
+                    alert(`รีเซ็ตเงินโหวต (บาท) และผู้ให้เงินของทีมแข่งขันทั้งหมด (${res.count} ทีม) เป็น 0 ทั้งในระบบและ Cloud Firestore เรียบร้อยแล้ว`);
                 });
             }
         }

@@ -203,6 +203,20 @@
       window.FirebaseSync.fetchEvaluationsFromCloud().catch(() => {});
     }
 
+    // Subscribe to Firebase Cloud Sync Realtime Notifications
+    if (window.FirebaseSync && typeof window.FirebaseSync.subscribe === 'function') {
+      window.FirebaseSync.subscribe((event, data) => {
+        if (event === 'VOTE_SETTINGS_UPDATED' && data && data.last_opened_team) {
+          const op = data.last_opened_team;
+          if (op && op.timestamp && (Date.now() - op.timestamp < 60000)) {
+            if (typeof window.showTeamInvestOpenedModal === 'function') {
+              window.showTeamInvestOpenedModal(op);
+            }
+          }
+        }
+      });
+    }
+
     // Listen for tab visibility to avoid rendering when tab is hidden in background
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && hasPendingBackgroundUpdate) {
@@ -231,16 +245,15 @@
             window.showTeamInvestOpenedModal(msg);
           }
         } else if (msg.type === 'TEAM_VOTE_STATUS_UPDATED' && msg.status === 'open') {
-          if (window.stateManager && typeof window.stateManager.isVoteOpen === 'function' && window.stateManager.isVoteOpen()) {
-            if (typeof window.showTeamInvestOpenedModal === 'function') {
-              window.showTeamInvestOpenedModal({
-                teamId: msg.teamId,
-                teamName: msg.team ? msg.team.teamName : '',
-                orderNo: msg.team ? msg.team.orderNo : '',
-                teamPhoto: msg.team ? msg.team.teamPhoto : '',
-                membersCount: msg.team && msg.team.members ? msg.team.members.length : 0
-              });
-            }
+          if (typeof window.showTeamInvestOpenedModal === 'function') {
+            window.showTeamInvestOpenedModal({
+              teamId: msg.teamId,
+              teamName: msg.team ? msg.team.teamName : '',
+              orderNo: msg.team ? msg.team.orderNo : '',
+              teamPhoto: msg.team ? msg.team.teamPhoto : '',
+              membersCount: msg.team && msg.team.members ? msg.team.members.length : 0,
+              timestamp: Date.now()
+            });
           }
         }
 
@@ -880,6 +893,7 @@
   }
 
   // Interactive Investment Handlers for Registered Employees
+  let sliderCommitDebounceTimers = {};
   window.onSliderLiveInput = function (teamId, val) {
     if (!currentEmployee || !window.stateManager) return;
     const empId = currentEmployee.EmployeeID || currentEmployee.id;
@@ -931,9 +945,22 @@
     if (progressFill) progressFill.style.width = `${livePct}%`;
     const pctText = document.getElementById('userInvestedPctText');
     if (pctText) pctText.textContent = `${livePct}% (${liveTotal.toLocaleString()} / ${maxBudget.toLocaleString()} บ.)`;
+
+    // Debounce commit (350ms) to support high concurrency and eliminate network overhead
+    if (sliderCommitDebounceTimers[teamId]) {
+      clearTimeout(sliderCommitDebounceTimers[teamId]);
+    }
+    sliderCommitDebounceTimers[teamId] = setTimeout(() => {
+      delete sliderCommitDebounceTimers[teamId];
+      window.setTeamInvestmentExact(teamId, num);
+    }, 350);
   };
 
   window.onSliderCommitChange = function (teamId, val) {
+    if (sliderCommitDebounceTimers[teamId]) {
+      clearTimeout(sliderCommitDebounceTimers[teamId]);
+      delete sliderCommitDebounceTimers[teamId];
+    }
     window.setTeamInvestmentExact(teamId, val);
   };
 
@@ -1192,9 +1219,7 @@
     }
 
     modal.style.display = 'flex';
-    requestAnimationFrame(() => {
-      modal.classList.add('is-active');
-    });
+    modal.classList.add('is-active');
 
     if (window.soundManager && typeof window.soundManager.playWin === 'function') {
       window.soundManager.playWin();

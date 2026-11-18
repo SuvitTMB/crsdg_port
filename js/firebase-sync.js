@@ -905,6 +905,36 @@
         }
     }
 
+    async function clearAllUserInvestmentsFromCloud() {
+        try {
+            console.log('[FirebaseSync] Clearing all documents from crsdg_investments...');
+            if (db) {
+                const snapshot = await db.collection(COLS.INVESTMENTS).get();
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                    console.log(`[FirebaseSync] SDK deleted ${snapshot.size} investment docs from crsdg_investments`);
+                }
+            } else {
+                const docs = await fetchAllRawDocuments(COLS.INVESTMENTS);
+                if (docs && docs.length > 0) {
+                    const writes = docs.map(d => ({ delete: d.name }));
+                    await commitBatchedWrites(writes);
+                    console.log(`[FirebaseSync] REST deleted ${docs.length} investment docs from crsdg_investments`);
+                }
+            }
+            // Clear settings in crsdg_vote/settings
+            await saveVoteSettings({ all_user_investments: '{}' });
+            return true;
+        } catch (err) {
+            console.error('[FirebaseSync] Failed to clear crsdg_investments:', err);
+            return false;
+        }
+    }
+
     // ========================================================
     // TABLE 8: crsdg_reward (Prize Management)
     // ========================================================
@@ -1247,6 +1277,7 @@
         // Investments
         saveUserInvestmentToCloud: saveUserInvestmentToCloud,
         fetchUserInvestmentsFromCloud: fetchUserInvestmentsFromCloud,
+        clearAllUserInvestmentsFromCloud: clearAllUserInvestmentsFromCloud,
         // Prizes (AL_Reward)
         fetchPrizesFromCloud: fetchPrizesFromCloud,
         savePrize: savePrize,

@@ -1659,7 +1659,9 @@ class StateManager {
             registeredAt: null
         }));
         this.saveMembers(members);
-        return { success: true, message: `รีเซ็ตสถานะการลงทะเบียนของพนักงานทั้งหมด ${members.length} ท่านเรียบร้อยแล้ว` };
+        // เคลียร์เงินลงทุนและคะแนนโหวตทั้งหมดด้วยเนื่องจากรีเซ็ตสถานะผู้มีสิทธิ์ลงทะเบียน
+        this.resetAllPlayerVotes();
+        return { success: true, message: `รีเซ็ตสถานะการลงทะเบียนของพนักงานทั้งหมด ${members.length} ท่าน และรีเซ็ตเงินลงทุนทั้งหมดเรียบร้อยแล้ว` };
     }
 
     // ========================================================
@@ -1836,15 +1838,29 @@ class StateManager {
         if (settings.vote_budget !== undefined) {
             localStorage.setItem('crsdg_vote_budget', String(settings.vote_budget));
         }
-        if (settings.all_user_investments) {
+        // ตรวจสอบการเปิดรับการลงทุนของทีมล่าสุด เพื่อแจ้งเตือน Lightbox ไปยังทุกหน้าจอผ่าน Cloud Realtime
+        if (settings.last_opened_team && typeof settings.last_opened_team === 'object') {
+            const opTeam = settings.last_opened_team;
+            const now = Date.now();
+            if (opTeam.timestamp && (now - opTeam.timestamp < 60000)) {
+                this.broadcast({
+                    type: 'TEAM_INVESTMENT_OPENED',
+                    ...opTeam
+                });
+                try {
+                    localStorage.setItem('crsdg_team_investment_opened_event', JSON.stringify(opTeam));
+                } catch (e) {}
+            }
+        }
+        if (settings.all_user_investments !== undefined) {
             try {
-                const cloudInv = typeof settings.all_user_investments === 'string' ? JSON.parse(settings.all_user_investments) : settings.all_user_investments;
+                const cloudInv = typeof settings.all_user_investments === 'string' ? JSON.parse(settings.all_user_investments || '{}') : settings.all_user_investments;
                 if (cloudInv && typeof cloudInv === 'object') {
-                    const localInv = this.getAllUserInvestments();
-                    const merged = { ...localInv, ...cloudInv };
-                    localStorage.setItem('crsdg_all_user_investments', JSON.stringify(merged));
-                    this.recalculatePlayerTeamVoteTotals();
-                    this.broadcast({ type: 'INVESTMENTS_UPDATED', investments: merged });
+                    if (Object.keys(cloudInv).length === 0) {
+                        localStorage.setItem('crsdg_all_user_investments', '{}');
+                        this.recalculatePlayerTeamVoteTotals();
+                        this.broadcast({ type: 'INVESTMENTS_UPDATED', investments: {}, reset: true });
+                    }
                 }
             } catch (e) {}
         }
@@ -1855,11 +1871,11 @@ class StateManager {
     applyCloudUserInvestments(cloudUserInv) {
         if (!cloudUserInv || typeof cloudUserInv !== 'object') return;
         try {
-            const localInv = this.getAllUserInvestments();
-            const merged = { ...localInv, ...cloudUserInv };
-            localStorage.setItem('crsdg_all_user_investments', JSON.stringify(merged));
+            // Firestore crsdg_investments คือแหล่งความจริงของเงินลงทุนทั้งหมด
+            const isReset = Object.keys(cloudUserInv).length === 0;
+            localStorage.setItem('crsdg_all_user_investments', JSON.stringify(cloudUserInv));
             this.recalculatePlayerTeamVoteTotals();
-            this.broadcast({ type: 'INVESTMENTS_UPDATED', investments: merged });
+            this.broadcast({ type: 'INVESTMENTS_UPDATED', investments: cloudUserInv, reset: isReset });
             this.broadcast({ type: 'PLAYERS_UPDATED', players: this.getPlayers() });
         } catch (e) {
             console.warn('[State] applyCloudUserInvestments notice:', e);
@@ -2150,9 +2166,11 @@ class StateManager {
             console.warn('Error saving user investments:', e);
         }
 
-        // คำนวณยอดเงินโหวตรวมและจำนวนผู้ให้เงินของแต่ละทีมใน crsdg_player ใหม่โดยอัตโนมัติ
-        this.recalculatePlayerTeamVoteTotals();
-        this.syncVoteSettingsToCloud();
+        // คำนวณยอดเงินโหวตรวมและจำนวนผู้ให้เงินของแต่ละทีมเฉพาะในเครื่อง (Local/In-Memory) รวดเร็วระดับ 60 FPS
+        // ไม่เรียก syncAllPlayers() และไม่เรียก syncVoteSettingsToCloud() ทุกครั้งที่มีการขยับสไลเดอร์ เพื่อป้องกัน Write Quota ชนกัน
+        this.recalculatePlayerTeamVoteTotals(true);
+
+        // บันทึกเฉพาะเอกสารของพนักงานรายนี้ไปยัง Firestore crsdg_investments/{cleanEmpId} (Atomic Write แยกอิสระ 100%)
         if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.saveUserInvestmentToCloud === 'function') {
             window.FirebaseSync.saveUserInvestmentToCloud(cleanEmpId, userInv).catch(() => {});
         }
@@ -2174,7 +2192,7 @@ class StateManager {
         };
     }
 
-    recalculatePlayerTeamVoteTotals() {
+    recalculatePlayerTeamVoteTotals(skipCloudSync = false) {
         const all = this.getAllUserInvestments();
         const players = this.getPlayers();
         if (!players || players.length === 0) return;
@@ -2201,7 +2219,14 @@ class StateManager {
             voterCount: teamVoters[p.id] !== undefined ? teamVoters[p.id] : 0
         }));
 
-        this.savePlayers(updated);
+        if (skipCloudSync) {
+            try {
+                localStorage.setItem(STORAGE_KEYS.PLAYER, JSON.stringify(updated));
+            } catch (e) {}
+            this.broadcast({ type: 'PLAYERS_UPDATED', players: updated });
+        } else {
+            this.savePlayers(updated);
+        }
     }
 
     setTeamVoteStatus(teamId, status) {
@@ -2210,6 +2235,14 @@ class StateManager {
         if (idx !== -1) {
             const nextStatus = (status === 'closed') ? 'closed' : 'open';
             players[idx].voteStatus = nextStatus;
+
+            // เมื่อกดเปิดโหวตของทีมนี้ ให้เปิดระบบรับการลงทุนหลักด้วย (ถ้ายังปิดอยู่)
+            if (nextStatus === 'open') {
+                if (!this.isVoteOpen()) {
+                    this.setVoteOpen(true);
+                }
+            }
+
             this.savePlayers(players);
             this.broadcast({
                 type: 'TEAM_VOTE_STATUS_UPDATED',
@@ -2220,9 +2253,6 @@ class StateManager {
 
             // เมื่อกดเปิดโหวตของทีมนี้ ให้เปิดระบบรับการลงทุนหลักด้วย (ถ้ายังปิดอยู่) และแจ้งเตือนฝั่งผู้ใช้งาน
             if (nextStatus === 'open') {
-                if (!this.isVoteOpen()) {
-                    this.setVoteOpen(true);
-                }
                 const eventPayload = {
                     teamId: players[idx].id,
                     teamName: players[idx].teamName || ('ทีมที่ ' + players[idx].orderNo),
@@ -2238,6 +2268,14 @@ class StateManager {
                 try {
                     localStorage.setItem('crsdg_team_investment_opened_event', JSON.stringify(eventPayload));
                 } catch (e) {}
+
+                // ซิงค์การแจ้งเตือนเปิดโหวตทีมไปยัง Cloud Firestore เพื่อให้มือถือและทุกอุปกรณ์แสดง Lightbox ทันที
+                if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.saveVoteSettings === 'function') {
+                    window.FirebaseSync.saveVoteSettings({
+                        vote_open: true,
+                        last_opened_team: eventPayload
+                    }).catch(e => console.warn('[State] Cloud broadcast team opened notice:', e));
+                }
             }
 
             return { success: true, team: players[idx], status: nextStatus };
@@ -2396,6 +2434,7 @@ class StateManager {
 
     resetAllPlayerVotes() {
         try {
+            localStorage.setItem('crsdg_all_user_investments', '{}');
             localStorage.removeItem('crsdg_all_user_investments');
         } catch (e) {}
 
@@ -2409,8 +2448,13 @@ class StateManager {
         }));
         this.savePlayers(updated);
         this.setVoteOpen(false);
+
+        if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.clearAllUserInvestmentsFromCloud === 'function') {
+            window.FirebaseSync.clearAllUserInvestmentsFromCloud().catch(e => console.warn('[State] Cloud clear investments notice:', e));
+        }
+
         this.broadcast({ type: 'PLAYERS_UPDATED', players: updated });
-        this.broadcast({ type: 'INVESTMENTS_UPDATED', reset: true });
+        this.broadcast({ type: 'INVESTMENTS_UPDATED', investments: {}, reset: true });
         return { success: true, count: updated.length };
     }
 
