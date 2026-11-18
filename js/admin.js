@@ -1229,14 +1229,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (voteToggleCheckbox) {
             voteToggleCheckbox.addEventListener('change', (e) => {
                 const isOpen = e.target.checked;
-                state.setVoteOpen(isOpen);
                 if (typeof state.setGameVoteOpen === 'function') {
                     state.setGameVoteOpen(isOpen);
                 }
                 renderVoteDashboard();
                 renderTeamRosters();
-                renderPlayers();
-                showToast(isOpen ? 'เปิดระบบรับโหวตเรียบร้อยแล้ว 🟢' : 'ปิดระบบรับโหวตแล้ว 🔴');
+                showToast(isOpen ? 'เปิดระบบรับโหวตเกม 4 ต่อ 4 เรียบร้อยแล้ว 🟢' : 'ปิดระบบรับโหวตเกม 4 ต่อ 4 แล้ว 🔴');
                 if (sound) sound.playClick();
             });
         }
@@ -1787,7 +1785,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderVoteDashboard() {
-        const isOpen = (typeof state.isGameVoteOpen === 'function') ? state.isGameVoteOpen() : state.isVoteOpen();
+        const isOpen = (typeof state.isGameVoteOpen === 'function') ? state.isGameVoteOpen() : false;
         const voteToggleCheckbox = document.getElementById('voteToggleCheckbox');
         const voteStatusBadge = document.getElementById('voteStatusBadge');
         const voteToggleLabel = document.getElementById('voteToggleLabel');

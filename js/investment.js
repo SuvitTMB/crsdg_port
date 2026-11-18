@@ -2161,23 +2161,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setInterval(renderDashboard, 3000);
 
-    // เมื่อเริ่มกิจกรรม ให้แต่ละทีม default สถานะเป็นปิดการลงทุน
-    try {
-        if (localStorage.getItem('crsdg_teams_default_closed_v2') !== 'true') {
-            if (state && typeof state.getPlayers === 'function' && typeof state.savePlayers === 'function') {
-                const players = state.getPlayers();
-                if (players && players.length > 0) {
-                    players.forEach(p => { p.voteStatus = 'closed'; });
-                    state.savePlayers(players);
-                }
-            }
-            if (state && typeof state.setVoteOpen === 'function') {
-                state.setVoteOpen(false);
-            }
-            localStorage.setItem('crsdg_teams_default_closed_v2', 'true');
-        }
-    } catch (e) {}
-
     // Initial render
     renderDashboard();
 });

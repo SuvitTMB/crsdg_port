@@ -717,16 +717,32 @@
     async function syncAllPlayers(playersList) {
         if (!Array.isArray(playersList)) return false;
         try {
-            const writes = playersList.map(p => ({
-                update: {
-                    name: `projects/${PROJECT_ID}/databases/(default)/documents/${COLS.PLAYER}/${p.id}`,
-                    fields: objToFirestoreFields({
-                        ...p,
-                        updatedAt: new Date().toISOString()
-                    })
-                }
-            }));
-            return await commitBatchedWrites(writes);
+            const nowIso = new Date().toISOString();
+            if (db) {
+                const batch = db.batch();
+                playersList.forEach(p => {
+                    if (p && p.id) {
+                        const ref = db.collection(COLS.PLAYER).doc(String(p.id).trim());
+                        batch.set(ref, {
+                            ...p,
+                            updatedAt: nowIso
+                        }, { merge: true });
+                    }
+                });
+                await batch.commit();
+                return true;
+            } else {
+                const writes = playersList.map(p => ({
+                    update: {
+                        name: `projects/${PROJECT_ID}/databases/(default)/documents/${COLS.PLAYER}/${p.id}`,
+                        fields: objToFirestoreFields({
+                            ...p,
+                            updatedAt: nowIso
+                        })
+                    }
+                }));
+                return await commitBatchedWrites(writes);
+            }
         } catch (err) {
             console.error('[FirebaseSync] Failed to sync players:', err);
             return false;
@@ -735,7 +751,10 @@
 
     async function setPlayerVoteStatus(playerId, status) {
         if (!playerId) return false;
-        return saveDocument(COLS.PLAYER, playerId, { voteStatus: status });
+        return saveDocument(COLS.PLAYER, playerId, {
+            voteStatus: status,
+            updatedAt: new Date().toISOString()
+        });
     }
 
     // ========================================================

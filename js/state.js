@@ -1760,12 +1760,36 @@ class StateManager {
             updatedAt: p.updatedAt || new Date().toISOString()
         })).filter(p => p.id && p.teamName);
         if (valid.length === 0) return;
+
+        const current = this.getPlayers();
+        const currentMap = new Map();
+        current.forEach(p => currentMap.set(p.id, p));
+
+        const merged = valid.map(cp => {
+            const local = currentMap.get(cp.id);
+            if (!local) return cp;
+            const localTime = new Date(local.updatedAt || 0).getTime();
+            const cloudTime = new Date(cp.updatedAt || 0).getTime();
+            // ป้องกัน race condition: ถ้าสถานะในเครื่องเพิ่งถูกคลิกแก้ไขใหม่กว่า snapshot เก่าจาก Cloud
+            // ให้ยึดสถานะในเครื่องไว้ ไม่ให้ Cloud ย้อนกลับไปเป็นสถานะเดิม
+            if (localTime > cloudTime && local.voteStatus) {
+                return {
+                    ...cp,
+                    voteStatus: local.voteStatus,
+                    voteAmount: local.voteAmount,
+                    voterCount: local.voterCount,
+                    updatedAt: local.updatedAt
+                };
+            }
+            return cp;
+        });
+
         try {
-            localStorage.setItem(STORAGE_KEYS.PLAYER, JSON.stringify(valid));
+            localStorage.setItem(STORAGE_KEYS.PLAYER, JSON.stringify(merged));
         } catch (e) {
             console.warn('[State] LocalStorage write player notice:', e);
         }
-        this.broadcast({ type: 'PLAYERS_UPDATED', players: valid });
+        this.broadcast({ type: 'PLAYERS_UPDATED', players: merged });
     }
 
     applyCloudQuizzes(cloudQuizzes) {
@@ -2234,7 +2258,9 @@ class StateManager {
         const idx = players.findIndex(p => p.id === teamId);
         if (idx !== -1) {
             const nextStatus = (status === 'closed') ? 'closed' : 'open';
+            const nowIso = new Date().toISOString();
             players[idx].voteStatus = nextStatus;
+            players[idx].updatedAt = nowIso;
 
             // เมื่อกดเปิดโหวตของทีมนี้ ให้เปิดระบบรับการลงทุนหลักด้วย (ถ้ายังปิดอยู่)
             if (nextStatus === 'open') {
@@ -2244,6 +2270,12 @@ class StateManager {
             }
 
             this.savePlayers(players);
+
+            // ซิงค์สถานะของทีมไปยัง Cloud Firestore ทันทีผ่าน Web SDK เพื่อความชัวร์และไม่เด้งกลับ
+            if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.setPlayerVoteStatus === 'function') {
+                window.FirebaseSync.setPlayerVoteStatus(teamId, nextStatus).catch(e => console.warn('[State] setPlayerVoteStatus cloud notice:', e));
+            }
+
             this.broadcast({
                 type: 'TEAM_VOTE_STATUS_UPDATED',
                 teamId: teamId,
@@ -2285,11 +2317,16 @@ class StateManager {
 
     closeAllTeamVotes() {
         const players = this.getPlayers();
+        const nowIso = new Date().toISOString();
         const updated = players.map(p => ({
             ...p,
-            voteStatus: 'closed'
+            voteStatus: 'closed',
+            updatedAt: nowIso
         }));
         this.savePlayers(updated);
+        if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.syncAllPlayers === 'function') {
+            window.FirebaseSync.syncAllPlayers(updated).catch(() => {});
+        }
         this.broadcast({
             type: 'ALL_TEAMS_VOTE_CLOSED',
             players: updated
