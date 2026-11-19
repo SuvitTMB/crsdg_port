@@ -6909,3 +6909,75 @@ html.light-mode .btn-invest-master-toggle.is-closed {
 .showcase-footer-actions {
     margin-top: 4px;
 }
+
+/* ========================================================
+   SYSTEM ALERT LIGHTBOX MODAL (REPLACES BROWSER ALERT)
+   ======================================================== */
+.admin-alert-modal-card {
+    max-width: 480px;
+    width: 92%;
+    background: #0d152e;
+    border: 2px solid rgba(245, 158, 11, 0.55);
+    border-radius: 20px;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 32px rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    overflow: hidden;
+    animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.admin-alert-message-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10px 14px 6px;
+    gap: 16px;
+}
+
+.admin-alert-icon-large {
+    font-size: 3.2rem;
+    line-height: 1;
+    filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.65));
+    animation: alertPulse 1.8s ease-in-out infinite;
+}
+
+.admin-alert-text {
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: #e2e8f0;
+    line-height: 1.65;
+    white-space: pre-line;
+    word-break: break-word;
+}
+
+.admin-alert-actions-footer {
+    display: flex;
+    justify-content: center;
+    padding: 16px 24px 20px;
+    background: rgba(10, 18, 38, 0.95);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-confirm-admin-alert {
+    min-width: 140px;
+    padding: 10px 32px !important;
+    font-size: 0.98rem !important;
+    font-weight: 700 !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    color: #ffffff !important;
+    border: 1.5px solid rgba(251, 191, 36, 0.7) !important;
+    box-shadow: 0 4px 18px rgba(245, 158, 11, 0.45) !important;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-confirm-admin-alert:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.6) !important;
+}
+
+.btn-confirm-admin-alert:active {
+    transform: translateY(0);
+}

@@ -826,3 +826,181 @@ body.remote-body {
     font-size: 0.68rem;
     font-weight: 700;
 }
+
+/* ========================================================
+   RESPONSIVE DESIGN FOR IPAD / TABLETS (768px+) & DESKTOP
+   ======================================================== */
+@media (min-width: 768px) {
+    body.remote-body {
+        max-width: 920px;
+        padding: 20px 24px 60px 24px;
+    }
+
+    .remote-header {
+        padding: 16px 20px;
+        margin-bottom: 18px;
+    }
+
+    .remote-title-text {
+        font-size: 1.35rem;
+    }
+
+    .remote-title-icon {
+        font-size: 2rem;
+    }
+
+    .remote-room-pill {
+        padding: 6px 16px;
+        font-size: 0.9rem;
+    }
+
+    .remote-status-bar {
+        padding-top: 10px;
+        font-size: 0.88rem;
+    }
+
+    .remote-connection-tag {
+        font-size: 0.88rem;
+    }
+
+    .remote-eligible-pill {
+        font-size: 0.88rem;
+        padding: 4px 12px;
+    }
+
+    /* Grid Layout on Tablet / iPad */
+    .remote-main {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        align-items: stretch;
+    }
+
+    /* Executive Section stretches across both columns on tablet */
+    .executive-picker-section {
+        grid-column: 1 / -1;
+        padding: 18px;
+        margin-bottom: 0;
+    }
+
+    .section-label {
+        font-size: 0.95rem;
+        margin-bottom: 14px;
+    }
+
+    .executive-grid-picker {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+
+    .exec-card-item {
+        padding: 14px 8px;
+        border-radius: 16px;
+    }
+
+    .exec-card-avatar {
+        width: 58px;
+        height: 58px;
+        margin-bottom: 8px;
+    }
+
+    .exec-card-name {
+        font-size: 0.92rem;
+        font-weight: 600;
+    }
+
+    .exec-card-status {
+        font-size: 0.72rem;
+        padding: 3px 9px;
+    }
+
+    /* Column 1: Controls Section */
+    .controls-section {
+        grid-column: 1;
+        margin-bottom: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .btn-giant-spin {
+        min-height: 140px;
+    }
+
+    .giant-btn-icon {
+        font-size: 2.8rem;
+    }
+
+    .giant-btn-label {
+        font-size: 1.25rem;
+    }
+
+    .giant-btn-sub {
+        font-size: 0.82rem;
+    }
+
+    .btn-cancel-winner-action {
+        padding: 14px 12px;
+        font-size: 0.92rem;
+    }
+
+    .btn-tool-toggle {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+
+    /* Column 2: Winner Feedback Section */
+    .winner-feedback-section {
+        grid-column: 2;
+        margin-bottom: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .winner-feedback-box {
+        padding: 24px 16px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .winner-target-sponsor {
+        font-size: 0.95rem;
+        margin-bottom: 12px;
+    }
+
+    .winner-id-display {
+        font-size: 2.4rem;
+        letter-spacing: 3px;
+        margin-bottom: 8px;
+    }
+
+    .winner-name-display {
+        font-size: 1.55rem;
+        margin-bottom: 8px;
+    }
+
+    .winner-dept-display {
+        font-size: 0.92rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    body.remote-body {
+        max-width: 1080px;
+    }
+
+    .executive-grid-picker {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px;
+    }
+
+    .exec-card-avatar {
+        width: 62px;
+        height: 62px;
+    }
+}
