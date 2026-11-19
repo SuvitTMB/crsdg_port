@@ -1019,7 +1019,6 @@
                     <h2 class="admin-card-title">
                         ระบบโหวตทายผลทีมชนะ <code class="table-name-badge">crsdg_vote</code>
                     </h2>
-                    <p class="admin-card-desc">ควบคุมการเปิด/ปิดโหวต และดูสถิติการทายผลทีมที่จะชนะ</p>
                 </div>
                 <div class="table-primary-actions"
                     style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
@@ -1040,6 +1039,17 @@
                         <span class="vote-status-badge" id="voteStatusBadge">🟢 เปิดรับโหวตอยู่</span>
                         <label class="switch-toggle" title="คลิกเพื่อเปิดหรือปิดระบบรับโหวต">
                             <input type="checkbox" id="voteToggleCheckbox" checked>
+                            <span class="slider-round"></span>
+                        </label>
+                    </div>
+
+                    <!-- Game 4v4 Button Open/Close Toggle Control (index.html) -->
+                    <div class="game-btn-toggle-control-box"
+                        style="display: flex; align-items: center; gap: 8px; background: rgba(15, 23, 42, 0.6); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(168, 85, 247, 0.35);">
+                        <span class="game-btn-status-badge" id="gameBtnStatusBadge"
+                            style="font-size: 0.82rem; font-weight: 600; color: #c084fc;">🟢 ปุ่มเกม 4 ต่อ 4: เปิด</span>
+                        <label class="switch-toggle" title="คลิกเพื่อเปิดหรือปิดการแสดงปุ่ม เกม 4 ต่อ 4 ในหน้า index.html">
+                            <input type="checkbox" id="gameBtnToggleCheckbox" checked>
                             <span class="slider-round"></span>
                         </label>
                     </div>
@@ -1117,11 +1127,20 @@
                         แดชบอร์ดแบบประเมินผลกิจกรรม <code class="table-name-badge">crsdg_evaluations</code>
                         (<span id="statEvalsCountBadge">0</span> ท่าน)
                     </h2>
-                    <p class="admin-card-desc">สถิติความพึงพอใจ คำติชม และรายงานผลการประเมินจากผู้ร่วมกิจกรรม CRSDG New
-                        Year 2027</p>
                 </div>
                 <div class="table-primary-actions"
                     style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <!-- Evaluation Box Open/Close Toggle Control (index.html) -->
+                    <div class="eval-toggle-control-box"
+                        style="display: flex; align-items: center; gap: 8px; background: rgba(15, 23, 42, 0.6); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(236, 72, 153, 0.35);">
+                        <span class="eval-status-badge" id="evalStatusBadge"
+                            style="font-size: 0.82rem; font-weight: 600; color: #f472b6;">🟢 กล่องประเมินผล: เปิด</span>
+                        <label class="switch-toggle" title="คลิกเพื่อเปิดหรือปิดการแสดงกล่องประเมินผลในหน้า index.html">
+                            <input type="checkbox" id="evalToggleCheckbox" checked>
+                            <span class="slider-round"></span>
+                        </label>
+                    </div>
+
                     <button type="button" class="btn-secondary" id="btnSyncEvaluationsFirebase"
                         title="ดึงข้อมูลผลการประเมินล่าสุดจาก Firebase Firestore (crsdg_evaluations)">
                         <svg class="btn-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -2693,6 +2712,34 @@
                 <button type="button" class="btn-secondary" id="btnCancelClearVoteDrawModal" style="padding: 10px 22px;">ยกเลิก</button>
                 <button type="button" class="btn-danger" id="btnConfirmClearVoteDrawAction" style="padding: 10px 22px; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border: none; font-weight: 700; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);">
                     🔄 ยืนยันการล้างผลสุ่ม
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         SYSTEM ALERT LIGHTBOX MODAL (REPLACES BROWSER ALERT)
+         ======================================================== -->
+    <div class="modal-overlay" id="adminAlertModal" style="display: none; z-index: 100010;">
+        <div class="modal-dialog admin-alert-modal-card">
+            <div class="modal-header-bar" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="modal-title-wrap" style="display: flex; align-items: center; gap: 10px;">
+                    <span class="modal-warn-badge" id="adminAlertModalIcon" style="font-size: 1.3rem;">⚠️</span>
+                    <h3 class="modal-title-text" id="adminAlertModalTitle" style="font-size: 1.15rem; font-weight: 700; color: #ffffff; margin: 0;">แจ้งเตือนระบบ</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeAdminAlertModalBtn" title="ปิดหน้าต่าง">✕</button>
+            </div>
+            <div class="modal-body-content" style="padding: 24px 22px;">
+                <div class="admin-alert-message-box">
+                    <div class="admin-alert-icon-large" id="adminAlertModalIconLarge">⚠️</div>
+                    <div class="admin-alert-text" id="adminAlertModalMessage">
+                        <!-- Message text -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions-footer admin-alert-actions-footer">
+                <button type="button" class="btn-primary btn-confirm-admin-alert" id="btnConfirmAdminAlertModal">
+                    <span>ตกลง</span>
                 </button>
             </div>
         </div>
