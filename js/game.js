@@ -3065,20 +3065,35 @@
             }
             window.closeAllGameModals = closeAllGameModals;
 
-            let lastProcessedRemoteCmdId = null;
-            let lastProcessedRemoteCmdTime = 0;
+            // Airtight Processed Command Tracking & Deduplication (ป้องกันการทำงานวนซ้ำ 100%)
+            const processedRemoteCmdIds = new Set();
+            // ละเว้นคำสั่งค้างเก่าในระบบที่ส่งมาก่อนหน้านี้ รับเฉพาะคำสั่งใหม่หรือภายใน 3 วินาทีก่อนโหลดหน้า
+            let lastProcessedRemoteCmdTs = Date.now() - 3000;
 
             function handleRemoteCommand(msg) {
                 if (!msg || !msg.action) return;
 
-                // Deduplication: ป้องกันการประมวลผลคำสั่งเดิมซ้ำสองรอบ (จาก BroadcastChannel และ storage event พร้อมกัน)
+                // 1. ตรวจสอบ timestamp: ต้องใหม่กว่าคำสั่งล่าสุดที่เคยประมวลผลไปแล้ว
+                if (msg.timestamp) {
+                    if (msg.timestamp <= lastProcessedRemoteCmdTs) {
+                        return;
+                    }
+                }
+
+                // 2. ตรวจสอบ Command ID: ห้ามรันคำสั่งเดิมซ้ำเด็ดขาด ไม่ว่าจะผ่านไปกี่วินาที
                 const cmdId = msg.id || (msg.action + '_' + (msg.timestamp || '') + '_' + JSON.stringify(msg.payload || {}));
-                const now = Date.now();
-                if (cmdId === lastProcessedRemoteCmdId && (now - lastProcessedRemoteCmdTime < 900)) {
+                if (processedRemoteCmdIds.has(cmdId)) {
                     return;
                 }
-                lastProcessedRemoteCmdId = cmdId;
-                lastProcessedRemoteCmdTime = now;
+
+                processedRemoteCmdIds.add(cmdId);
+                if (msg.timestamp) {
+                    lastProcessedRemoteCmdTs = Math.max(lastProcessedRemoteCmdTs, msg.timestamp);
+                }
+                if (processedRemoteCmdIds.size > 200) {
+                    const first = processedRemoteCmdIds.values().next().value;
+                    processedRemoteCmdIds.delete(first);
+                }
 
                 const { action, payload } = msg;
 
@@ -3327,18 +3342,8 @@
             });
 
             // 3. Cloud Firestore Real-time Listener (Commands from remote_crsdg on iPad/phone)
-            let lastProcessedCloudCmdId = null;
-            let lastProcessedCloudCmdTime = 0;
-
             const handleCloudCommand = (cmd) => {
                 if (!cmd || !cmd.action) return;
-                const cmdId = cmd.id || (cmd.action + '_' + (cmd.timestamp || ''));
-                const now = Date.now();
-                if (cmdId === lastProcessedCloudCmdId && (now - lastProcessedCloudCmdTime < 900)) {
-                    return;
-                }
-                lastProcessedCloudCmdId = cmdId;
-                lastProcessedCloudCmdTime = now;
                 handleRemoteCommand(cmd);
             };
 
@@ -3349,9 +3354,7 @@
                         handleCloudCommand(event.data.game_remote_cmd);
                     }
                 });
-            }
-
-            if (typeof firebase !== 'undefined' && firebase.firestore) {
+            } else if (typeof firebase !== 'undefined' && firebase.firestore) {
                 try {
                     firebase.firestore().collection('crsdg_vote').doc('settings').onSnapshot(doc => {
                         if (doc && doc.exists) {

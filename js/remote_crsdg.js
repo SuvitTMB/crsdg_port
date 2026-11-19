@@ -173,9 +173,7 @@
                 renderQuizPanel(latestGameState);
             }
         });
-    }
-
-    if (typeof firebase !== 'undefined' && firebase.firestore) {
+    } else if (typeof firebase !== 'undefined' && firebase.firestore) {
         try {
             firebase.firestore().collection('crsdg_vote').doc('settings').onSnapshot(doc => {
                 if (doc && doc.exists) {

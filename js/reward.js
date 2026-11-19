@@ -750,7 +750,7 @@
     }
 
     function setupRemoteListeners() {
-        let lastProcessedCmdTs = 0;
+        let lastProcessedCmdTs = Date.now() - 3000;
 
         const handleRemoteMessage = (data) => {
             if (!data || !data.type) return;
@@ -845,9 +845,7 @@
                     updateEligibleCount();
                 }
             });
-        }
-
-        if (typeof firebase !== 'undefined' && firebase.firestore) {
+        } else if (typeof firebase !== 'undefined' && firebase.firestore) {
             try {
                 firebase.firestore().collection('crsdg_vote').doc('settings').onSnapshot(doc => {
                     if (doc && doc.exists) {
