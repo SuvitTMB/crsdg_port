@@ -12,7 +12,7 @@
 body.reward-body {
     font-family: 'Kanit', sans-serif;
     min-height: 100vh;
-    background: #070e24 url('../images/background-blue.jpg') no-repeat center center fixed;
+    background: #070e24 url('../images/background-blue.png') no-repeat center center fixed;
     background-size: cover;
     color: #ffffff;
     display: flex;
@@ -237,21 +237,29 @@ body.reward-body {
     width: 100%;
 }
 
-/* Sponsor Stage Event Title (Above Sponsor Photo) - Vibrant Celebration Colors & Larger Font */
+/* Sponsor Stage Event Title (Above Sponsor Photo) - Logo Image with Festive Shimmer Glow */
 .sponsor-stage-title {
-    font-size: 1.75rem;
-    font-weight: 900;
-    letter-spacing: 2px;
-    text-align: center;
-    text-transform: uppercase;
-    line-height: 1.25;
-    margin-bottom: 22px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
     max-width: 440px;
-    background: linear-gradient(135deg, #FFF066 0%, #FFB020 28%, #FF4D6D 65%, #C77DFF 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 16px rgba(255, 176, 32, 0.7)) drop-shadow(0 0 32px rgba(255, 77, 109, 0.45));
+    width: 100%;
+}
+
+.sponsor-stage-logo-img {
+    height: 90px;
+    max-height: 95px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 16px rgba(255, 176, 32, 0.75)) drop-shadow(0 0 32px rgba(255, 77, 109, 0.45));
     animation: titleFestiveShimmer 4s ease-in-out infinite alternate;
+    transition: transform 0.3s ease;
+}
+
+.sponsor-stage-logo-img:hover {
+    transform: scale(1.03);
 }
 
 @keyframes titleFestiveShimmer {
