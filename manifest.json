@@ -1,0 +1,25 @@
+{
+  "name": "CRSDG AI Showcase & New Year Celebration",
+  "short_name": "CRSDG 2026",
+  "description": "ระบบลงทะเบียนและโหวตลงทุน AI Showcase 2026",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0f1d",
+  "theme_color": "#0a0f1d",
+  "icons": [
+    {
+      "src": "images/icon.jpg",
+      "sizes": "500x500",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/icon.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
