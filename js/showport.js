@@ -294,6 +294,58 @@
         updateComparisonThemes(amt1, amt2);
     };
 
+    // Toast notification for ShowPort
+    let toastTimeout = null;
+    function showToast(message, type = 'success') {
+        let toast = document.getElementById('showportToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'showportToast';
+            toast.className = 'showport-toast';
+            document.body.appendChild(toast);
+        }
+        toast.className = `showport-toast toast-${type} active`;
+        toast.innerHTML = `<span>${type === 'success' ? '🟢' : '🔒'}</span><span>${message}</span>`;
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            toast.classList.remove('active');
+        }, 3200);
+    }
+
+    // Global Team Vote Toggle Handler (สั่งการเปิด/ปิดรับการลงทุนทีม และส่งสัญญาณไปยัง index)
+    window.toggleTeamVoteFromShowport = function (colIndex) {
+        if (!state) return;
+        const targetTeamId = (colIndex === 1) ? selectedTeamId1 : selectedTeamId2;
+        if (!targetTeamId) return;
+
+        const players = (typeof state.getPlayers === 'function') ? state.getPlayers() : [];
+        const target = players.find(p => p.id === targetTeamId);
+        if (!target) return;
+
+        const isCurrentlyClosed = (target.voteStatus === 'closed');
+        const nextStatus = isCurrentlyClosed ? 'open' : 'closed';
+
+        // ปรับสถานะทีมใน state และส่งสัญญาณทั้ง Local Broadcast และ Firebase Cloud Sync ไปยังหน้า index.html
+        if (typeof state.setTeamVoteStatus === 'function') {
+            state.setTeamVoteStatus(targetTeamId, nextStatus);
+        }
+
+        // เล่นเสียง Sound Effect
+        const sound = window.sound || window.soundEffects || null;
+        if (nextStatus === 'open') {
+            if (sound && typeof sound.playWin === 'function') sound.playWin();
+            else if (sound && typeof sound.playClick === 'function') sound.playClick();
+        } else {
+            if (sound && typeof sound.playClick === 'function') sound.playClick();
+        }
+
+        const tName = target.teamName || ('ทีมที่ ' + (target.orderNo || ''));
+        showToast(nextStatus === 'open' ? `🟢 เปิดรับการลงทุน "${tName}" (ส่งสัญญาณ Lightbox แจ้งเตือนฝั่ง index แล้ว)` : `🔒 ปิดรับการลงทุน "${tName}" เรียบร้อยแล้ว`, nextStatus === 'open' ? 'success' : 'warning');
+
+        // รีเฟรชหน้าจอแดชบอร์ดทันที
+        renderDashboard();
+    };
+
     // ========================================================
     // 3. COMPARISON THEME CONTROLLER
     // หากทีมที่เปรียบเทียบกันทีมไหนมีเงินลงทุนมากกว่าอีกทีม ให้แสดงสีพื้นเป็นสีม่วง
@@ -439,6 +491,7 @@
         if (elTeamStatus) {
             elTeamStatus.className = `team-status-pill ${isTeamOpen ? 'open' : 'closed'}`;
             elTeamStatus.innerHTML = isTeamOpen ? '🟢 เปิดรับการลงทุน' : '🔒 ปิดรับการลงทุน';
+            elTeamStatus.title = isTeamOpen ? 'คลิกเพื่อปิดรับการลงทุนทีมนี้ (ส่งคำสั่งไปยังฝั่ง index)' : 'คลิกเพื่อเปิดรับการลงทุนทีมนี้ (แสดง Lightbox แจ้งเตือนฝั่ง index ทันที)';
         }
 
         const elTeamTitle = document.getElementById(`dispTeamTitleCol${colIndex}`);

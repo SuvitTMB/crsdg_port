@@ -713,6 +713,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         updateFullscreenUI();
+
+        // รักษาและส่งต่อสถานะการเปิด/ปิดลงทุนของหน้า admin เมื่อกดปุ่ม "แสดงพอร์ต"
+        const btnNavShowPort = document.getElementById('btnNavShowPort');
+        if (btnNavShowPort) {
+            btnNavShowPort.addEventListener('click', () => {
+                if (state && typeof state.syncVoteSettingsToCloud === 'function') {
+                    state.syncVoteSettingsToCloud();
+                }
+            });
+        }
     }
 
     // ========================================================

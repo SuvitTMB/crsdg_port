@@ -329,6 +329,7 @@
     bindRegistrationEvents();
     bindCropperEvents();
     bindPortalNavigationEvents();
+    initPwaInstallHandlers();
   }
 
   function updateRegisteredCountBadge() {
@@ -775,9 +776,6 @@
                 <div class="portfolio-subtitle-text">จัดสรรเงินลงทุนเชียร์ทีมแข่งขันที่คุณมั่นใจ</div>
               </div>
             </div>
-            <a href="showport.html" target="_blank" style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.35); color: #93c5fd; text-decoration: none; transition: all 0.2s ease;">
-              <span>📊 แดชบอร์ดสรุปพอร์ต ❯</span>
-            </a>
             <div class="portfolio-status-pill ${isVoteOpen ? 'status-open' : 'status-closed'}" style="display:none;">
               <span class="live-pulse-dot" style="background:${isVoteOpen ? '#10b981' : '#ef4444'};"></span>
               <span>${isVoteOpen ? '🟢 เปิดให้ลงทุน1' : '🔒 ปิดรับการลงทุน'}</span>
@@ -2436,5 +2434,20 @@
       try { confetti({ particleCount: 90, spread: 80, origin: { y: 0.5 } }); } catch (_) { }
     }
   };
+
+  // ========================================================
+  // PWA SERVICE WORKER REGISTRATION (ซ่อน Address Bar ใน Standalone Mode)
+  // ========================================================
+  function initPwaInstallHandlers() {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          console.log('[PWA] Service Worker registered successfully:', reg.scope);
+        }).catch((err) => {
+          console.warn('[PWA] Service Worker registration failed:', err);
+        });
+      });
+    }
+  }
 
 })();

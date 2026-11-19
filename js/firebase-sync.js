@@ -229,7 +229,8 @@
             const encId = encodeURIComponent(cleanId);
             const fields = objToFirestoreFields(data);
             fields.updatedAt = { stringValue: new Date().toISOString() };
-            const url = `${FIRESTORE_BASE_URL}/${collectionName}/${encId}`;
+            const fieldMasks = Object.keys(fields).map(f => `updateMask.fieldPaths=${encodeURIComponent(f)}`).join('&');
+            const url = `${FIRESTORE_BASE_URL}/${collectionName}/${encId}?${fieldMasks}`;
             const headers = { 'Content-Type': 'application/json' };
             if (auth && auth.currentUser) {
                 try {
@@ -885,22 +886,21 @@
     async function saveUserInvestmentToCloud(empId, userInvestments) {
         if (!empId) return false;
         const cleanId = String(empId).trim().toLowerCase();
-        const docId = 'inv_' + cleanId;
         const payload = {
             empId: cleanId,
             investments: userInvestments || {},
             updatedAt: new Date().toISOString()
         };
         try {
-            // บันทึกไปยัง crsdg_vote/inv_{cleanId} ซึ่งได้รับสิทธิ์ 200 OK (แยกตามรายบุคคล)
+            // บันทึกไปยังตาราง crsdg_investments/{cleanId} ซึ่งเปิด permission เรียบร้อยแล้ว (200 OK)
             if (db) {
                 // แทนที่ข้อมูลเอกสารโดยไม่ใช้ { merge: true } เพื่อให้การปรับลดหรือถอนเงินลงทุนเป็น 0 ถูกต้อง 100%
-                await db.collection(COLS.VOTE).doc(docId).set(payload);
+                await db.collection(COLS.INVESTMENTS).doc(cleanId).set(payload);
                 return true;
             } else {
-                const encId = encodeURIComponent(docId);
+                const encId = encodeURIComponent(cleanId);
                 const fields = objToFirestoreFields(payload);
-                const url = `${FIRESTORE_BASE_URL}/${COLS.VOTE}/${encId}`;
+                const url = `${FIRESTORE_BASE_URL}/${COLS.INVESTMENTS}/${encId}`;
                 const res = await fetch(url, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
@@ -916,39 +916,35 @@
 
     async function fetchUserInvestmentsFromCloud() {
         try {
-            console.log('[FirebaseSync] Fetching user investments from crsdg_vote...');
+            console.log('[FirebaseSync] Fetching user investments from crsdg_investments...');
             const userInvMap = {};
             if (db) {
-                const snapshot = await db.collection(COLS.VOTE).get();
+                const snapshot = await db.collection(COLS.INVESTMENTS).get();
                 snapshot.forEach(doc => {
-                    if (doc.id.startsWith('inv_')) {
-                        const d = doc.data();
-                        if (!d) return;
-                        const empId = String(d.empId || doc.id.replace(/^inv_/, '')).trim().toLowerCase();
-                        let inv = d.investments;
-                        if (typeof inv === 'string') {
-                            try { inv = JSON.parse(inv); } catch (e) { inv = {}; }
-                        }
-                        if (empId && typeof inv === 'object') {
-                            userInvMap[empId] = inv || {};
-                        }
+                    const d = doc.data();
+                    if (!d) return;
+                    const empId = String(d.empId || doc.id).trim().toLowerCase();
+                    let inv = d.investments;
+                    if (typeof inv === 'string') {
+                        try { inv = JSON.parse(inv); } catch (e) { inv = {}; }
+                    }
+                    if (empId && typeof inv === 'object') {
+                        userInvMap[empId] = inv || {};
                     }
                 });
             } else {
-                const docs = await fetchAllRawDocuments(COLS.VOTE);
+                const docs = await fetchAllRawDocuments(COLS.INVESTMENTS);
                 (docs || []).forEach(doc => {
+                    const d = firestoreDocToObj(doc);
+                    if (!d) return;
                     const docName = doc.name ? doc.name.split('/').pop() : '';
-                    if (docName.startsWith('inv_')) {
-                        const d = firestoreDocToObj(doc);
-                        if (!d) return;
-                        const empId = String(d.empId || docName.replace(/^inv_/, '')).trim().toLowerCase();
-                        let inv = d.investments;
-                        if (typeof inv === 'string') {
-                            try { inv = JSON.parse(inv); } catch (e) { inv = {}; }
-                        }
-                        if (empId && typeof inv === 'object') {
-                            userInvMap[empId] = inv || {};
-                        }
+                    const empId = String(d.empId || docName).trim().toLowerCase();
+                    let inv = d.investments;
+                    if (typeof inv === 'string') {
+                        try { inv = JSON.parse(inv); } catch (e) { inv = {}; }
+                    }
+                    if (empId && typeof inv === 'object') {
+                        userInvMap[empId] = inv || {};
                     }
                 });
             }
@@ -964,38 +960,30 @@
 
     async function clearAllUserInvestmentsFromCloud() {
         try {
-            console.log('[FirebaseSync] Clearing all user investments from crsdg_vote...');
+            console.log('[FirebaseSync] Clearing all user investments from crsdg_investments...');
             if (db) {
-                const snapshot = await db.collection(COLS.VOTE).get();
-                const batch = db.batch();
-                let count = 0;
-                snapshot.forEach(doc => {
-                    if (doc.id.startsWith('inv_')) {
+                const snapshot = await db.collection(COLS.INVESTMENTS).get();
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.forEach(doc => {
                         batch.delete(doc.ref);
-                        count++;
-                    }
-                });
-                if (count > 0) {
+                    });
                     await batch.commit();
-                    console.log(`[FirebaseSync] SDK deleted ${count} investment docs from crsdg_vote`);
+                    console.log(`[FirebaseSync] SDK deleted ${snapshot.size} investment docs from crsdg_investments`);
                 }
             } else {
-                const docs = await fetchAllRawDocuments(COLS.VOTE);
-                const invDocs = (docs || []).filter(doc => {
-                    const docName = doc.name ? doc.name.split('/').pop() : '';
-                    return docName.startsWith('inv_');
-                });
-                if (invDocs.length > 0) {
-                    const writes = invDocs.map(d => ({ delete: d.name }));
+                const docs = await fetchAllRawDocuments(COLS.INVESTMENTS);
+                if (docs && docs.length > 0) {
+                    const writes = docs.map(d => ({ delete: d.name }));
                     await commitBatchedWrites(writes);
-                    console.log(`[FirebaseSync] REST deleted ${invDocs.length} investment docs from crsdg_vote`);
+                    console.log(`[FirebaseSync] REST deleted ${docs.length} investment docs from crsdg_investments`);
                 }
             }
-            // Clear settings in crsdg_vote/settings and notify other clients via reset_votes_timestamp
+            // Notify other clients via reset_votes_timestamp
             await saveVoteSettings({ reset_votes_timestamp: Date.now() });
             return true;
         } catch (err) {
-            console.error('[FirebaseSync] Failed to clear crsdg_vote investments:', err);
+            console.error('[FirebaseSync] Failed to clear crsdg_investments:', err);
             return false;
         }
     }
@@ -1261,41 +1249,39 @@
                 notify('EVALUATIONS_UPDATED', evals);
             }, err => console.warn('[FirebaseSync] crsdg_evaluations onSnapshot notice:', err.message));
 
-            // Realtime listener for crsdg_vote (settings & all user investments inv_*)
-            db.collection(COLS.VOTE).onSnapshot(snapshot => {
-                const userInvMap = {};
-                let settingsDoc = null;
+            // Realtime listener for crsdg_vote (settings)
+            db.collection(COLS.VOTE).doc('settings').onSnapshot(doc => {
+                if (!doc || !doc.exists) return;
+                const d = doc.data();
+                if (d) {
+                    if (window.state && typeof window.state.applyCloudVoteSettings === 'function') {
+                        window.state.applyCloudVoteSettings(d);
+                    }
+                    notify('VOTE_SETTINGS_UPDATED', d);
+                }
+            }, err => console.warn('[FirebaseSync] crsdg_vote settings onSnapshot notice:', err.message));
 
+            // Realtime listener for crsdg_investments (Individual employee investments)
+            db.collection(COLS.INVESTMENTS).onSnapshot(snapshot => {
+                const userInvMap = {};
                 snapshot.forEach(doc => {
                     const d = doc.data();
                     if (!d) return;
-
-                    if (doc.id === 'settings') {
-                        settingsDoc = d;
-                    } else if (doc.id.startsWith('inv_')) {
-                        const empId = String(d.empId || doc.id.replace(/^inv_/, '')).trim().toLowerCase();
-                        let inv = d.investments;
-                        if (typeof inv === 'string') {
-                            try { inv = JSON.parse(inv); } catch (e) { inv = {}; }
-                        }
-                        if (empId && typeof inv === 'object') {
-                            userInvMap[empId] = inv || {};
-                        }
+                    const empId = String(d.empId || doc.id).trim().toLowerCase();
+                    let inv = d.investments;
+                    if (typeof inv === 'string') {
+                        try { inv = JSON.parse(inv); } catch (e) { inv = {}; }
+                    }
+                    if (empId && typeof inv === 'object') {
+                        userInvMap[empId] = inv || {};
                     }
                 });
-
-                if (settingsDoc) {
-                    if (window.state && typeof window.state.applyCloudVoteSettings === 'function') {
-                        window.state.applyCloudVoteSettings(settingsDoc);
-                    }
-                    notify('VOTE_SETTINGS_UPDATED', settingsDoc);
-                }
 
                 if (window.state && typeof window.state.applyCloudUserInvestments === 'function') {
                     window.state.applyCloudUserInvestments(userInvMap);
                 }
                 notify('INVESTMENTS_UPDATED', userInvMap);
-            }, err => console.warn('[FirebaseSync] crsdg_vote onSnapshot notice:', err.message));
+            }, err => console.warn('[FirebaseSync] crsdg_investments onSnapshot notice:', err.message));
 
         } catch (err) {
             console.warn('[FirebaseSync] Web SDK initialization notice:', err);

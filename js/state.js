@@ -2196,7 +2196,7 @@ class StateManager {
         // คำนวณยอดเงินโหวตรวมและจำนวนผู้ให้เงินของแต่ละทีมเฉพาะในเครื่องทันทีระดับ 60 FPS
         this.recalculatePlayerTeamVoteTotals(true);
 
-        // บันทึกเฉพาะเอกสารของพนักงานรายนี้ไปยัง Firestore crsdg_vote/inv_{cleanEmpId} (200 OK Atomic Write แยกอิสระ 100%)
+        // บันทึกเฉพาะเอกสารของพนักงานรายนี้ไปยัง Firestore crsdg_investments/{cleanEmpId} (200 OK Atomic Write แยกอิสระ 100%)
         if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.saveUserInvestmentToCloud === 'function') {
             window.FirebaseSync.saveUserInvestmentToCloud(cleanEmpId, userInv).catch(() => {});
         }
@@ -2504,7 +2504,7 @@ class StateManager {
             updatedAt: new Date().toISOString()
         }));
         this.savePlayers(updated);
-        this.setVoteOpen(false);
+        // ไม่สั่งปิดการลงทุนหลัก ให้คงสถานะเดิมตามหน้า admin
 
         if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.clearAllUserInvestmentsFromCloud === 'function') {
             window.FirebaseSync.clearAllUserInvestmentsFromCloud().catch(e => console.warn('[State] Cloud clear investments notice:', e));
