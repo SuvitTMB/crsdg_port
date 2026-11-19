@@ -302,12 +302,16 @@
         const chosen = (f.chosenTeam && f.chosenTeam.stringValue) ? f.chosenTeam.stringValue.trim() : null;
         const photo = (f.photo && f.photo.stringValue) ? f.photo.stringValue : '';
         const prize = (f.prize && f.prize.stringValue) ? f.prize.stringValue : null;
+        const memberVal = (f.Member && f.Member.stringValue) ? f.Member.stringValue : ((f.member && f.member.stringValue) ? f.member.stringValue : '');
+        const memberStatus = (String(memberVal).trim().toLowerCase() === 'member' || (memberVal && String(memberVal).trim() !== '-' && String(memberVal).trim() !== '0')) ? 'Member' : '';
 
         return {
             id: id,
             EmployeeID: id,
             EmpName: name,
             Group: group,
+            Member: memberStatus,
+            member: memberStatus,
             name: name,
             department: group,
             photo: photo,
@@ -380,6 +384,8 @@
                 const empId = String(m.EmployeeID || m.id || '').trim();
                 const empName = String(m.EmpName || m.name || '').trim();
                 const group = String(m.Group || m.group || m.department || 'Team A').trim();
+                const rawMem = (m.Member !== undefined && m.Member !== null) ? String(m.Member).trim() : ((m.member !== undefined && m.member !== null) ? String(m.member).trim() : '');
+                const memberStatus = (rawMem.toLowerCase() === 'member' || (rawMem && rawMem !== '-' && rawMem !== '0')) ? 'Member' : '';
 
                 if (empId && empName) {
                     writes.push({
@@ -389,6 +395,8 @@
                                 EmployeeID: { stringValue: empId },
                                 EmpName: { stringValue: empName },
                                 Group: { stringValue: group },
+                                Member: { stringValue: memberStatus },
+                                member: { stringValue: memberStatus },
                                 id: { stringValue: empId },
                                 name: { stringValue: empName },
                                 department: { stringValue: group },
@@ -431,11 +439,32 @@
 
         const isReg = (memberData.registered === true || memberData.isRegistered === true);
         const chosen = (memberData.chosenTeam && String(memberData.chosenTeam).trim()) ? String(memberData.chosenTeam).trim() : null;
+        const rawMem = (memberData.Member !== undefined && memberData.Member !== null) ? String(memberData.Member).trim() : ((memberData.member !== undefined && memberData.member !== null) ? String(memberData.member).trim() : '');
+        const memberStatus = (rawMem.toLowerCase() === 'member' || (rawMem && rawMem !== '-' && rawMem !== '0')) ? 'Member' : '';
+
+        if (db) {
+            try {
+                await db.collection(COLS.MEMBERS).doc(empId).set({
+                    ...memberData,
+                    EmployeeID: empId,
+                    EmpName: empName,
+                    Group: group,
+                    Member: memberStatus,
+                    member: memberStatus,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                return true;
+            } catch (sdkErr) {
+                console.warn('[FirebaseSync] SDK saveMember fallback to REST:', sdkErr.message);
+            }
+        }
 
         const fields = {
             EmployeeID: { stringValue: empId },
             EmpName: { stringValue: empName },
             Group: { stringValue: group },
+            Member: { stringValue: memberStatus },
+            member: { stringValue: memberStatus },
             id: { stringValue: empId },
             name: { stringValue: empName },
             department: { stringValue: group },
@@ -493,6 +522,30 @@
         isBatchWriting = true;
         try {
             console.log('[FirebaseSync] Resetting all members in crsdg_member to null...');
+            if (db) {
+                const snapshot = await db.collection(COLS.MEMBERS).get();
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.forEach(doc => {
+                        batch.update(doc.ref, {
+                            registered: null,
+                            isRegistered: null,
+                            registeredAt: null,
+                            chosenTeam: null,
+                            vote: null,
+                            prize: null,
+                            wonPrize: null,
+                            prizeTitle: null,
+                            hasWon: null,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    });
+                    await batch.commit();
+                    console.log(`[FirebaseSync] SDK successfully reset status fields of ${snapshot.size} members to null in crsdg_member`);
+                }
+                return true;
+            }
+
             const docs = await fetchAllRawDocuments(COLS.MEMBERS);
             if (!docs || !docs.length) return true;
 
@@ -523,6 +576,78 @@
             return true;
         } catch (err) {
             console.error('[FirebaseSync] Failed to reset registrations in cloud:', err);
+            return false;
+        } finally {
+            isBatchWriting = false;
+        }
+    }
+
+    async function resetAllMemberWinnerStatusesInCloud() {
+        isBatchWriting = true;
+        try {
+            console.log('[FirebaseSync] Resetting winner status fields of members in crsdg_member...');
+            if (db) {
+                const snapshot = await db.collection(COLS.MEMBERS).get();
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    let count = 0;
+                    snapshot.forEach(doc => {
+                        const d = doc.data() || {};
+                        if (d.hasWon || d.wonPrize || d.prizeTitle || d.prizeResult || d.prizeGroup || d.wonAt || d.drawCanceled || d.prize) {
+                            batch.update(doc.ref, {
+                                hasWon: null,
+                                wonPrize: null,
+                                prize: null,
+                                prizeTitle: null,
+                                prizeResult: null,
+                                prizeGroup: null,
+                                wonAt: null,
+                                drawCanceled: null,
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            count++;
+                        }
+                    });
+                    if (count > 0) {
+                        await batch.commit();
+                        console.log(`[FirebaseSync] SDK successfully reset winner status for ${count} members in crsdg_member`);
+                    }
+                }
+                return true;
+            } else {
+                const docs = await fetchAllRawDocuments(COLS.MEMBERS);
+                if (!docs || !docs.length) return true;
+                const updateWrites = [];
+                docs.forEach(doc => {
+                    const f = doc.fields || {};
+                    const hasWinnerData = f.hasWon || f.wonPrize || f.prize || f.prizeTitle || f.prizeResult || f.wonAt || f.drawCanceled;
+                    if (hasWinnerData) {
+                        updateWrites.push({
+                            update: {
+                                name: doc.name,
+                                fields: {
+                                    ...f,
+                                    hasWon: { nullValue: null },
+                                    wonPrize: { nullValue: null },
+                                    prize: { nullValue: null },
+                                    prizeTitle: { nullValue: null },
+                                    prizeResult: { nullValue: null },
+                                    prizeGroup: { nullValue: null },
+                                    wonAt: { nullValue: null },
+                                    drawCanceled: { nullValue: null },
+                                    updatedAt: { stringValue: new Date().toISOString() }
+                                }
+                            }
+                        });
+                    }
+                });
+                if (updateWrites.length > 0) {
+                    await commitBatchedWrites(updateWrites);
+                }
+                return true;
+            }
+        } catch (err) {
+            console.error('[FirebaseSync] Failed to reset winner status on members:', err);
             return false;
         } finally {
             isBatchWriting = false;
@@ -1026,19 +1151,33 @@
     async function syncAllPrizes(prizesList) {
         if (!Array.isArray(prizesList)) return false;
         try {
-            const writes = prizesList.map(p => {
-                const cleanId = encodeURIComponent(String(p.id).trim());
-                const fields = objToFirestoreFields(p);
-                fields.updatedAt = { stringValue: new Date().toISOString() };
-                return {
-                    update: {
-                        name: `projects/${PROJECT_ID}/databases/(default)/documents/${COLS.PRIZES}/${cleanId}`,
-                        fields: fields
-                    }
-                };
-            });
-            await commitBatchedWrites(writes);
-            return true;
+            if (db) {
+                const batch = db.batch();
+                prizesList.forEach(p => {
+                    const cleanId = String(p.id).trim();
+                    const ref = db.collection(COLS.PRIZES).doc(cleanId);
+                    batch.set(ref, {
+                        ...p,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                });
+                await batch.commit();
+                return true;
+            } else {
+                const writes = prizesList.map(p => {
+                    const cleanId = encodeURIComponent(String(p.id).trim());
+                    const fields = objToFirestoreFields(p);
+                    fields.updatedAt = { stringValue: new Date().toISOString() };
+                    return {
+                        update: {
+                            name: `projects/${PROJECT_ID}/databases/(default)/documents/${COLS.PRIZES}/${cleanId}`,
+                            fields: fields
+                        }
+                    };
+                });
+                await commitBatchedWrites(writes);
+                return true;
+            }
         } catch (err) {
             console.error('[FirebaseSync] Failed to syncAllPrizes:', err);
             return false;
@@ -1052,10 +1191,19 @@
     async function fetchWinnersFromCloud() {
         try {
             console.log('[FirebaseSync] Fetching winners from crsdg_winners...');
-            const docs = await fetchAllRawDocuments(COLS.WINNERS);
-            const winners = docs.map(d => firestoreDocToObj(d)).filter(w => w && w.id);
+            let winners = [];
+            if (db) {
+                const snapshot = await db.collection(COLS.WINNERS).get();
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    if (d) winners.push({ id: doc.id, ...d });
+                });
+            } else {
+                const docs = await fetchAllRawDocuments(COLS.WINNERS);
+                winners = docs.map(d => firestoreDocToObj(d)).filter(w => w && w.id);
+            }
             console.log(`[FirebaseSync] Fetched ${winners.length} winners from Firestore.`);
-            if (winners.length > 0 && window.state && typeof window.state.applyCloudWinners === 'function') {
+            if (window.state && typeof window.state.applyCloudWinners === 'function') {
                 window.state.applyCloudWinners(winners);
             }
             return winners;
@@ -1077,12 +1225,25 @@
     async function clearAllWinnersFromCloud() {
         try {
             console.log('[FirebaseSync] Clearing all documents from crsdg_winners...');
-            const docs = await fetchAllRawDocuments(COLS.WINNERS);
-            const writes = docs.map(doc => ({ delete: doc.name }));
-            if (writes.length > 0) {
-                await commitBatchedWrites(writes);
+            if (db) {
+                const snapshot = await db.collection(COLS.WINNERS).get();
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                    console.log(`[FirebaseSync] SDK successfully deleted ${snapshot.size} winner docs from crsdg_winners`);
+                }
+                return true;
+            } else {
+                const docs = await fetchAllRawDocuments(COLS.WINNERS);
+                if (docs && docs.length > 0) {
+                    const writes = docs.map(doc => ({ delete: doc.name }));
+                    await commitBatchedWrites(writes);
+                }
+                return true;
             }
-            return true;
         } catch (err) {
             console.error('[FirebaseSync] Failed to clear crsdg_winners:', err);
             return false;
@@ -1092,19 +1253,33 @@
     async function syncAllWinners(winnersList) {
         if (!Array.isArray(winnersList)) return false;
         try {
-            const writes = winnersList.map(w => {
-                const cleanId = encodeURIComponent(String(w.id).trim());
-                const fields = objToFirestoreFields(w);
-                fields.updatedAt = { stringValue: new Date().toISOString() };
-                return {
-                    update: {
-                        name: `projects/${PROJECT_ID}/databases/(default)/documents/${COLS.WINNERS}/${cleanId}`,
-                        fields: fields
-                    }
-                };
-            });
-            await commitBatchedWrites(writes);
-            return true;
+            if (db) {
+                const batch = db.batch();
+                winnersList.forEach(w => {
+                    const cleanId = String(w.id).trim();
+                    const ref = db.collection(COLS.WINNERS).doc(cleanId);
+                    batch.set(ref, {
+                        ...w,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                });
+                await batch.commit();
+                return true;
+            } else {
+                const writes = winnersList.map(w => {
+                    const cleanId = encodeURIComponent(String(w.id).trim());
+                    const fields = objToFirestoreFields(w);
+                    fields.updatedAt = { stringValue: new Date().toISOString() };
+                    return {
+                        update: {
+                            name: `projects/${PROJECT_ID}/databases/(default)/documents/${COLS.WINNERS}/${cleanId}`,
+                            fields: fields
+                        }
+                    };
+                });
+                await commitBatchedWrites(writes);
+                return true;
+            }
         } catch (err) {
             console.error('[FirebaseSync] Failed to syncAllWinners:', err);
             return false;
@@ -1186,12 +1361,16 @@
 
                     const isReg = (d.registered === true || d.isRegistered === true) ? true : null;
                     const chosen = (d.chosenTeam && String(d.chosenTeam).trim()) ? String(d.chosenTeam).trim() : null;
+                    const rawMem = d.Member || d.member || '';
+                    const memberStatus = (String(rawMem).trim().toLowerCase() === 'member' || (rawMem && String(rawMem).trim() !== '-' && String(rawMem).trim() !== '0')) ? 'Member' : '';
 
                     members.push({
                         id: empId,
                         EmployeeID: empId,
                         EmpName: empName,
                         Group: String(d.Group || d.department || 'Team A').trim(),
+                        Member: memberStatus,
+                        member: memberStatus,
                         name: empName,
                         department: String(d.Group || d.department || 'Team A').trim(),
                         photo: d.photo || '',
@@ -1316,6 +1495,7 @@
         deleteMember: deleteMember,
         clearAllMembersFromCloud: clearAllMembersFromCloud,
         resetAllMembersRegistrationInCloud: resetAllMembersRegistrationInCloud,
+        resetAllMemberWinnerStatusesInCloud: resetAllMemberWinnerStatusesInCloud,
         updateMemberRegistration: updateMemberRegistration,
         // Teams 4v4
         fetchTeamNamesFromCloud: fetchTeamNamesFromCloud,

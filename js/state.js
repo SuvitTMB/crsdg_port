@@ -1001,11 +1001,15 @@ class StateManager {
                 const rawGrp = (m.Group !== undefined && m.Group !== null) ? String(m.Group).trim() : (m.department !== undefined && m.department !== null ? String(m.department).trim() : '');
                 // Purge old dummy fallback 'Team A' if present
                 const cleanGroup = (rawGrp.toLowerCase() === 'team a') ? '' : rawGrp;
+                const rawMem = (m.Member !== undefined && m.Member !== null) ? m.Member : (m.member !== undefined && m.member !== null ? m.member : '');
+                const memberStatus = (String(rawMem).trim().toLowerCase() === 'member' || (rawMem && String(rawMem).trim() !== '-' && String(rawMem).trim() !== '0' && String(rawMem).trim().toLowerCase() !== 'false')) ? 'Member' : '';
                 return {
                     ...m,
                     EmployeeID: String(m.EmployeeID || m.id || ''),
                     EmpName: String(m.EmpName || m.name || ''),
                     Group: cleanGroup,
+                    Member: memberStatus,
+                    member: memberStatus,
                     id: String(m.EmployeeID || m.id || ''),
                     name: String(m.EmpName || m.name || ''),
                     department: cleanGroup,
@@ -1037,11 +1041,15 @@ class StateManager {
             }
             const rawGrp = (m.Group !== undefined && m.Group !== null) ? String(m.Group).trim() : (m.department !== undefined && m.department !== null ? String(m.department).trim() : '');
             const cleanGroup = (rawGrp.toLowerCase() === 'team a') ? '' : rawGrp;
+            const rawMem = (m.Member !== undefined && m.Member !== null) ? m.Member : (m.member !== undefined && m.member !== null ? m.member : '');
+            const memberStatus = (String(rawMem).trim().toLowerCase() === 'member' || (rawMem && String(rawMem).trim() !== '-' && String(rawMem).trim() !== '0' && String(rawMem).trim().toLowerCase() !== 'false')) ? 'Member' : '';
             return {
                 ...cleanM,
                 EmployeeID: String(m.EmployeeID || m.id || ''),
                 EmpName: String(m.EmpName || m.name || ''),
                 Group: cleanGroup,
+                Member: memberStatus,
+                member: memberStatus,
                 id: String(m.EmployeeID || m.id || ''),
                 name: String(m.EmpName || m.name || ''),
                 department: cleanGroup,
@@ -1125,11 +1133,16 @@ class StateManager {
             return { success: false, message: `รหัสพนักงาน ${empId} มีอยู่ในตาราง crsdg_member แล้ว` };
         }
 
+        const rawMember = memberData.Member !== undefined && memberData.Member !== null ? memberData.Member : (memberData.member !== undefined && memberData.member !== null ? memberData.member : '');
+        const memberStatus = (String(rawMember).trim().toLowerCase() === 'member' || (rawMember && String(rawMember).trim() !== '-' && String(rawMember).trim() !== '0' && String(rawMember).trim().toLowerCase() !== 'false')) ? 'Member' : '';
+
         const isReg = (memberData.registered === true || memberData.isRegistered === true) ? true : (memberData.registered === false ? false : null);
         const newRecord = {
             EmployeeID: empId,
             EmpName: empName,
             Group: group,
+            Member: memberStatus,
+            member: memberStatus,
             id: empId,
             name: empName,
             department: group,
@@ -1167,12 +1180,20 @@ class StateManager {
             return { success: false, message: `รหัสพนักงาน ${newEmpId} ซ้ำกับพนักงานท่านอื่นในระบบ` };
         }
 
+        let newMember = old.Member !== undefined ? old.Member : (old.member || '');
+        if (updatedFields.Member !== undefined || updatedFields.member !== undefined) {
+            const rawM = updatedFields.Member !== undefined ? updatedFields.Member : updatedFields.member;
+            newMember = (String(rawM).trim().toLowerCase() === 'member' || (rawM && String(rawM).trim() !== '-' && String(rawM).trim() !== '0' && String(rawM).trim().toLowerCase() !== 'false')) ? 'Member' : '';
+        }
+
         members[idx] = {
             ...old,
             ...updatedFields,
             EmployeeID: newEmpId,
             EmpName: newEmpName,
             Group: newGroup,
+            Member: newMember,
+            member: newMember,
             id: newEmpId,
             name: newEmpName,
             department: newGroup,
@@ -1227,6 +1248,9 @@ class StateManager {
             const group = String(rawGroup || '').trim();
             const cleanGroup = (group.toLowerCase() === 'team a') ? '' : group;
 
+            const rawMem = item.Member !== undefined && item.Member !== null ? item.Member : (item.member !== undefined && item.member !== null ? item.member : '');
+            const memberStatus = (String(rawMem).trim().toLowerCase() === 'member' || (rawMem && String(rawMem).trim() !== '-' && String(rawMem).trim() !== '0' && String(rawMem).trim().toLowerCase() !== 'false')) ? 'Member' : '';
+
             if (empId && empName) {
                 importedEmpIds.add(empId);
                 // Requirement:
@@ -1237,6 +1261,8 @@ class StateManager {
                     EmployeeID: empId,
                     EmpName: empName,
                     Group: cleanGroup,
+                    Member: memberStatus,
+                    member: memberStatus,
                     id: empId,
                     name: empName,
                     department: cleanGroup,
@@ -1255,9 +1281,13 @@ class StateManager {
                 if (existingMap.has(empId)) {
                     const idx = existingMap.get(empId);
                     const prev = current[idx];
+                    const prevMember = prev.Member !== undefined ? prev.Member : (prev.member || '');
+                    const finalMember = (item.Member !== undefined || item.member !== undefined) ? memberStatus : prevMember;
                     current[idx] = {
                         ...prev,
                         ...record,
+                        Member: finalMember,
+                        member: finalMember,
                         photo: record.photo || prev.photo || '',
                         registered: null,
                         isRegistered: null,
@@ -1410,6 +1440,23 @@ class StateManager {
             localStorage.setItem(STORAGE_KEYS.CANCELED_DRAWS || 'crsdg_canceled_draw_ids', JSON.stringify(list));
             this.broadcast({ type: 'CANCELED_DRAWS_UPDATED', canceledEmpIds: list });
         }
+        // เอาค่าในฟิวด์ Member ออกตามเงื่อนไข
+        const members = this.getMembers();
+        const normalize = id => String(id || '').trim().replace(/^0+/, '');
+        const targetMember = members.find(m => {
+            const mId = normalize(m.EmployeeID || m.id);
+            const wId = normalize(sId);
+            return (mId && wId && mId === wId) || String(m.EmployeeID || m.id || '').trim() === sId;
+        });
+        if (targetMember && (targetMember.Member || targetMember.member)) {
+            targetMember.Member = '';
+            targetMember.member = '';
+            targetMember.drawCanceled = true;
+            this.saveMembers(members);
+            if (typeof FirebaseSync !== 'undefined' && typeof FirebaseSync.saveMember === 'function') {
+                FirebaseSync.saveMember(targetMember).catch(() => {});
+            }
+        }
     }
 
     removeCanceledDrawEmpId(empId) {
@@ -1436,27 +1483,28 @@ class StateManager {
         );
 
         return members.filter(m => {
+            // 1. เงื่อนไข: พนักงานต้องมีรหัสพนักงาน (EmployeeID) และชื่อ-นามสกุล (EmpName) ครบถ้วน
             const empId = String(m.EmployeeID || m.id || '').trim();
             const empName = String(m.EmpName || m.name || '').trim();
             if (!empId || !empName) return false;
 
             const empIdLower = empId.toLowerCase();
 
-            // 1. เงื่อนไข: ฟิลด์ Group ต้องไม่เป็นค่าว่าง หรือค่า null
-            const rawGroup = m.Group !== undefined && m.Group !== null ? m.Group : (m.department !== undefined && m.department !== null ? m.department : m.group);
-            const groupStr = String(rawGroup || '').trim();
-            if (!groupStr) return false;
-            const lowerGroup = groupStr.toLowerCase();
-            if (lowerGroup === 'null' || lowerGroup === 'undefined' || lowerGroup === '-' || lowerGroup === 'none' || lowerGroup === 'ไม่ระบุกลุ่ม' || lowerGroup === 'ไม่ระบุ' || lowerGroup === 'team a') {
+            // 2. เงื่อนไข: ฟิวด์ Member ต้องมีข้อความ (ต้องไม่เป็นค่าว่าง และต้องมีสถานะเป็น Member)
+            const rawMember = m.Member !== undefined && m.Member !== null ? m.Member : (m.member !== undefined && m.member !== null ? m.member : '');
+            const memberStr = String(rawMember || '').trim();
+            if (!memberStr) return false;
+            const lowerMember = memberStr.toLowerCase();
+            if (lowerMember === 'null' || lowerMember === 'undefined' || lowerMember === '-' || lowerMember === 'none' || lowerMember === 'false' || lowerMember === '0') {
                 return false;
             }
 
-            // 2. เงื่อนไข: ยังไม่ได้รับรางวัล
-            if (winnerEmpIds.has(empIdLower) || m.hasWon === true || !!m.wonPrize || !!m.prize) {
+            // 3. เงื่อนไขสถานะการได้รับรางวัล: ต้อง ยังไม่เคยได้รับรางวัลใดๆ มาก่อน (hasWon !== true, wonPrize == null และไม่อยู่ในรายการผู้ชนะเดิม)
+            if (winnerEmpIds.has(empIdLower) || m.hasWon === true || !!m.wonPrize || !!m.prize || !!m.prizeTitle || !!m.prizeResult) {
                 return false;
             }
 
-            // 3. เงื่อนไข: สุ่มไปแล้วและถูกยกเลิก ไม่ให้มีการสุ่มซ้ำขึ้นมาอีกครั้ง
+            // 4. เงื่อนไขผู้สละสิทธิ์/ถูกยกเลิก: หากพนักงานท่านใดเคยถูกสุ่มได้แต่กดสละสิทธิ์หรือกดยกเลิก ระบบจะตัดออกทันทีเพื่อไม่ให้สุ่มซ้ำ
             if (canceledEmpIds.has(empIdLower) || m.drawCanceled === true || m.isDisqualified === true) {
                 return false;
             }
@@ -1598,6 +1646,8 @@ class StateManager {
                 member.prizeGroup = null;
                 member.wonAt = null;
                 member.drawCanceled = true;
+                member.Member = '';
+                member.member = '';
                 this.saveMembers(members);
                 if (typeof FirebaseSync !== 'undefined' && typeof FirebaseSync.saveMember === 'function') {
                     FirebaseSync.saveMember(member).catch(() => {});
@@ -1614,7 +1664,7 @@ class StateManager {
         return true;
     }
 
-    resetWinners() {
+    async resetWinners() {
         this.saveWinners([]);
         this.resetCanceledDrawEmpIds();
         const prizes = this.getPrizes().map(p => ({ ...p, drawn: 0 }));
@@ -1633,19 +1683,24 @@ class StateManager {
         this.saveMembers(members);
 
         if (typeof FirebaseSync !== 'undefined') {
-            if (typeof FirebaseSync.clearAllWinnersFromCloud === 'function') {
-                FirebaseSync.clearAllWinnersFromCloud().catch(() => {});
-            }
-            if (typeof FirebaseSync.syncAllPrizes === 'function') {
-                FirebaseSync.syncAllPrizes(prizes).catch(() => {});
-            }
-            if (typeof FirebaseSync.syncAllMembers === 'function') {
-                FirebaseSync.syncAllMembers(members).catch(() => {});
+            try {
+                if (typeof FirebaseSync.clearAllWinnersFromCloud === 'function') {
+                    await FirebaseSync.clearAllWinnersFromCloud();
+                }
+                if (typeof FirebaseSync.resetAllMemberWinnerStatusesInCloud === 'function') {
+                    await FirebaseSync.resetAllMemberWinnerStatusesInCloud();
+                }
+                if (typeof FirebaseSync.syncAllPrizes === 'function') {
+                    await FirebaseSync.syncAllPrizes(prizes);
+                }
+            } catch (err) {
+                console.warn('[State] Error syncing winner reset to cloud:', err);
             }
         }
 
         this.broadcast({ type: 'WINNERS_RESET' });
         this.broadcast({ type: 'MEMBERS_UPDATED', members });
+        this.broadcast({ type: 'PRIZES_UPDATED', prizes });
     }
 
     // ========================================================
@@ -1685,7 +1740,14 @@ class StateManager {
             const chosen = (cm.chosenTeam && String(cm.chosenTeam).trim()) ? String(cm.chosenTeam).trim() : null;
             const photo = cm.photo || (local && local.photo) || '';
 
-            if (!local || local.registered !== isReg || local.registeredAt !== regAt || local.chosenTeam !== chosen) {
+            const cloudHasWon = (cm.hasWon === true) ? true : null;
+            const cloudWonPrize = cm.wonPrize ? String(cm.wonPrize).trim() : null;
+            const cloudPrizeTitle = cm.prizeTitle ? String(cm.prizeTitle).trim() : null;
+            const cloudPrize = cm.prize ? cm.prize : null;
+            const rawMem = (cm.Member !== undefined && cm.Member !== null) ? cm.Member : (cm.member !== undefined && cm.member !== null ? cm.member : (local ? (local.Member || local.member) : ''));
+            const memberStatus = (String(rawMem).trim().toLowerCase() === 'member' || (rawMem && String(rawMem).trim() !== '-' && String(rawMem).trim() !== '0' && String(rawMem).trim().toLowerCase() !== 'false')) ? 'Member' : '';
+
+            if (!local || local.registered !== isReg || local.registeredAt !== regAt || local.chosenTeam !== chosen || local.hasWon !== cloudHasWon || local.wonPrize !== cloudWonPrize || (local.Member || '') !== memberStatus) {
                 hasChange = true;
             }
 
@@ -1694,6 +1756,8 @@ class StateManager {
                 EmployeeID: cId,
                 EmpName: String(cm.EmpName || cm.name || '').trim(),
                 Group: String(cm.Group || cm.department || 'Team A').trim(),
+                Member: memberStatus,
+                member: memberStatus,
                 id: cId,
                 name: String(cm.EmpName || cm.name || '').trim(),
                 department: String(cm.Group || cm.department || 'Team A').trim(),
@@ -1703,10 +1767,10 @@ class StateManager {
                 registeredAt: regAt,
                 chosenTeam: chosen,
                 vote: (cm.vote && String(cm.vote).trim()) ? String(cm.vote).trim() : null,
-                prize: cm.prize || (local && local.prize) || null,
-                wonPrize: cm.wonPrize || (local && local.wonPrize) || null,
-                prizeTitle: cm.prizeTitle || (local && local.prizeTitle) || null,
-                hasWon: cm.hasWon || (local && local.hasWon) || null
+                prize: cloudPrize,
+                wonPrize: cloudWonPrize,
+                prizeTitle: cloudPrizeTitle,
+                hasWon: cloudHasWon
             };
         });
 
@@ -1837,15 +1901,6 @@ class StateManager {
 
     applyCloudWinners(winners) {
         if (!Array.isArray(winners)) return;
-        if (winners.length === 0) {
-            const current = this.getWinners();
-            if (current.length > 0) {
-                if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.syncAllWinners === 'function') {
-                    window.FirebaseSync.syncAllWinners(current).catch(() => {});
-                }
-                return;
-            }
-        }
         localStorage.setItem(STORAGE_KEYS.WINNERS, JSON.stringify(winners));
         this.notifyListeners({ type: 'WINNERS_UPDATED', winners });
     }

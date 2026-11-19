@@ -42,6 +42,16 @@
     const rerollModalEmpIdEl = document.getElementById('rerollModalEmpId');
     const rerollModalPrizeNameEl = document.getElementById('rerollModalPrizeName');
 
+    // System Alert Lightbox Modal Elements
+    const alertModalEl = document.getElementById('alertModal');
+    const alertModalTitleEl = document.getElementById('alertModalTitle');
+    const alertModalIconEl = document.getElementById('alertModalIcon');
+    const alertModalIconLargeEl = document.getElementById('alertModalIconLarge');
+    const alertModalMessageEl = document.getElementById('alertModalMessage');
+    const closeAlertModalBtnEl = document.getElementById('closeAlertModalBtn');
+    const btnConfirmAlertModalEl = document.getElementById('btnConfirmAlertModal');
+    let alertCloseCallback = null;
+
     // Stage Sponsor Showcase Elements
     const sponsorAvatarImgEl = document.getElementById('sponsorAvatarImg');
     const sponsorAvatarFallbackEl = document.getElementById('sponsorAvatarFallback');
@@ -367,6 +377,48 @@
     }
 
     // ========================================================
+    // SYSTEM ALERT LIGHTBOX MODAL (REPLACES BROWSER ALERT)
+    // ========================================================
+    function showRewardAlert(message, options = {}) {
+        const title = options.title || 'แจ้งเตือนระบบ';
+        const icon = options.icon || '⚠️';
+        alertCloseCallback = typeof options.onClose === 'function' ? options.onClose : null;
+
+        if (alertModalTitleEl) alertModalTitleEl.textContent = title;
+        if (alertModalIconEl) alertModalIconEl.textContent = icon;
+        if (alertModalIconLargeEl) alertModalIconLargeEl.textContent = icon;
+        if (alertModalMessageEl) alertModalMessageEl.textContent = message || '';
+
+        if (alertModalEl) {
+            alertModalEl.style.display = 'flex';
+        }
+        if (sound && !isMuted) {
+            if (typeof sound.playClick === 'function') sound.playClick();
+        }
+    }
+
+    function closeAlertModal() {
+        if (alertModalEl) {
+            alertModalEl.style.display = 'none';
+        }
+        if (alertCloseCallback) {
+            const cb = alertCloseCallback;
+            alertCloseCallback = null;
+            try { cb(); } catch (e) { console.warn(e); }
+        }
+        if (sound && !isMuted) {
+            if (typeof sound.playClick === 'function') sound.playClick();
+        }
+    }
+
+    // Expose globally and override window.alert in reward.html context
+    window.showRewardAlert = showRewardAlert;
+    window.closeRewardAlert = closeAlertModal;
+    window.alert = function (msg) {
+        showRewardAlert(String(msg || ''));
+    };
+
+    // ========================================================
     // LUCKY DRAW SPINNING ENGINE (AUTO-SPIN WITH SOUND & CONFETTI)
     // ========================================================
     function startSpin() {
@@ -374,7 +426,10 @@
 
         const eligible = state.getEligibleParticipants();
         if (eligible.length === 0) {
-            alert('ไม่มีผู้มีสิทธิ์ร่วมสุ่มรางวัลเหลืออยู่ในระบบ\n(ผู้ร่วมงานทุกคนได้รับรางวัลไปแล้ว หรือยังไม่มีผู้ลงทะเบียน)');
+            showRewardAlert('ไม่มีผู้มีสิทธิ์ร่วมสุ่มรางวัลเหลืออยู่ในระบบ\n(ผู้ร่วมงานทุกคนได้รับรางวัลไปแล้ว หรือยังไม่มีผู้ลงทะเบียน)', {
+                title: 'แจ้งเตือนระบบสุ่มรางวัล',
+                icon: '⚠️'
+            });
             return;
         }
 
@@ -777,6 +832,11 @@
                 const drawnCount = parseInt(currentPrize.drawn, 10) || 0;
                 if (drawnCount < totalQty) {
                     startSpin();
+                } else {
+                    showRewardAlert(`รางวัลนี้ได้รับการสุ่มครบจำนวนแล้ว (${drawnCount}/${totalQty} รางวัล)\nหากต้องการสุ่มใหม่ สามารถกดปุ่ม "สุ่มใหม่" ได้ครับ`, {
+                        title: 'สุ่มรางวัลครบตามจำนวนแล้ว',
+                        icon: '✓'
+                    });
                 }
             });
         }
@@ -807,6 +867,32 @@
                 if (e.target === rerollModalEl) closeRerollModal();
             });
         }
+
+        // Alert Modal Events
+        if (closeAlertModalBtnEl) {
+            closeAlertModalBtnEl.addEventListener('click', closeAlertModal);
+        }
+        if (btnConfirmAlertModalEl) {
+            btnConfirmAlertModalEl.addEventListener('click', closeAlertModal);
+        }
+        if (alertModalEl) {
+            alertModalEl.addEventListener('click', (e) => {
+                if (e.target === alertModalEl) closeAlertModal();
+            });
+        }
+
+        // Escape Key to close modals
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (alertModalEl && alertModalEl.style.display === 'flex') {
+                    closeAlertModal();
+                } else if (rerollModalEl && rerollModalEl.style.display === 'flex') {
+                    closeRerollModal();
+                } else if (qrModalEl && qrModalEl.style.display === 'flex') {
+                    qrModalEl.style.display = 'none';
+                }
+            }
+        });
 
         if (soundToggleBtnEl) {
             soundToggleBtnEl.addEventListener('click', toggleSound);

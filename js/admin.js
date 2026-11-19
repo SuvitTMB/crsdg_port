@@ -67,6 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const editChosenTeamSelect = document.getElementById('editChosenTeamSelect');
     const editRegisteredStatusSelect = document.getElementById('editRegisteredStatusSelect');
+    const editMemberStatusSelect = document.getElementById('editMemberStatusSelect');
+    const partMemberSelect = document.getElementById('partMember');
 
     // Reset Registration Modal Elements
     const btnOpenResetRegModal = document.getElementById('btnOpenResetRegModal');
@@ -2424,6 +2426,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     return currentSortDirection === 'asc' ? cmp : -cmp;
                 }
 
+                if (currentSortColumn === 'member') {
+                    const memA = (a.Member === 'Member' || a.member === 'Member') ? 'Member' : '';
+                    const memB = (b.Member === 'Member' || b.member === 'Member') ? 'Member' : '';
+                    const cmp = memA.localeCompare(memB);
+                    return currentSortDirection === 'asc' ? cmp : -cmp;
+                }
+
                 if (currentSortColumn === 'team') {
                     const teamA = memberTeamMap.get(idA)?.name || '';
                     const teamB = memberTeamMap.get(idB)?.name || '';
@@ -2475,7 +2484,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (allMembers.length === 0) {
                 participantsTableBody.innerHTML = `
                     <tr>
-                        <td colspan="10">
+                        <td colspan="11">
                             <div class="table-empty-container">
                                 <div class="table-empty-icon">👥</div>
                                 <div class="table-empty-title">ยังไม่มีข้อมูลพนักงานในตาราง crsdg_member</div>
@@ -2497,7 +2506,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 participantsTableBody.innerHTML = `
                     <tr>
-                        <td colspan="10" class="table-empty" style="text-align: center; padding: 24px; color: var(--text-secondary);">
+                        <td colspan="11" class="table-empty" style="text-align: center; padding: 24px; color: var(--text-secondary);">
                             🔍 ไม่พบข้อมูลพนักงานที่ตรงกับเงื่อนไขการค้นหา
                         </td>
                     </tr>
@@ -2586,6 +2595,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="team-dot" style="background: ${grpColor};"></span>
                             <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${group}</span>
                         </span>
+                    </td>
+                    <td class="col-td-member" style="text-align: center;">
+                        ${(m.Member === 'Member' || m.member === 'Member' || String(m.Member || m.member || '').trim().toLowerCase() === 'member')
+                            ? `<span class="badge badge-success" style="font-size: 0.72rem; padding: 2px 8px; font-weight: 500; border-radius: 9999px;">Member</span>`
+                            : `<span class="empty-cell-dash">-</span>`}
                     </td>
                     <td class="col-td-team" title="${tInfo ? ('ทีมแข่งขัน: ' + tInfo.name) : '-'}">
                         ${teamHTML}
@@ -2804,23 +2818,26 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Find header row (look for EmployeeID, EmpName, Group)
+        // Find header row (look for EmployeeID, EmpName, Group, Member)
         let headerRowIdx = 0;
         let colEmpId = 0;
         let colEmpName = 1;
         let colGroup = 2;
+        let colMember = -1;
 
         for (let r = 0; r < Math.min(5, rawRows.length); r++) {
             const row = rawRows[r].map(c => String(c).toLowerCase().trim().replace(/[\s_-]/g, ''));
             const foundId = row.findIndex(c => c.includes('employeeid') || c.includes('empid') || c.includes('รหัส'));
             const foundName = row.findIndex(c => c.includes('empname') || c.includes('name') || c.includes('ชื่อ'));
             const foundGroup = row.findIndex(c => c.includes('group') || c.includes('team') || c.includes('กลุ่ม') || c.includes('ฝ่าย') || c.includes('ทีม'));
+            const foundMember = row.findIndex(c => c === 'member' || c.includes('member') || c.includes('สมาชิก'));
 
             if (foundId !== -1 && foundName !== -1) {
                 headerRowIdx = r;
                 colEmpId = foundId;
                 colEmpName = foundName;
                 if (foundGroup !== -1) colGroup = foundGroup;
+                if (foundMember !== -1) colMember = foundMember;
                 break;
             }
         }
@@ -2835,11 +2852,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const rawGroup = (row[colGroup] !== undefined && row[colGroup] !== null) ? String(row[colGroup]).trim() : '';
             const group = (rawGroup.toLowerCase() === 'team a' || rawGroup.toLowerCase() === 'none' || rawGroup.toLowerCase() === 'null') ? '' : rawGroup;
 
+            let memberStatus = '';
+            if (colMember !== -1 && row[colMember] !== undefined && row[colMember] !== null) {
+                const rawMem = String(row[colMember]).trim();
+                if (rawMem.toLowerCase() === 'member' || (rawMem && rawMem !== '-' && rawMem !== '0' && rawMem.toLowerCase() !== 'false' && rawMem.toLowerCase() !== 'no')) {
+                    memberStatus = 'Member';
+                }
+            }
+
             if (id && name) {
                 parsedMembers.push({
                     EmployeeID: id,
                     EmpName: name,
-                    Group: group
+                    Group: group,
+                    Member: memberStatus
                 });
             }
         }
@@ -2860,9 +2886,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td style="text-align: center; color: var(--text-secondary);">${idx + 1}</td>
                     <td><span class="empid-badge">${m.EmployeeID}</span></td>
                     <td><strong>${m.EmpName}</strong></td>
-                    <td><span class="badge badge-info" style="font-size: 0.72rem;">${m.Group}</span></td>
+                    <td><span class="badge badge-info" style="font-size: 0.72rem;">${m.Group || '-'}</span></td>
+                    <td style="text-align: center;">${m.Member ? `<span class="badge badge-success" style="font-size: 0.72rem;">Member</span>` : `<span style="color: var(--text-secondary); font-size: 0.72rem;">-</span>`}</td>
                 </tr>
-            `).join('') + (parsedMembers.length > 8 ? `<tr><td colspan="4" style="text-align:center; color: var(--text-secondary); padding: 8px;">... และอีก ${parsedMembers.length - 8} รายการ</td></tr>` : '');
+            `).join('') + (parsedMembers.length > 8 ? `<tr><td colspan="5" style="text-align:center; color: var(--text-secondary); padding: 8px;">... และอีก ${parsedMembers.length - 8} รายการ</td></tr>` : '');
         }
 
         if (excelParsedPreview) {
@@ -3068,6 +3095,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'EmployeeID': m.EmployeeID || m.id,
                 'EmpName': m.EmpName || m.name,
                 'Group': m.Group || m.department || 'Team A',
+                'Member': (m.Member === 'Member' || m.member === 'Member' || String(m.Member || m.member || '').trim().toLowerCase() === 'member') ? 'Member' : '',
                 'ทีมแข่งขัน': memberTeamMap.get(m.EmployeeID || m.id) || '-',
                 'ลงทะเบียน': (m.registered === true && m.registeredAt) ? formatThaiDateTime(m.registeredAt) : (m.registered === true ? 'ลงทะเบียนแล้ว' : 'ยังไม่ลงทะเบียน'),
                 'เลือกทีม': m.chosenTeam || '-',
@@ -3168,6 +3196,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const empId = document.getElementById('partId').value.trim();
             const empName = document.getElementById('partName').value.trim();
             const group = document.getElementById('partDept').value.trim() || 'Team A';
+            const partMemberEl = document.getElementById('partMember');
+            const memberStatus = partMemberEl ? partMemberEl.value : 'Member';
 
             if (!empId) {
                 alert('กรุณากรอกรหัสพนักงาน');
@@ -3195,6 +3225,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 EmployeeID: empId,
                 EmpName: empName,
                 Group: group,
+                Member: memberStatus,
                 photo: finalPhoto
             });
 
@@ -3208,6 +3239,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     EmployeeID: empId,
                     EmpName: empName,
                     Group: group,
+                    Member: memberStatus,
                     photo: finalPhoto,
                     registered: null,
                     registeredAt: null,
@@ -3248,7 +3280,8 @@ document.addEventListener('DOMContentLoaded', () => {
         imgBaseY: 0,
         canvasSize: 260,
         cropSize: 200,
-        hasPhoto: false
+        hasPhoto: false,
+        photoChanged: false
     };
 
     function initEditCropperCanvas() {
@@ -3341,9 +3374,12 @@ document.addEventListener('DOMContentLoaded', () => {
         pCtx.restore();
     }
 
-    function setEditCropperZoom(newScale) {
+    function setEditCropperZoom(newScale, isUserAction = false) {
         // Allow zooming out down to 0.30 (-70% shrink) up to 3.0x zoom
         editCropper.scale = Math.min(3.0, Math.max(0.30, newScale));
+        if (isUserAction) {
+            editCropper.photoChanged = true;
+        }
         if (editZoomRangeInput) editZoomRangeInput.value = editCropper.scale.toFixed(2);
         updateEditZoomLabel(editCropper.scale);
         renderEditCropper();
@@ -3352,6 +3388,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Auto-detect and trim baked-in black sidebars from previously cropped images
     function trimBakedBlackBorders(img) {
         try {
+            // Guard against remote URLs or empty images: only inspect local data URLs
+            // to completely prevent Canvas tainting SecurityError
+            if (!img || !img.src || !img.src.startsWith('data:')) {
+                return null;
+            }
             const c = document.createElement('canvas');
             c.width = img.width;
             c.height = img.height;
@@ -3441,7 +3482,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         editCropper.originalImgSrc = src;
+        const isRemote = typeof src === 'string' && (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('//'));
+
         const img = new Image();
+        if (isRemote) {
+            img.crossOrigin = 'anonymous';
+        }
+
         img.onload = () => {
             const trimmedDataUrl = trimBakedBlackBorders(img);
             if (trimmedDataUrl) {
@@ -3458,12 +3505,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 autoFitAndCenterCropper(img);
             }
         };
+
         img.onerror = () => {
+            // If crossOrigin load failed (e.g. CORS not permitted on origin), retry without crossOrigin so user can view photo
+            if (isRemote && img.crossOrigin) {
+                const fallbackImg = new Image();
+                fallbackImg.onload = () => {
+                    editCropper.img = fallbackImg;
+                    editCropper.hasPhoto = true;
+                    autoFitAndCenterCropper(fallbackImg);
+                };
+                fallbackImg.onerror = () => {
+                    editCropper.img = null;
+                    editCropper.originalImgSrc = '';
+                    editCropper.hasPhoto = false;
+                    renderEditCropper();
+                };
+                fallbackImg.src = src;
+                return;
+            }
             editCropper.img = null;
             editCropper.originalImgSrc = '';
             editCropper.hasPhoto = false;
             renderEditCropper();
         };
+
         img.src = src;
     }
 
@@ -3482,6 +3548,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!editCropper.isDragging) return;
             const dx = clientX - editCropper.dragStartX;
             const dy = clientY - editCropper.dragStartY;
+            if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+                editCropper.photoChanged = true;
+            }
             editCropper.offsetX = editCropper.imgBaseX + dx;
             editCropper.offsetY = editCropper.imgBaseY + dy;
             renderEditCropper();
@@ -3510,18 +3579,24 @@ document.addEventListener('DOMContentLoaded', () => {
         editCropCanvasWrapper.addEventListener('wheel', (e) => {
             e.preventDefault();
             const delta = e.deltaY < 0 ? 0.08 : -0.08;
-            setEditCropperZoom(editCropper.scale + delta);
+            setEditCropperZoom(editCropper.scale + delta, true);
         }, { passive: false });
     }
 
     if (editZoomRangeInput) {
-        editZoomRangeInput.addEventListener('input', (e) => setEditCropperZoom(parseFloat(e.target.value)));
+        editZoomRangeInput.addEventListener('input', (e) => setEditCropperZoom(parseFloat(e.target.value), true));
     }
-    if (btnEditZoomIn) btnEditZoomIn.addEventListener('click', () => setEditCropperZoom(editCropper.scale + 0.1));
-    if (btnEditZoomOut) btnEditZoomOut.addEventListener('click', () => setEditCropperZoom(editCropper.scale - 0.1));
-    if (btnEditResetCrop) btnEditResetCrop.addEventListener('click', resetEditCropper);
+    if (btnEditZoomIn) btnEditZoomIn.addEventListener('click', () => setEditCropperZoom(editCropper.scale + 0.1, true));
+    if (btnEditZoomOut) btnEditZoomOut.addEventListener('click', () => setEditCropperZoom(editCropper.scale - 0.1, true));
+    if (btnEditResetCrop) {
+        btnEditResetCrop.addEventListener('click', () => {
+            editCropper.photoChanged = true;
+            resetEditCropper();
+        });
+    }
     if (btnEditRotateCrop) {
         btnEditRotateCrop.addEventListener('click', () => {
+            editCropper.photoChanged = true;
             editCropper.rotation = (editCropper.rotation + 90) % 360;
             renderEditCropper();
         });
@@ -3534,6 +3609,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editPhotoFileInput) {
         editPhotoFileInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) {
+                editCropper.photoChanged = true;
                 const reader = new FileReader();
                 reader.onload = (re) => loadEditCropperImage(re.target.result);
                 reader.readAsDataURL(e.target.files[0]);
@@ -3543,6 +3619,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnEditRemovePhoto) {
         btnEditRemovePhoto.addEventListener('click', () => {
+            editCropper.photoChanged = true;
             editCropper.img = null;
             editCropper.hasPhoto = false;
             editCropper.originalImgSrc = '';
@@ -3556,6 +3633,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const members = state.getMembers();
         const member = members.find(m => (m.EmployeeID || m.id) === empId);
         if (!member) return;
+
+        editCropper.photoChanged = false; // Reset modification flag when opening modal
 
         editOriginalEmpId.value = empId;
         editEmpIdInput.value = member.EmployeeID || member.id;
@@ -3576,6 +3655,12 @@ document.addEventListener('DOMContentLoaded', () => {
             editRegisteredStatusSelect.value = member.registered === true ? 'yes' : 'no';
         }
 
+        // Set Member Status Select
+        if (editMemberStatusSelect) {
+            const isMem = (member.Member === 'Member' || member.member === 'Member' || String(member.Member || member.member || '').trim().toLowerCase() === 'member');
+            editMemberStatusSelect.value = isMem ? 'Member' : '';
+        }
+
         // Load member photo into the integrated cropper (prefer uncropped originalPhoto if available)
         const photoSrc = member.originalPhoto || member.photo || '';
         loadEditCropperImage(photoSrc);
@@ -3590,101 +3675,127 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editMemberForm) {
         editMemberForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const origId = editOriginalEmpId.value;
-            const newId = editEmpIdInput.value.trim();
-            const newName = editEmpNameInput.value.trim();
-            const newGroup = editGroupInput.value.trim() || 'Team A';
+            try {
+                const origId = editOriginalEmpId.value;
+                const newId = editEmpIdInput.value.trim();
+                const newName = editEmpNameInput.value.trim();
+                const newGroup = editGroupInput.value.trim() || 'Team A';
 
-            if (!newId) {
-                alert('กรุณากรอกรหัสพนักงาน');
-                editEmpIdInput.focus();
-                return;
-            }
-            if (!newName) {
-                alert('กรุณากรอกชื่อ-นามสกุลพนักงาน');
-                editEmpNameInput.focus();
-                return;
-            }
+                if (!newId) {
+                    alert('กรุณากรอกรหัสพนักงาน');
+                    editEmpIdInput.focus();
+                    return;
+                }
+                if (!newName) {
+                    alert('กรุณากรอกชื่อ-นามสกุลพนักงาน');
+                    editEmpNameInput.focus();
+                    return;
+                }
 
-            // Export photo from canvas if photo is loaded
-            let photoData = '';
-            let origPhotoData = editCropper.originalImgSrc || '';
-            if (editCropper.hasPhoto && editCropper.img) {
-                const outCanvas = document.createElement('canvas');
-                const outSize = 350; // Strictly 350px x 350px
-                outCanvas.width = outSize;
-                outCanvas.height = outSize;
-                const oCtx = outCanvas.getContext('2d');
-                const sourceSize = editCropper.cropSize;
-                const sourceX = (editCropper.canvasSize - sourceSize) / 2;
-                const sourceY = (editCropper.canvasSize - sourceSize) / 2;
-                oCtx.drawImage(editCropCanvas, sourceX, sourceY, sourceSize, sourceSize, 0, 0, outSize, outSize);
-                const rawCropped = outCanvas.toDataURL('image/jpeg', 0.88);
+                const existingMember = state.getMembers().find(m => (m.EmployeeID || m.id) === origId);
 
-                photoData = rawCropped;
-                if (window.FirebaseStorageManager) {
+                // Determine photo data:
+                // Case 1: Photo was explicitly removed or no photo exists
+                // Case 2: Photo was NOT changed by user -> preserve existing member photo exactly as is
+                // Case 3: Photo was changed (uploaded new file or re-adjusted) -> export from canvas
+                let photoData = '';
+                let origPhotoData = '';
+
+                if (!editCropper.hasPhoto) {
+                    photoData = '';
+                    origPhotoData = '';
+                } else if (!editCropper.photoChanged) {
+                    // User didn't change photo -> preserve existing photo directly!
+                    // This avoids canvas tainting SecurityError and avoids re-compressing
+                    photoData = existingMember ? (existingMember.photo || '') : (editCropper.originalImgSrc || '');
+                    origPhotoData = existingMember ? (existingMember.originalPhoto || '') : (editCropper.originalImgSrc || '');
+                } else {
+                    // Photo was changed by user
                     try {
-                        showToast('กำลังปรับขนาดและอัปโหลดรูปภาพสู่ Firebase Storage...');
-                        const uploadRes = await window.FirebaseStorageManager.uploadMemberPhoto(newId, outCanvas);
-                        photoData = uploadRes.downloadUrl || uploadRes.dataUrl;
-                    } catch (fbErr) {
-                        console.warn('[Admin] Firebase upload warning:', fbErr);
+                        const outCanvas = document.createElement('canvas');
+                        const outSize = 350; // Strictly 350px x 350px
+                        outCanvas.width = outSize;
+                        outCanvas.height = outSize;
+                        const oCtx = outCanvas.getContext('2d');
+                        const sourceSize = editCropper.cropSize;
+                        const sourceX = (editCropper.canvasSize - sourceSize) / 2;
+                        const sourceY = (editCropper.canvasSize - sourceSize) / 2;
+                        oCtx.drawImage(editCropCanvas, sourceX, sourceY, sourceSize, sourceSize, 0, 0, outSize, outSize);
+                        const rawCropped = outCanvas.toDataURL('image/jpeg', 0.88);
+                        photoData = rawCropped;
+
+                        if (window.FirebaseStorageManager) {
+                            try {
+                                showToast('กำลังปรับขนาดและอัปโหลดรูปภาพสู่ Firebase Storage...');
+                                const uploadRes = await window.FirebaseStorageManager.uploadMemberPhoto(newId, outCanvas);
+                                photoData = uploadRes.downloadUrl || uploadRes.dataUrl;
+                            } catch (fbErr) {
+                                console.warn('[Admin] Firebase upload warning:', fbErr);
+                            }
+                        }
+
+                        origPhotoData = editCropper.originalImgSrc || '';
+                        if (!origPhotoData || origPhotoData.length < 50) {
+                            origPhotoData = (editCropper.img && editCropper.img.src && editCropper.img.src.length < 2000) ? editCropper.img.src : '';
+                        }
+                    } catch (canvasErr) {
+                        console.warn('[Admin] Canvas export failed (e.g. cross-origin tainted canvas), falling back to existing photo:', canvasErr);
+                        photoData = existingMember ? (existingMember.photo || '') : (editCropper.originalImgSrc || '');
+                        origPhotoData = existingMember ? (existingMember.originalPhoto || '') : (editCropper.originalImgSrc || '');
                     }
                 }
 
-                if (!origPhotoData || origPhotoData.length < 50) {
-                    origPhotoData = (editCropper.img && editCropper.img.src && editCropper.img.src.length < 2000) ? editCropper.img.src : '';
+                const newChosenTeam = editChosenTeamSelect ? editChosenTeamSelect.value : '';
+                const isReg = editRegisteredStatusSelect ? (editRegisteredStatusSelect.value === 'yes') : false;
+                const newMemberStatus = editMemberStatusSelect ? editMemberStatusSelect.value : '';
+                let regTime = existingMember ? existingMember.registeredAt : null;
+                if (isReg && !regTime) {
+                    regTime = new Date().toISOString();
+                } else if (!isReg) {
+                    regTime = null;
                 }
-            } else {
-                photoData = '';
-                origPhotoData = '';
-            }
 
-            const newChosenTeam = editChosenTeamSelect ? editChosenTeamSelect.value : '';
-            const isReg = editRegisteredStatusSelect ? (editRegisteredStatusSelect.value === 'yes') : false;
-            const existingMember = state.getMembers().find(m => (m.EmployeeID || m.id) === origId);
-            let regTime = existingMember ? existingMember.registeredAt : null;
-            if (isReg && !regTime) {
-                regTime = new Date().toISOString();
-            } else if (!isReg) {
-                regTime = null;
-            }
+                // Do not store multi-megabyte base64 strings in localStorage to avoid QuotaExceededError
+                const safeOrigPhoto = (origPhotoData && origPhotoData.length < 2000) ? origPhotoData : '';
 
-            // Do not store multi-megabyte base64 strings in localStorage to avoid QuotaExceededError
-            const safeOrigPhoto = (origPhotoData && origPhotoData.length < 2000) ? origPhotoData : '';
-
-            const res = state.updateMember(origId, {
-                EmployeeID: newId,
-                EmpName: newName,
-                Group: newGroup,
-                photo: photoData,
-                originalPhoto: safeOrigPhoto,
-                chosenTeam: newChosenTeam || null,
-                registered: isReg ? true : null,
-                registeredAt: regTime
-            });
-
-            if (!res.success) {
-                alert(res.message);
-                return;
-            }
-
-            if (window.FirebaseSync && typeof window.FirebaseSync.saveMember === 'function') {
-                window.FirebaseSync.saveMember({
+                const res = state.updateMember(origId, {
                     EmployeeID: newId,
                     EmpName: newName,
                     Group: newGroup,
+                    Member: newMemberStatus,
                     photo: photoData,
+                    originalPhoto: safeOrigPhoto,
                     chosenTeam: newChosenTeam || null,
                     registered: isReg ? true : null,
                     registeredAt: regTime
-                }).catch(err => console.error('[Admin] Save to Firebase error:', err));
-            }
+                });
 
-            showToast(res.message);
-            if (sound) sound.playClick();
-            if (editMemberModal) editMemberModal.style.display = 'none';
-            renderAll();
+                if (!res.success) {
+                    alert(res.message);
+                    return;
+                }
+
+                if (window.FirebaseSync && typeof window.FirebaseSync.saveMember === 'function') {
+                    window.FirebaseSync.saveMember({
+                        EmployeeID: newId,
+                        EmpName: newName,
+                        Group: newGroup,
+                        Member: newMemberStatus,
+                        photo: photoData,
+                        chosenTeam: newChosenTeam || null,
+                        registered: isReg ? true : null,
+                        registeredAt: regTime
+                    }).catch(err => console.error('[Admin] Save to Firebase error:', err));
+                }
+
+                showToast(res.message);
+                if (sound) sound.playClick();
+                if (editMemberModal) editMemberModal.style.display = 'none';
+                renderAll();
+            } catch (submitErr) {
+                console.error('[Admin] Submit editMemberForm error:', submitErr);
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + (submitErr.message || submitErr));
+            }
         });
     }
 
@@ -3821,13 +3932,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadCropperImage(dataUrl) {
         initCropperCanvas();
+        const isRemote = typeof dataUrl === 'string' && (dataUrl.startsWith('http://') || dataUrl.startsWith('https://') || dataUrl.startsWith('//'));
         const img = new Image();
+        if (isRemote) {
+            img.crossOrigin = 'anonymous';
+        }
         img.onload = () => {
             cropperState.img = img;
             resetCropperZoomAndPan();
             if (photoCropModal) photoCropModal.style.display = 'flex';
         };
         img.onerror = () => {
+            if (isRemote && img.crossOrigin) {
+                const fallbackImg = new Image();
+                fallbackImg.onload = () => {
+                    cropperState.img = fallbackImg;
+                    resetCropperZoomAndPan();
+                    if (photoCropModal) photoCropModal.style.display = 'flex';
+                };
+                fallbackImg.onerror = () => {
+                    alert('ไม่สามารถเปิดรูปภาพได้');
+                };
+                fallbackImg.src = dataUrl;
+                return;
+            }
             alert('ไม่สามารถเปิดรูปภาพได้');
         };
         img.src = dataUrl;
@@ -3933,43 +4061,48 @@ document.addEventListener('DOMContentLoaded', () => {
         saveCropBtn.addEventListener('click', async () => {
             if (!cropperState.img) return;
 
-            // Render high-res cropped output (strictly 350px x 350px JPEG)
-            const outCanvas = document.createElement('canvas');
-            const outSize = 350; // Strictly 350px x 350px
-            outCanvas.width = outSize;
-            outCanvas.height = outSize;
-            const oCtx = outCanvas.getContext('2d');
+            try {
+                // Render high-res cropped output (strictly 350px x 350px JPEG)
+                const outCanvas = document.createElement('canvas');
+                const outSize = 350; // Strictly 350px x 350px
+                outCanvas.width = outSize;
+                outCanvas.height = outSize;
+                const oCtx = outCanvas.getContext('2d');
 
-            const sourceSize = cropperState.cropSize;
-            const sourceX = (cropperState.canvasSize - sourceSize) / 2;
-            const sourceY = (cropperState.canvasSize - sourceSize) / 2;
+                const sourceSize = cropperState.cropSize;
+                const sourceX = (cropperState.canvasSize - sourceSize) / 2;
+                const sourceY = (cropperState.canvasSize - sourceSize) / 2;
 
-            oCtx.drawImage(cropCanvas, sourceX, sourceY, sourceSize, sourceSize, 0, 0, outSize, outSize);
-            const base64Jpeg = outCanvas.toDataURL('image/jpeg', 0.88);
+                oCtx.drawImage(cropCanvas, sourceX, sourceY, sourceSize, sourceSize, 0, 0, outSize, outSize);
+                const base64Jpeg = outCanvas.toDataURL('image/jpeg', 0.88);
 
-            let finalPhotoUrl = base64Jpeg;
+                let finalPhotoUrl = base64Jpeg;
 
-            const validTargetEmpId = cropperState.targetEmpId ? String(cropperState.targetEmpId).trim() : '';
-            if (validTargetEmpId && validTargetEmpId.toLowerCase() !== 'null' && validTargetEmpId.toLowerCase() !== 'undefined') {
-                if (window.FirebaseStorageManager) {
-                    try {
-                        showToast('กำลังปรับขนาดและอัปโหลดรูปภาพสู่ Firebase Storage...');
-                        const uploadRes = await window.FirebaseStorageManager.uploadMemberPhoto(validTargetEmpId, outCanvas);
-                        finalPhotoUrl = uploadRes.downloadUrl || uploadRes.dataUrl;
-                    } catch (fbErr) {
-                        console.warn('[Admin] Firebase upload warning:', fbErr);
+                const validTargetEmpId = cropperState.targetEmpId ? String(cropperState.targetEmpId).trim() : '';
+                if (validTargetEmpId && validTargetEmpId.toLowerCase() !== 'null' && validTargetEmpId.toLowerCase() !== 'undefined') {
+                    if (window.FirebaseStorageManager) {
+                        try {
+                            showToast('กำลังปรับขนาดและอัปโหลดรูปภาพสู่ Firebase Storage...');
+                            const uploadRes = await window.FirebaseStorageManager.uploadMemberPhoto(validTargetEmpId, outCanvas);
+                            finalPhotoUrl = uploadRes.downloadUrl || uploadRes.dataUrl;
+                        } catch (fbErr) {
+                            console.warn('[Admin] Firebase upload warning:', fbErr);
+                        }
                     }
-                }
 
-                // Update member record in crsdg_member
-                state.updateParticipantPhoto(validTargetEmpId, finalPhotoUrl);
-                showToast(`บันทึกรูปภาพของ ${validTargetEmpId} สู่ Firebase Storage และตาราง crsdg_member สำเร็จ`);
-                if (sound) sound.playClick();
-                if (photoCropModal) photoCropModal.style.display = 'none';
-                renderAll();
-            } else if (cropCallback) {
-                cropCallback(finalPhotoUrl);
-                if (photoCropModal) photoCropModal.style.display = 'none';
+                    // Update member record in crsdg_member
+                    state.updateParticipantPhoto(validTargetEmpId, finalPhotoUrl);
+                    showToast(`บันทึกรูปภาพของ ${validTargetEmpId} สู่ Firebase Storage และตาราง crsdg_member สำเร็จ`);
+                    if (sound) sound.playClick();
+                    if (photoCropModal) photoCropModal.style.display = 'none';
+                    renderAll();
+                } else if (cropCallback) {
+                    cropCallback(finalPhotoUrl);
+                    if (photoCropModal) photoCropModal.style.display = 'none';
+                }
+            } catch (cropErr) {
+                console.error('[Admin] Crop export error:', cropErr);
+                alert('ไม่สามารถประมวลผลรูปภาพนี้ได้: ' + (cropErr.message || cropErr));
             }
         });
     }
@@ -4833,18 +4966,6 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('ลบรายการผู้ได้รับรางวัลเรียบร้อยแล้ว');
     };
 
-    if (btnResetWinnersEl) {
-        btnResetWinnersEl.addEventListener('click', () => {
-            const confirmed = confirm('⚠️ คำเตือน: คุณต้องการรีเซ็ตผลรางวัลทั้งหมดใช่หรือไม่?\n(ประวัติผู้โชคดีจะถูกลบทั้งหมด และของรางวัลทั้งหมดจะกลับมามีสิทธิ์สุ่มใหม่)');
-            if (confirmed) {
-                state.resetWinners();
-                renderWinners();
-                renderPrizes();
-                showToast('รีเซ็ตผลรางวัลทั้งหมดเรียบร้อยแล้ว');
-            }
-        });
-    }
-
     const btnExportWinnersExcelFromPrizes = document.getElementById('btnExportWinnersExcelFromPrizes');
     const btnResetWinnersFromPrizes = document.getElementById('btnResetWinnersFromPrizes');
 
@@ -4872,15 +4993,30 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('ส่งออกไฟล์ Excel รายชื่อผู้รับรางวัลเรียบร้อยแล้ว');
     }
 
-    function resetWinnersAction() {
-        const confirmed = confirm('คำเตือน: คุณต้องการรีเซ็ตผลการสุ่มรางวัลทั้งหมดหรือไม่?\n(ของรางวัลจะถูกคืนสิทธิ์ และพนักงานจะสามารถร่วมสุ่มรางวัลได้อีกครั้ง)');
+    async function resetWinnersAction() {
+        const confirmed = confirm('⚠️ คำเตือน: คุณต้องการรีเซ็ตผลรางวัลทั้งหมดใช่หรือไม่?\n(ประวัติผู้โชคดีจะถูกลบทั้งหมด และของรางวัลทั้งหมดจะกลับมามีสิทธิ์สุ่มใหม่)');
         if (!confirmed) return;
-        state.resetWinners();
-        renderWinners();
-        renderPrizes();
-        renderParticipants();
-        renderStats();
-        showToast('รีเซ็ตผลการสุ่มรางวัลทั้งหมดเรียบร้อยแล้ว');
+
+        const buttons = [btnResetWinnersEl, btnResetWinnersFromPrizes].filter(Boolean);
+        buttons.forEach(b => { b.disabled = true; });
+
+        try {
+            await state.resetWinners();
+            renderWinners();
+            renderPrizes();
+            renderParticipants();
+            renderStats();
+            showToast('รีเซ็ตผลรางวัลทั้งหมดเรียบร้อยแล้ว');
+        } catch (err) {
+            console.error('[Admin] resetWinners error:', err);
+            showToast('เกิดข้อผิดพลาดในการรีเซ็ตผลรางวัล');
+        } finally {
+            buttons.forEach(b => { b.disabled = false; });
+        }
+    }
+
+    if (btnResetWinnersEl) {
+        btnResetWinnersEl.addEventListener('click', resetWinnersAction);
     }
 
     if (btnExportWinnersExcelEl) {
