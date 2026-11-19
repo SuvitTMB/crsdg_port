@@ -252,6 +252,32 @@
         </div>
     </div>
 
+    <!-- System Alert Lightbox Modal -->
+    <div class="modal-overlay" id="alertModal" style="display: none;">
+        <div class="modal-dialog alert-modal-card">
+            <div class="modal-header-bar">
+                <div class="modal-title-wrap">
+                    <span class="modal-warn-badge" id="alertModalIcon">⚠️</span>
+                    <h3 class="modal-title-text" id="alertModalTitle">แจ้งเตือนระบบ</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeAlertModalBtn" title="ปิดหน้าต่าง">✕</button>
+            </div>
+            <div class="modal-body-content">
+                <div class="alert-modal-message-box">
+                    <div class="alert-modal-icon-large" id="alertModalIconLarge">⚠️</div>
+                    <div class="alert-modal-text" id="alertModalMessage">
+                        <!-- Message text -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions-footer alert-actions-footer">
+                <button type="button" class="btn-confirm-alert-modal" id="btnConfirmAlertModal">
+                    <span>ตกลง</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="js/confetti.js"></script>
     <script src="js/audio.js"></script>

@@ -201,7 +201,7 @@
                         </div>
                     </div>
                     <div class="fields-col"
-                        style="flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                        style="flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;">
                         <div class="form-group">
                             <label for="partId"
                                 style="font-size: 0.8rem; color: #cbd5e1; display: block; margin-bottom: 4px;">รหัสพนักงาน
@@ -220,6 +220,14 @@
                                 (Group)</label>
                             <input type="text" id="partDept" class="form-input"
                                 placeholder="เช่น Team A หรือ Management">
+                        </div>
+                        <div class="form-group">
+                            <label for="partMember"
+                                style="font-size: 0.8rem; color: #cbd5e1; display: block; margin-bottom: 4px;">สถานะ Member</label>
+                            <select id="partMember" class="form-select form-input">
+                                <option value="Member">Member</option>
+                                <option value="">(ค่าว่าง)</option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-group form-actions-cell"
@@ -347,6 +355,10 @@
                             <th class="col-th-dept sortable-th" data-sort="group"
                                 title="คลิกเพื่อเรียงลำดับตามกลุ่มสังกัด">
                                 <div class="th-content"><span>กลุ่ม (Group)</span><span class="sort-icon">⇅</span></div>
+                            </th>
+                            <th class="col-th-member sortable-th" data-sort="member"
+                                title="คลิกเพื่อเรียงลำดับตามสถานะ Member">
+                                <div class="th-content"><span>Member</span><span class="sort-icon">⇅</span></div>
                             </th>
                             <th class="col-th-team sortable-th" data-sort="team" title="คลิกเพื่อเรียงลำดับตามทีมแข่ง">
                                 <div class="th-content"><span>ทีมแข่ง</span><span class="sort-icon">⇅</span></div>
@@ -1759,9 +1771,10 @@
                             <thead>
                                 <tr>
                                     <th style="width: 45px; text-align: center;">#</th>
-                                    <th style="width: 110px;">EmployeeID</th>
+                                    <th style="width: 105px;">EmployeeID</th>
                                     <th>EmpName</th>
-                                    <th style="width: 100px;">Group</th>
+                                    <th style="width: 110px;">Group</th>
+                                    <th style="width: 80px; text-align: center;">Member</th>
                                 </tr>
                             </thead>
                             <tbody id="excelModalPreviewTableBody">
@@ -2006,8 +2019,15 @@
                                 placeholder="เช่น Team A, Team B, Team C" required>
                         </div>
 
-                        <div class="form-row-2col"
-                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                        <div class="form-row-3col"
+                            style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                            <div class="form-group">
+                                <label for="editMemberStatusSelect">สถานะ Member</label>
+                                <select id="editMemberStatusSelect" class="form-select">
+                                    <option value="Member">Member</option>
+                                    <option value="">(ค่าว่าง)</option>
+                                </select>
+                            </div>
                             <div class="form-group">
                                 <label for="editChosenTeamSelect">เลือกทีม (ทายผลชนะ)</label>
                                 <select id="editChosenTeamSelect" class="form-select">
