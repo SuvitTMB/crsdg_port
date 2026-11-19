@@ -304,7 +304,7 @@
                 <div class="search-box">
                     <span class="search-icon">🔍</span>
                     <input type="text" id="searchParticipant" class="form-input search-input"
-                        placeholder="ค้นหา EmployeeID, EmpName, Group...">
+                        placeholder="ค้นหา EmployeeID, EmpName, Group..." autocomplete="off">
                     <button type="button" class="btn-search-clear" id="btnClearSearchParticipant"
                         title="ล้างข้อความค้นหา" style="display: none;">✕</button>
                 </div>
@@ -2593,6 +2593,87 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX: แสดงอนิเมชั่นสุ่มรายชื่อทีละคน (Vote Draw Animation Showcase)
+         ======================================================== -->
+    <div class="modal-overlay" id="voteDrawShowcaseModal" style="display: none; z-index: 100005;">
+        <div class="admin-card vote-draw-showcase-container">
+            <div class="showcase-header">
+                <div class="showcase-header-left">
+                    <span class="showcase-pill-badge" id="showcaseTeamBadge">🏆 ทีมชนะโหวต</span>
+                    <span class="showcase-progress-badge" id="showcaseProgressBadge">สุ่มคนที่ 1 / 1</span>
+                </div>
+                <div class="showcase-header-actions">
+                    <button type="button" class="btn-sm btn-showcase-skip" id="btnShowcaseSkip" title="ข้ามอนิเมชั่นและสุ่มให้ครบทั้งหมดทันที">⏭️ ข้ามอนิเมชั่น</button>
+                    <button type="button" class="btn-modal-close" id="btnCloseShowcaseModal" title="ปิดหน้าต่าง">✕</button>
+                </div>
+            </div>
+
+            <div class="showcase-stage" id="showcaseStage">
+                <div class="showcase-status-banner" id="showcaseStatusBanner">
+                    <span class="status-pulse-dot" id="showcasePulseDot"></span>
+                    <span id="showcaseStatusText">กำลังสุ่มผู้โชคดี...</span>
+                </div>
+
+                <div class="showcase-avatar-wrapper" id="showcaseAvatarWrap">
+                    <div class="showcase-avatar-glow" id="showcaseAvatarGlow"></div>
+                    <div class="showcase-avatar-box" id="showcaseAvatarBox">
+                        <img id="showcaseAvatarImg" src="" alt="Winner Avatar" style="display: none;">
+                        <span id="showcaseAvatarEmoji">🎲</span>
+                    </div>
+                </div>
+
+                <div class="showcase-winner-details">
+                    <div class="showcase-winner-badge" id="showcaseWinnerBadge" style="display: none;">🎉 ผู้ได้รับรางวัลลำดับที่ <span id="showcaseWinnerRank">1</span></div>
+                    <h2 class="showcase-winner-name" id="showcaseWinnerName">กำลังสุ่ม...</h2>
+                    <div class="showcase-meta-row">
+                        <span class="showcase-empid-pill" id="showcaseWinnerEmpId">-</span>
+                        <span class="showcase-dept-pill" id="showcaseWinnerDept">-</span>
+                    </div>
+                </div>
+
+                <div class="showcase-countdown-wrap" id="showcaseCountdownWrap" style="display: none;">
+                    <div class="showcase-countdown-label" id="showcaseCountdownLabel">⏳ พักรอ 4 วินาที เพื่อสุ่มคนถัดไป (4 วิ)...</div>
+                    <div class="showcase-countdown-track">
+                        <div class="showcase-countdown-bar" id="showcaseCountdownBar"></div>
+                    </div>
+                </div>
+
+                <div class="showcase-footer-actions" id="showcaseFooterActions" style="display: none;">
+                    <button type="button" class="btn-primary" id="btnShowcaseDone" style="padding: 10px 28px; font-weight: 400; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; border-radius: 10px; font-size: 1rem; cursor: pointer; color: #ffffff; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+                        ✅ สรุปผลการสุ่มทั้งหมด
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX: ยืนยันการล้างผลการสุ่มรางวัลทีมชนะโหวต
+         ======================================================== -->
+    <div class="modal-overlay" id="confirmClearVoteDrawModal" style="display: none; z-index: 100006;">
+        <div class="admin-card modal-card-box" style="max-width: 480px; width: 92%; text-align: center; border: 1.5px solid rgba(239, 68, 68, 0.45); box-shadow: 0 25px 60px rgba(0,0,0,0.85), 0 0 35px rgba(239, 68, 68, 0.25);">
+            <div class="admin-card-header" style="justify-content: space-between; border-bottom: 1px solid rgba(239, 68, 68, 0.25); padding: 16px 20px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.3rem;">⚠️</span>
+                    <h3 class="admin-card-title" style="color: #f87171; margin: 0; font-size: 1.15rem; font-weight: 700;">ยืนยันการล้างผลสุ่มรางวัล</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="btnCloseConfirmClearVoteDraw">✕</button>
+            </div>
+            <div style="padding: 24px 20px; font-size: 0.95rem; color: #cbd5e1; line-height: 1.6;">
+                <div style="font-size: 2.8rem; margin-bottom: 12px;">🔄</div>
+                <p style="margin: 0 0 10px; font-size: 1.05rem; font-weight: 600; color: #f8fafc;">คุณต้องการล้างผลการสุ่มรายชื่อของทีมนี้ทั้งหมดใช่หรือไม่?</p>
+                <p style="margin: 0; color: #94a3b8; font-size: 0.88rem;">รายชื่อผู้ได้รับรางวัลที่สุ่มไว้ของทีมนี้จะถูกล้างออกทั้งหมด เพื่อให้สามารถเริ่มทำการสุ่มใหม่ได้</p>
+            </div>
+            <div class="modal-actions-bar" style="display: flex; justify-content: center; gap: 12px; padding: 0 20px 24px;">
+                <button type="button" class="btn-secondary" id="btnCancelClearVoteDrawModal" style="padding: 10px 22px;">ยกเลิก</button>
+                <button type="button" class="btn-danger" id="btnConfirmClearVoteDrawAction" style="padding: 10px 22px; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border: none; font-weight: 700; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);">
+                    🔄 ยืนยันการล้างผลสุ่ม
+                </button>
             </div>
         </div>
     </div>
