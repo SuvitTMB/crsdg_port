@@ -58,22 +58,38 @@
         const msg = {
             id: 'cmd_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
             action: action,
-            payload: payload,
+            payload: payload || {},
             timestamp: Date.now()
         };
 
+        // 1. BroadcastChannel for fast local cross-tab communication
         if (channel) {
             try { channel.postMessage(msg); } catch (e) { console.warn(e); }
         }
 
+        // 2. LocalStorage for multi-window fallback on same origin
         try {
             localStorage.setItem('crsdg_remote_command', JSON.stringify(msg));
         } catch (e) {
             console.warn(e);
         }
 
-        // Network Command Dispatch for cross-device support (เฉพาะเมื่อเปิดใช้งาน Network API)
-        if (isNetworkSyncEnabled()) {
+        // 3. Cloud Firestore Real-time Sync (Cross-device, remote on iPad/mobile to server game.html)
+        try {
+            const cleanMsg = JSON.parse(JSON.stringify(msg));
+            if (window.FirebaseSync && typeof window.FirebaseSync.saveVoteSettings === 'function') {
+                window.FirebaseSync.saveVoteSettings({
+                    game_remote_cmd: cleanMsg
+                }).catch(err => console.warn('[GameRemote] Cloud save notice:', err));
+            } else if (typeof firebase !== 'undefined' && firebase.firestore) {
+                firebase.firestore().collection('crsdg_vote').doc('settings').set({
+                    game_remote_cmd: cleanMsg
+                }, { merge: true }).catch(err => console.warn('[GameRemote] Direct set notice:', err));
+            }
+        } catch (e) {}
+
+        // Network Command Dispatch for custom backend server (if explicitly configured)
+        if (window.__USE_LOCAL_API_SERVER__ && isNetworkSyncEnabled()) {
             fetch('/api/remote-command', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -122,6 +138,56 @@
         }
     });
 
+    // Cloud Firestore Real-time Sync for game_state_sync across devices
+    let lastProcessedBroadcastTime = 0;
+
+    function handleCloudGameState(cloudState) {
+        if (!cloudState) return;
+        const bTime = cloudState.broadcastTime || cloudState.timestamp || 0;
+        if (bTime && bTime <= lastProcessedBroadcastTime) {
+            return;
+        }
+        if (bTime) lastProcessedBroadcastTime = bTime;
+
+        // Merge database teams/quizzes if not attached to cloudState
+        const fullState = {
+            allTeams: getDatabaseTeams(),
+            allQuizzes: getDatabaseQuizzes(),
+            ...cloudState
+        };
+
+        lastHeartbeatTime = Date.now();
+        latestGameState = fullState;
+        updateConnectionStatus(true);
+        renderRemoteUI(fullState);
+    }
+
+    if (window.FirebaseSync && typeof window.FirebaseSync.subscribe === 'function') {
+        window.FirebaseSync.subscribe((event) => {
+            if (!event) return;
+            if (event.type === 'VOTE_SETTINGS_UPDATED' && event.data && event.data.game_state_sync) {
+                handleCloudGameState(event.data.game_state_sync);
+            } else if (event.type === 'TEAMS_UPDATED' || event.type === 'NAMETEAM_UPDATED' || event.type === 'PLAYERS_UPDATED') {
+                renderArenaPanel(latestGameState);
+            } else if (event.type === 'QUIZZES_UPDATED' || event.type === 'QUIZ_UPDATED') {
+                renderQuizPanel(latestGameState);
+            }
+        });
+    }
+
+    if (typeof firebase !== 'undefined' && firebase.firestore) {
+        try {
+            firebase.firestore().collection('crsdg_vote').doc('settings').onSnapshot(doc => {
+                if (doc && doc.exists) {
+                    const d = doc.data();
+                    if (d && d.game_state_sync) {
+                        handleCloudGameState(d.game_state_sync);
+                    }
+                }
+            }, err => console.warn('[GameRemote] Firestore onSnapshot notice:', err));
+        } catch (e) {}
+    }
+
     // Real-time listener for database updates via StateManager (admin or Excel imports)
     if (typeof window !== 'undefined') {
         window.addEventListener('DOMContentLoaded', () => {
@@ -138,8 +204,8 @@
         });
     }
 
-    // Network State Polling for cross-device support (เฉพาะเมื่อเปิดใช้งาน Network API)
-    if (isNetworkSyncEnabled()) {
+    // Optional Network State Polling for custom local backend (disabled by default on GitHub Pages)
+    if (window.__USE_LOCAL_API_SERVER__ && isNetworkSyncEnabled()) {
         let lastPolledBroadcastTime = 0;
         setInterval(() => {
             fetch('/api/game-state')
@@ -871,9 +937,7 @@
         switchTab: switchTab,
         clickStartCompetition: () => {
             // สั่งให้หน้า game ทำการกดปุ่มเริ่มการแข่งขัน
-            sendCommand('CLICK_START_COMPETITION');
-            sendCommand('START_COMPETITION');
-            sendCommand('OPEN_ARENA');
+            sendCommand('CLICK_START_COMPETITION', {}, true);
 
             // ปิด lightbox บนรีโมต
             const modal = document.getElementById('remoteStartIntroModal');

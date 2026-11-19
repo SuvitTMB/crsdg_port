@@ -2989,17 +2989,44 @@
                 return false;
             }
 
-            function broadcastGameState() {
+            let lastBroadcastStateSig = '';
+
+            function broadcastGameState(forceCloud = false) {
                 try {
                     const state = getFullGameState();
                     state.broadcastTime = Date.now();
                     if (remoteGameChannel) {
                         remoteGameChannel.postMessage({ type: 'GAME_STATE_UPDATE', state: state });
                     }
-                    localStorage.setItem('crsdg_game_state_sync', JSON.stringify(state));
+                    try {
+                        localStorage.setItem('crsdg_game_state_sync', JSON.stringify(state));
+                    } catch (e) {}
 
-                    // Network Sync Fallback (สำหรับกรณีต่อข้ามอุปกรณ์ผ่าน Wi-Fi)
-                    if (isNetworkSyncEnabled()) {
+                    // Cloud Firestore Real-time Sync (Push game state to remote_crsdg across devices)
+                    try {
+                        const stateSig = `${state.stage}_${state.activeTurn}_${state.blueScore}_${state.orangeScore}_${state.bankScore}_${state.revealedAnswersCount}_${JSON.stringify(state.strikes)}_${state.isStealPhase}_${state.selectedQuizId}_${state.selectedTeamALeft}_${state.selectedTeamBRight}_${JSON.stringify(state.modals)}`;
+                        if (forceCloud || stateSig !== lastBroadcastStateSig) {
+                            lastBroadcastStateSig = stateSig;
+                            const clean = JSON.parse(JSON.stringify(state));
+                            delete clean.allQuizzes;
+                            delete clean.allTeams;
+
+                            if (window.FirebaseSync && typeof window.FirebaseSync.saveVoteSettings === 'function') {
+                                window.FirebaseSync.saveVoteSettings({
+                                    game_state_sync: clean
+                                }).catch(() => {});
+                            } else if (typeof firebase !== 'undefined' && firebase.firestore) {
+                                firebase.firestore().collection('crsdg_vote').doc('settings').set({
+                                    game_state_sync: clean
+                                }, { merge: true }).catch(() => {});
+                            }
+                        }
+                    } catch (syncErr) {
+                        console.warn('[Game] Cloud broadcast state error:', syncErr);
+                    }
+
+                    // Optional Network Sync Fallback (สำหรับกรณีมี backend server เฉพาะ)
+                    if (window.__USE_LOCAL_API_SERVER__ && isNetworkSyncEnabled()) {
                         fetch('/api/game-state', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -3058,20 +3085,20 @@
                 switch (action) {
                     case 'PING':
                     case 'REQUEST_STATE':
-                        broadcastGameState();
+                        broadcastGameState(true);
                         break;
 
                     // Arena Actions
                     case 'OPEN_ARENA':
                     case 'START_COMPETITION':
                     case 'CLICK_START_COMPETITION':
-                        if (startCompBtn) {
-                            startCompBtn.click();
-                        } else {
+                        if (typeof openMatchArena === 'function') {
                             openMatchArena();
                             closeAllGameModals();
+                        } else if (startCompBtn) {
+                            startCompBtn.click();
                         }
-                        broadcastGameState();
+                        broadcastGameState(true);
                         break;
                     case 'SELECT_TEAM_LEFT':
                         if (payload && payload.teamId && typeof window.selectTeamLeft === 'function') {
@@ -3290,17 +3317,55 @@
                 }
                 if (e.key === 'crsdg_player' || e.key === 'crsdg_nameteam' || e.key === 'crsdg_team' || e.key === 'crsdg_member') {
                     renderTeamCards();
-                    broadcastState();
+                    broadcastGameState();
                 } else if (e.key === 'crsdg_quiz') {
                     if (quizSelectOverlay && quizSelectOverlay.classList.contains('active')) {
                         renderQuizCards();
                     }
-                    broadcastState();
+                    broadcastGameState();
                 }
             });
 
-            // Network Command Polling for cross-device support (เฉพาะเมื่อเปิดใช้งาน Network API)
-            if (isNetworkSyncEnabled()) {
+            // 3. Cloud Firestore Real-time Listener (Commands from remote_crsdg on iPad/phone)
+            let lastProcessedCloudCmdId = null;
+            let lastProcessedCloudCmdTime = 0;
+
+            const handleCloudCommand = (cmd) => {
+                if (!cmd || !cmd.action) return;
+                const cmdId = cmd.id || (cmd.action + '_' + (cmd.timestamp || ''));
+                const now = Date.now();
+                if (cmdId === lastProcessedCloudCmdId && (now - lastProcessedCloudCmdTime < 900)) {
+                    return;
+                }
+                lastProcessedCloudCmdId = cmdId;
+                lastProcessedCloudCmdTime = now;
+                handleRemoteCommand(cmd);
+            };
+
+            if (window.FirebaseSync && typeof window.FirebaseSync.subscribe === 'function') {
+                window.FirebaseSync.subscribe((event) => {
+                    if (!event) return;
+                    if (event.type === 'VOTE_SETTINGS_UPDATED' && event.data && event.data.game_remote_cmd) {
+                        handleCloudCommand(event.data.game_remote_cmd);
+                    }
+                });
+            }
+
+            if (typeof firebase !== 'undefined' && firebase.firestore) {
+                try {
+                    firebase.firestore().collection('crsdg_vote').doc('settings').onSnapshot(doc => {
+                        if (doc && doc.exists) {
+                            const d = doc.data();
+                            if (d && d.game_remote_cmd) {
+                                handleCloudCommand(d.game_remote_cmd);
+                            }
+                        }
+                    }, err => console.warn('[Game] Firestore settings onSnapshot notice:', err));
+                } catch (e) {}
+            }
+
+            // Optional Network Command Polling for custom local backend (disabled by default on GitHub Pages)
+            if (window.__USE_LOCAL_API_SERVER__ && isNetworkSyncEnabled()) {
                 let lastPolledCmdId = null;
                 setInterval(() => {
                     fetch('/api/remote-command')
@@ -3316,6 +3381,6 @@
             }
 
             // Initial Broadcast on Load & periodic heartbeat
-            setTimeout(broadcastGameState, 400);
+            setTimeout(() => broadcastGameState(true), 600);
             setInterval(broadcastGameState, 2500);
         });
