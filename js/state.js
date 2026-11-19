@@ -1916,6 +1916,14 @@ class StateManager {
         if (settings.vote_budget !== undefined) {
             localStorage.setItem('crsdg_vote_budget', String(settings.vote_budget));
         }
+        if (settings.eval_open !== undefined) {
+            localStorage.setItem('crsdg_eval_open', String(Boolean(settings.eval_open)));
+            this.broadcast({ type: 'EVAL_STATUS_UPDATED', isOpen: Boolean(settings.eval_open) });
+        }
+        if (settings.game_btn_open !== undefined) {
+            localStorage.setItem('crsdg_game_btn_open', String(Boolean(settings.game_btn_open)));
+            this.broadcast({ type: 'GAME_BTN_STATUS_UPDATED', isOpen: Boolean(settings.game_btn_open) });
+        }
         // ตรวจสอบการเปิดรับการลงทุนของทีมล่าสุด เพื่อแจ้งเตือน Lightbox ไปยังทุกหน้าจอผ่าน Cloud Realtime (ไม่ยิงซ้ำถ้าเคยแจ้งเตือน timestamp นี้ไปแล้ว)
         if (settings.last_opened_team && typeof settings.last_opened_team === 'object') {
             const opTeam = settings.last_opened_team;
@@ -2057,9 +2065,51 @@ class StateManager {
                 vote_open: this.isVoteOpen(),
                 game_vote_open: this.isGameVoteOpen(),
                 vote_budget: this.getVoteBudget(),
+                eval_open: this.isEvalOpen(),
+                game_btn_open: this.isGameButtonOpen(),
                 updatedAt: new Date().toISOString()
             }).catch(e => console.warn('[State] Cloud voteSettings sync notice:', e));
         }
+    }
+
+    // ========================================================
+    // EVALUATION BOX TOGGLE (crsdg_eval_open - index.html)
+    // ========================================================
+    isEvalOpen() {
+        try {
+            const raw = localStorage.getItem('crsdg_eval_open');
+            if (raw === null) return true; // Default open
+            return raw === 'true';
+        } catch {
+            return true;
+        }
+    }
+
+    setEvalOpen(isOpen) {
+        localStorage.setItem('crsdg_eval_open', String(Boolean(isOpen)));
+        this.broadcast({ type: 'EVAL_STATUS_UPDATED', isOpen: Boolean(isOpen) });
+        this.syncVoteSettingsToCloud();
+        return { success: true, isOpen: Boolean(isOpen) };
+    }
+
+    // ========================================================
+    // GAME 4v4 BUTTON TOGGLE (crsdg_game_btn_open - index.html)
+    // ========================================================
+    isGameButtonOpen() {
+        try {
+            const raw = localStorage.getItem('crsdg_game_btn_open');
+            if (raw === null) return true; // Default open
+            return raw === 'true';
+        } catch {
+            return true;
+        }
+    }
+
+    setGameButtonOpen(isOpen) {
+        localStorage.setItem('crsdg_game_btn_open', String(Boolean(isOpen)));
+        this.broadcast({ type: 'GAME_BTN_STATUS_UPDATED', isOpen: Boolean(isOpen) });
+        this.syncVoteSettingsToCloud();
+        return { success: true, isOpen: Boolean(isOpen) };
     }
 
     isVoteOpen() {

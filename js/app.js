@@ -33,6 +33,61 @@
     initialPinchZoom: 1.0
   };
 
+  // ========================================================
+  // SYSTEM ALERT LIGHTBOX MODAL (REPLACES BROWSER ALERT)
+  // ========================================================
+  let userAlertCallback = null;
+  function showUserAlert(message, title = 'แจ้งเตือนระบบ', icon = '⚠️', onClose = null) {
+    userAlertCallback = typeof onClose === 'function' ? onClose : null;
+    const modal = document.getElementById('userAlertModal');
+    const titleEl = document.getElementById('userAlertTitle');
+    const msgEl = document.getElementById('userAlertMessage');
+    const badgeEl = document.getElementById('userAlertBadge');
+
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message || '';
+    if (badgeEl) badgeEl.textContent = icon;
+
+    if (modal) {
+      modal.classList.add('is-active');
+      modal.style.display = 'flex';
+    }
+  }
+
+  function closeUserAlertModal() {
+    const modal = document.getElementById('userAlertModal');
+    if (modal) {
+      modal.classList.remove('is-active');
+      modal.style.display = 'none';
+    }
+    if (userAlertCallback) {
+      const cb = userAlertCallback;
+      userAlertCallback = null;
+      try { cb(); } catch (e) { console.warn(e); }
+    }
+  }
+
+  window.showUserAlert = showUserAlert;
+  window.closeUserAlert = closeUserAlertModal;
+  window.alert = function (msg) {
+    showUserAlert(String(msg || ''));
+  };
+
+  const btnConfirmUserAlert = document.getElementById('btnConfirmUserAlert');
+  if (btnConfirmUserAlert) btnConfirmUserAlert.addEventListener('click', closeUserAlertModal);
+  const userAlertModalEl = document.getElementById('userAlertModal');
+  if (userAlertModalEl) {
+    userAlertModalEl.addEventListener('click', function(e) {
+      if (e.target === this) closeUserAlertModal();
+    });
+  }
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const m = document.getElementById('userAlertModal');
+      if (m && m.classList.contains('is-active')) closeUserAlertModal();
+    }
+  });
+
   // DOM Elements - Fixed Bars & Containers
   const appFixedTopBar = document.getElementById('appFixedTopBar');
   const appFixedBottomBar = document.getElementById('appFixedBottomBar');
@@ -206,15 +261,22 @@
     // Subscribe to Firebase Cloud Sync Realtime Notifications
     if (window.FirebaseSync && typeof window.FirebaseSync.subscribe === 'function') {
       window.FirebaseSync.subscribe((event, data) => {
-        if (event === 'VOTE_SETTINGS_UPDATED' && data && data.last_opened_team) {
-          const op = data.last_opened_team;
-          if (op && op.timestamp && (Date.now() - op.timestamp < 60000)) {
-            if (typeof window.showTeamInvestOpenedModal === 'function') {
-              window.showTeamInvestOpenedModal(op);
+        if (event === 'VOTE_SETTINGS_UPDATED') {
+          if (typeof applyFeatureVisibility === 'function') applyFeatureVisibility();
+          if (data && data.last_opened_team) {
+            const op = data.last_opened_team;
+            if (op && op.timestamp && (Date.now() - op.timestamp < 60000)) {
+              if (typeof window.showTeamInvestOpenedModal === 'function') {
+                window.showTeamInvestOpenedModal(op);
+              }
             }
           }
         }
       });
+    }
+
+    if (typeof applyFeatureVisibility === 'function') {
+      applyFeatureVisibility();
     }
 
     // Listen for tab visibility to avoid rendering when tab is hidden in background
@@ -243,6 +305,13 @@
         if (msg.type === 'TEAM_INVESTMENT_OPENED') {
           if (typeof window.showTeamInvestOpenedModal === 'function') {
             window.showTeamInvestOpenedModal(msg);
+          }
+        }
+
+        // อัปเดตการแสดง/ซ่อนปุ่มประเมินผล และปุ่มเกม 4 ต่อ 4 จากแอดมินแบบ Real-time
+        if (msg.type === 'EVAL_STATUS_UPDATED' || msg.type === 'GAME_BTN_STATUS_UPDATED') {
+          if (typeof applyFeatureVisibility === 'function') {
+            applyFeatureVisibility();
           }
         }
 
@@ -367,9 +436,48 @@
   }
 
   // ========================================================
+  // FEATURE VISIBILITY TOGGLE (EVALUATION & GAME 4v4 BUTTONS)
+  // ========================================================
+  function applyFeatureVisibility() {
+    // 1. กล่องประเมินผล (index.html)
+    const isEvalOpen = (window.stateManager && typeof window.stateManager.isEvalOpen === 'function')
+      ? window.stateManager.isEvalOpen()
+      : (localStorage.getItem('crsdg_eval_open') !== 'false');
+    const quickPillEval = document.getElementById('quickPillEval');
+    if (quickPillEval) {
+      quickPillEval.style.display = isEvalOpen ? 'flex' : 'none';
+    }
+
+    // 2. ปุ่ม เกม 4 ต่อ 4 (index.html)
+    const isGameBtnOpen = (window.stateManager && typeof window.stateManager.isGameButtonOpen === 'function')
+      ? window.stateManager.isGameButtonOpen()
+      : (localStorage.getItem('crsdg_game_btn_open') !== 'false');
+    const quickPillGame = document.getElementById('quickPillGame');
+    const btnNavGame = document.getElementById('btnNavGame');
+    if (quickPillGame) {
+      quickPillGame.style.display = isGameBtnOpen ? 'flex' : 'none';
+    }
+    if (btnNavGame) {
+      btnNavGame.style.display = isGameBtnOpen ? 'flex' : 'none';
+    }
+    if (!isGameBtnOpen && activeTab === 'game') {
+      switchHomeTab('home');
+    }
+  }
+  window.applyFeatureVisibility = applyFeatureVisibility;
+
+  // ========================================================
   // 3. HOME PORTAL TAB SWITCHING (5 Tabs)
   // ========================================================
   function switchHomeTab(tabName) {
+    if (tabName === 'game') {
+      const isGameBtnOpen = (window.stateManager && typeof window.stateManager.isGameButtonOpen === 'function')
+        ? window.stateManager.isGameButtonOpen()
+        : (localStorage.getItem('crsdg_game_btn_open') !== 'false');
+      if (!isGameBtnOpen) {
+        tabName = 'home';
+      }
+    }
     activeTab = tabName;
 
     // Expose switchHomeTab globally
@@ -1295,6 +1403,11 @@
         }
       } catch (err) { }
     }
+    if (e.key === 'crsdg_eval_open' || e.key === 'crsdg_game_btn_open') {
+      if (typeof applyFeatureVisibility === 'function') {
+        applyFeatureVisibility();
+      }
+    }
     if (e.key === 'crsdg_all_user_investments' || e.key === 'crsdg_player' || e.key === 'crsdg_vote_open' || e.key === 'crsdg_vote_budget' || e.key === 'crsdg_last_reset_votes_ts') {
       if (activeTab === 'vote' && currentEmployee) {
         renderVoteTab(currentEmployee);
@@ -2164,6 +2277,14 @@
   // COMPREHENSIVE EVALUATION HANDLERS
   // ========================================================
   window.openEvalLightbox = function () {
+    const isEvalOpen = (window.stateManager && typeof window.stateManager.isEvalOpen === 'function')
+      ? window.stateManager.isEvalOpen()
+      : (localStorage.getItem('crsdg_eval_open') !== 'false');
+    if (!isEvalOpen) {
+      alert('ขณะนี้ระบบปิดรับแบบประเมินผลกิจกรรมแล้ว');
+      return;
+    }
+
     const modal = document.getElementById('evalLightboxModal');
     if (!modal) return;
 

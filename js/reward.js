@@ -707,14 +707,31 @@
     // REMOTE & CROSS-TAB SYNCHRONIZATION
     // ========================================================
     function broadcastRewardEvent(data) {
-        if (rewardChannel) {
-            try { rewardChannel.postMessage(data); } catch (e) {}
-        }
-        // Also persist in localStorage for multi-browser support
-        localStorage.setItem('crsdg_reward_sync_state', JSON.stringify({
+        const payload = {
             ...data,
             timestamp: Date.now()
-        }));
+        };
+
+        if (rewardChannel) {
+            try { rewardChannel.postMessage(payload); } catch (e) {}
+        }
+        // Also persist in localStorage for multi-browser support
+        try {
+            localStorage.setItem('crsdg_reward_sync_state', JSON.stringify(payload));
+        } catch (e) {}
+
+        // Cloud Firestore sync (Remote iPad to Stage PC across network)
+        if (window.FirebaseSync && typeof window.FirebaseSync.saveVoteSettings === 'function') {
+            window.FirebaseSync.saveVoteSettings({
+                stage_reward_state: payload
+            }).catch(() => {});
+        } else if (typeof firebase !== 'undefined' && firebase.firestore) {
+            try {
+                firebase.firestore().collection('crsdg_vote').doc('settings').set({
+                    stage_reward_state: payload
+                }, { merge: true }).catch(() => {});
+            } catch (e) {}
+        }
     }
 
     function syncStageStateToRemote() {
@@ -733,8 +750,16 @@
     }
 
     function setupRemoteListeners() {
+        let lastProcessedCmdTs = 0;
+
         const handleRemoteMessage = (data) => {
             if (!data || !data.type) return;
+
+            // Timestamp deduplication
+            if (data.timestamp) {
+                if (data.timestamp <= lastProcessedCmdTs) return;
+                lastProcessedCmdTs = data.timestamp;
+            }
 
             switch (data.type) {
                 case 'REMOTE_CMD_SELECT_PRIZE':
@@ -803,6 +828,37 @@
                 updateEligibleCount();
             }
         });
+
+        // Cloud Firestore Realtime Sync (Receives commands from iPad remote)
+        if (window.FirebaseSync && typeof window.FirebaseSync.subscribe === 'function') {
+            window.FirebaseSync.subscribe((event) => {
+                if (!event) return;
+                if (event.type === 'VOTE_SETTINGS_UPDATED' && event.data && event.data.remote_reward_cmd) {
+                    handleRemoteMessage(event.data.remote_reward_cmd);
+                } else if (event.type === 'PRIZES_UPDATED' || event.type === 'WINNERS_UPDATED' || event.type === 'MEMBERS_UPDATED') {
+                    renderCarousel();
+                    if (currentPrize) {
+                        const prizes = state.getPrizes();
+                        const updated = prizes.find(p => p.id === currentPrize.id);
+                        if (updated) loadPrizeToStage(updated);
+                    }
+                    updateEligibleCount();
+                }
+            });
+        }
+
+        if (typeof firebase !== 'undefined' && firebase.firestore) {
+            try {
+                firebase.firestore().collection('crsdg_vote').doc('settings').onSnapshot(doc => {
+                    if (doc && doc.exists) {
+                        const d = doc.data();
+                        if (d && d.remote_reward_cmd) {
+                            handleRemoteMessage(d.remote_reward_cmd);
+                        }
+                    }
+                }, () => {});
+            } catch (e) {}
+        }
     }
 
     // ========================================================

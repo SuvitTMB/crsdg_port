@@ -29,6 +29,63 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ========================================================
+    // SYSTEM ALERT LIGHTBOX MODAL (REPLACES BROWSER ALERT)
+    // ========================================================
+    let adminAlertCallback = null;
+    function showAdminAlert(message, options = {}) {
+        const title = options.title || 'แจ้งเตือนระบบ';
+        const icon = options.icon || '⚠️';
+        adminAlertCallback = typeof options.onClose === 'function' ? options.onClose : null;
+
+        const modal = document.getElementById('adminAlertModal');
+        const titleEl = document.getElementById('adminAlertModalTitle');
+        const iconEl = document.getElementById('adminAlertModalIcon');
+        const iconLargeEl = document.getElementById('adminAlertModalIconLarge');
+        const msgEl = document.getElementById('adminAlertModalMessage');
+
+        if (titleEl) titleEl.textContent = title;
+        if (iconEl) iconEl.textContent = icon;
+        if (iconLargeEl) iconLargeEl.textContent = icon;
+        if (msgEl) msgEl.textContent = message || '';
+
+        if (modal) modal.style.display = 'flex';
+        if (sound && typeof sound.playClick === 'function') sound.playClick();
+    }
+
+    function closeAdminAlertModal() {
+        const modal = document.getElementById('adminAlertModal');
+        if (modal) modal.style.display = 'none';
+        if (adminAlertCallback) {
+            const cb = adminAlertCallback;
+            adminAlertCallback = null;
+            try { cb(); } catch (e) { console.warn(e); }
+        }
+        if (sound && typeof sound.playClick === 'function') sound.playClick();
+    }
+
+    window.showAdminAlert = showAdminAlert;
+    window.closeAdminAlert = closeAdminAlertModal;
+    window.alert = function (msg) {
+        showAdminAlert(String(msg || ''));
+    };
+
+    const closeAdminAlertModalBtn = document.getElementById('closeAdminAlertModalBtn');
+    const btnConfirmAdminAlertModal = document.getElementById('btnConfirmAdminAlertModal');
+    const adminAlertModal = document.getElementById('adminAlertModal');
+    if (closeAdminAlertModalBtn) closeAdminAlertModalBtn.addEventListener('click', closeAdminAlertModal);
+    if (btnConfirmAdminAlertModal) btnConfirmAdminAlertModal.addEventListener('click', closeAdminAlertModal);
+    if (adminAlertModal) {
+        adminAlertModal.addEventListener('click', (e) => {
+            if (e.target === adminAlertModal) closeAdminAlertModal();
+        });
+    }
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && adminAlertModal && adminAlertModal.style.display === 'flex') {
+            closeAdminAlertModal();
+        }
+    });
+
+    // ========================================================
     // DOM ELEMENTS
     // ========================================================
     // Metric Elements
@@ -1257,6 +1314,20 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Game 4v4 Button Open/Close Toggle (index.html)
+        const gameBtnToggleCheckbox = document.getElementById('gameBtnToggleCheckbox');
+        if (gameBtnToggleCheckbox) {
+            gameBtnToggleCheckbox.addEventListener('change', (e) => {
+                const isOpen = e.target.checked;
+                if (typeof state.setGameButtonOpen === 'function') {
+                    state.setGameButtonOpen(isOpen);
+                }
+                renderGameBtnToggleState();
+                showToast(isOpen ? 'เปิดแสดงปุ่ม เกม 4 ต่อ 4 (index.html) เรียบร้อยแล้ว 🟢' : 'ปิดการแสดงปุ่ม เกม 4 ต่อ 4 (index.html) แล้ว 🔴');
+                if (sound) sound.playClick();
+            });
+        }
+
         // Vote Budget Input & Save in Tab Vote
         const tabVoteBudgetInput = document.getElementById('tabVoteBudgetInput');
         const btnSaveTabVoteBudget = document.getElementById('btnSaveTabVoteBudget');
@@ -2093,6 +2164,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function renderGameBtnToggleState() {
+        const isOpen = (typeof state.isGameButtonOpen === 'function') ? state.isGameButtonOpen() : true;
+        const gameBtnToggleCheckbox = document.getElementById('gameBtnToggleCheckbox');
+        const gameBtnStatusBadge = document.getElementById('gameBtnStatusBadge');
+        if (gameBtnToggleCheckbox) gameBtnToggleCheckbox.checked = isOpen;
+        if (gameBtnStatusBadge) {
+            gameBtnStatusBadge.textContent = isOpen ? '🟢 ปุ่มเกม 4 ต่อ 4: เปิด' : '🔴 ปุ่มเกม 4 ต่อ 4: ปิด';
+            gameBtnStatusBadge.style.color = isOpen ? '#c084fc' : '#f87171';
+        }
+    }
+
     function renderVoteDashboard() {
         const isOpen = (typeof state.isGameVoteOpen === 'function') ? state.isGameVoteOpen() : false;
         const voteToggleCheckbox = document.getElementById('voteToggleCheckbox');
@@ -2110,6 +2192,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         if (voteToggleLabel) voteToggleLabel.textContent = isOpen ? 'เปิดรับโหวต' : 'ปิดรับโหวต';
+
+        renderGameBtnToggleState();
 
         const tabVoteBudgetInput = document.getElementById('tabVoteBudgetInput');
         if (tabVoteBudgetInput && document.activeElement !== tabVoteBudgetInput) {
@@ -6388,7 +6472,19 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/'/g, '&#39;');
     }
 
+    function renderEvalToggleState() {
+        const isOpen = (typeof state.isEvalOpen === 'function') ? state.isEvalOpen() : true;
+        const evalToggleCheckbox = document.getElementById('evalToggleCheckbox');
+        const evalStatusBadge = document.getElementById('evalStatusBadge');
+        if (evalToggleCheckbox) evalToggleCheckbox.checked = isOpen;
+        if (evalStatusBadge) {
+            evalStatusBadge.textContent = isOpen ? '🟢 กล่องประเมินผล: เปิด' : '🔴 กล่องประเมินผล: ปิด';
+            evalStatusBadge.style.color = isOpen ? '#f472b6' : '#f87171';
+        }
+    }
+
     function renderEvaluations() {
+        renderEvalToggleState();
         const tableBody = document.getElementById('evaluationsTableBody');
         if (!tableBody) return;
 
@@ -6693,6 +6789,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initEvaluationsSection() {
+        const evalToggleCheckbox = document.getElementById('evalToggleCheckbox');
+        if (evalToggleCheckbox) {
+            evalToggleCheckbox.addEventListener('change', (e) => {
+                const isOpen = e.target.checked;
+                if (typeof state.setEvalOpen === 'function') {
+                    state.setEvalOpen(isOpen);
+                }
+                renderEvalToggleState();
+                showToast(isOpen ? 'เปิดแสดงกล่องประเมินผล (index.html) เรียบร้อยแล้ว 🟢' : 'ปิดการแสดงกล่องประเมินผล (index.html) แล้ว 🔴');
+                if (sound) sound.playClick();
+            });
+        }
+
         const searchInput = document.getElementById('evalSearchInput');
         const starSelect = document.getElementById('evalStarFilterSelect');
         const btnExportExcel = document.getElementById('btnExportEvaluationsExcel');

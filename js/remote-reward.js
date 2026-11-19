@@ -80,8 +80,8 @@
         setupEventListeners();
         setupChannelListeners();
 
-        // Request current stage sync
-        sendCommand({ type: 'REMOTE_REQUEST_SYNC' });
+        // Request current stage sync (isUserAction = false to prevent premature vibrate/audio)
+        sendCommand({ type: 'REMOTE_REQUEST_SYNC' }, false);
     }
 
     function renderExecutiveGrid() {
@@ -125,7 +125,7 @@
         const p = prizes[currentPrizeIndex];
         updatePrizeDisplay();
         renderExecutiveGrid();
-        sendCommand({ type: 'REMOTE_CMD_SELECT_PRIZE', prizeId: p.id });
+        sendCommand({ type: 'REMOTE_CMD_SELECT_PRIZE', prizeId: p.id }, true);
     }
 
     window.remoteSelectPrizeIndex = (idx) => {
@@ -298,24 +298,43 @@
     // ========================================================
     // REMOTE COMMAND SENDER
     // ========================================================
-    function sendCommand(cmd) {
-        // Haptic feedback for touch devices
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
-            try { navigator.vibrate(40); } catch (e) {}
-        }
-        if (sound && !isMuted && typeof sound.playClick === 'function') {
-            sound.playClick();
+    function sendCommand(cmd, isUserAction = false) {
+        // Haptic feedback & click audio for direct user interactions only
+        if (isUserAction) {
+            if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+                try { navigator.vibrate(40); } catch (e) {}
+            }
+            if (sound && !isMuted && typeof sound.playClick === 'function') {
+                try { sound.playClick(); } catch (e) {}
+            }
         }
 
+        const payload = {
+            ...cmd,
+            timestamp: Date.now()
+        };
+
         if (rewardChannel) {
-            try { rewardChannel.postMessage(cmd); } catch (e) {}
+            try { rewardChannel.postMessage(payload); } catch (e) {}
         }
 
         // Cross-window storage fallback
-        localStorage.setItem('crsdg_reward_remote_cmd', JSON.stringify({
-            ...cmd,
-            timestamp: Date.now()
-        }));
+        try {
+            localStorage.setItem('crsdg_reward_remote_cmd', JSON.stringify(payload));
+        } catch (e) {}
+
+        // Cloud Firestore Sync (Cross-device iPad to stage server)
+        if (window.FirebaseSync && typeof window.FirebaseSync.saveVoteSettings === 'function') {
+            window.FirebaseSync.saveVoteSettings({
+                remote_reward_cmd: payload
+            }).catch(err => console.warn('[Remote] saveVoteSettings notice:', err));
+        } else if (typeof firebase !== 'undefined' && firebase.firestore) {
+            try {
+                firebase.firestore().collection('crsdg_vote').doc('settings').set({
+                    remote_reward_cmd: payload
+                }, { merge: true }).catch(err => console.warn('[Remote] direct set notice:', err));
+            } catch (e) {}
+        }
     }
 
     function setSpinButtonState(spinning) {
@@ -371,7 +390,7 @@
                         return;
                     }
                 }
-                sendCommand({ type: 'REMOTE_CMD_SPIN', isFast: false });
+                sendCommand({ type: 'REMOTE_CMD_SPIN', isFast: false }, true);
                 setSpinButtonState(true);
             });
         }
@@ -380,7 +399,7 @@
         if (btnRemoteQuickDrawEl) {
             btnRemoteQuickDrawEl.addEventListener('click', () => {
                 if (!isSpinning) {
-                    sendCommand({ type: 'REMOTE_CMD_SPIN', isFast: true });
+                    sendCommand({ type: 'REMOTE_CMD_SPIN', isFast: true }, true);
                     setSpinButtonState(true);
                 }
             });
@@ -389,7 +408,7 @@
         // Reroll Action
         if (btnRemoteRerollEl) {
             btnRemoteRerollEl.addEventListener('click', () => {
-                sendCommand({ type: 'REMOTE_CMD_REROLL' });
+                sendCommand({ type: 'REMOTE_CMD_REROLL' }, true);
                 setSpinButtonState(true);
             });
         }
@@ -399,7 +418,7 @@
             btnRemoteToggleSoundEl.addEventListener('click', () => {
                 isMuted = !isMuted;
                 if (remoteSoundIconEl) remoteSoundIconEl.textContent = isMuted ? '🔇' : '🔊';
-                sendCommand({ type: 'REMOTE_CMD_TOGGLE_SOUND' });
+                sendCommand({ type: 'REMOTE_CMD_TOGGLE_SOUND' }, true);
             });
         }
 
@@ -498,17 +517,25 @@
                     type: 'REMOTE_CMD_CANCEL_WINNER',
                     prizeId: prize.id,
                     winnerId: existing.id
-                });
+                }, true);
             });
         }
     }
 
     // ========================================================
-    // CHANNEL & STORAGE LISTENERS
+    // CHANNEL & STORAGE & CLOUD LISTENERS
     // ========================================================
     function setupChannelListeners() {
+        let lastProcessedStageTs = 0;
+
         const handleSyncMessage = (data) => {
             if (!data || !data.type) return;
+
+            // Timestamp deduplication
+            if (data.timestamp) {
+                if (data.timestamp <= lastProcessedStageTs) return;
+                lastProcessedStageTs = data.timestamp;
+            }
 
             if (data.type === 'STAGE_SYNC') {
                 if (data.prize) {
@@ -521,18 +548,28 @@
                 setSpinButtonState(!!data.isSpinning);
                 renderExecutiveGrid();
                 updatePrizeDisplay();
+                if (data.winner) {
+                    displayWinnerFeedback(data.winner, data.prize);
+                }
                 if (typeof data.eligibleCount === 'number' && remoteEligibleCountEl) {
                     remoteEligibleCountEl.textContent = data.eligibleCount;
                 }
                 if (connStatusTextEl) {
-                    connStatusTextEl.textContent = 'เชื่อมต่อกับเวทีสุ่มรางวัลแล้ว';
+                    connStatusTextEl.textContent = 'เชื่อมต่อกับเวทีสุ่มรางวัลแล้ว (Cloud)';
                 }
             } else if (data.type === 'WINNER_REVEALED') {
                 setSpinButtonState(false);
                 prizes = state.getPrizes();
+                if (data.prize) {
+                    const idx = prizes.findIndex(p => p.id === data.prize.id);
+                    if (idx !== -1) currentPrizeIndex = idx;
+                }
                 renderExecutiveGrid();
                 updatePrizeDisplay();
                 updateEligibleCount();
+                if (data.winner) {
+                    displayWinnerFeedback(data.winner, data.prize);
+                }
             } else if (data.type === 'WINNERS_UPDATED' || data.type === 'PRIZES_UPDATED' || data.type === 'WINNER_CANCELLED' || data.type === 'REROLL_TRIGGERED') {
                 prizes = state.getPrizes();
                 populatePrizeDropdown();
@@ -559,6 +596,35 @@
                 updateEligibleCount();
             }
         });
+
+        // Cloud Firestore Realtime Sync (cross-device iPad <-> Stage PC)
+        if (window.FirebaseSync && typeof window.FirebaseSync.subscribe === 'function') {
+            window.FirebaseSync.subscribe((event) => {
+                if (!event) return;
+                if (event.type === 'VOTE_SETTINGS_UPDATED' && event.data && event.data.stage_reward_state) {
+                    handleSyncMessage(event.data.stage_reward_state);
+                } else if (event.type === 'PRIZES_UPDATED' || event.type === 'WINNERS_UPDATED' || event.type === 'MEMBERS_UPDATED') {
+                    prizes = state.getPrizes();
+                    populatePrizeDropdown();
+                    renderExecutiveGrid();
+                    updatePrizeDisplay();
+                    updateEligibleCount();
+                }
+            });
+        }
+
+        if (typeof firebase !== 'undefined' && firebase.firestore) {
+            try {
+                firebase.firestore().collection('crsdg_vote').doc('settings').onSnapshot(doc => {
+                    if (doc && doc.exists) {
+                        const d = doc.data();
+                        if (d && d.stage_reward_state) {
+                            handleSyncMessage(d.stage_reward_state);
+                        }
+                    }
+                }, () => {});
+            } catch (e) {}
+        }
     }
 
     // Run on DOM ready
