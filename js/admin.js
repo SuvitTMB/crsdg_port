@@ -283,21 +283,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ========================================================
-    // AVATAR HTML GENERATOR
+    // AVATAR HTML GENERATOR & LOOP-PROOF IMAGE HANDLING
     // ========================================================
+    window.brokenImageUrls = window.brokenImageUrls || new Set();
+    window.markBrokenImage = function (url) {
+        if (url) window.brokenImageUrls.add(String(url).trim());
+    };
+
     function getAvatarHTML(participant, size = 36) {
         if (!participant) return '';
         const name = participant.EmpName || participant.name || 'พนักงาน';
         const empId = participant.EmployeeID || participant.id || '';
-
-        if (participant.photo && participant.photo.length > 30) {
-            return `
-                <div class="employee-avatar-wrapper" style="width: ${size}px; height: ${size}px;" title="คลิกเพื่อซูม/ตัด/เปลี่ยนรูปภาพ">
-                    <img src="${participant.photo}" alt="${name}" class="employee-avatar-img">
-                    <div class="avatar-cam-overlay">📷</div>
-                </div>
-            `;
-        }
 
         const nameParts = name.replace(/^(คุณ|นาย|นางสาว|นาง|ดร\.)\s*/, '').trim().split(' ');
         const initials = nameParts.length > 1
@@ -317,6 +313,20 @@ document.addEventListener('DOMContentLoaded', () => {
             'linear-gradient(135deg, #06b6d4, #0e7490)'
         ];
         const bg = colors[Math.abs(hash) % colors.length];
+
+        const photoUrl = participant.photo ? String(participant.photo).trim() : '';
+        const isPhotoUsable = photoUrl && photoUrl.length > 30 && !window.brokenImageUrls.has(photoUrl);
+
+        if (isPhotoUsable) {
+            return `
+                <div class="employee-avatar-wrapper" style="width: ${size}px; height: ${size}px; background: ${bg};" title="คลิกเพื่อซูม/ตัด/เปลี่ยนรูปภาพ">
+                    <img src="${photoUrl}" alt="${name}" class="employee-avatar-img"
+                        onerror="this.onerror=null; window.markBrokenImage?.(this.src); this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                    <span class="avatar-initials-badge" style="display: none;">${initials}</span>
+                    <div class="avatar-cam-overlay">📷</div>
+                </div>
+            `;
+        }
 
         return `
             <div class="employee-avatar-wrapper" style="width: ${size}px; height: ${size}px; background: ${bg};" title="คลิกเพื่อซูม/ตัด/อัปโหลดรูปภาพ">
@@ -1254,7 +1264,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.setVoteBudget(val);
                 showToast(`บันทึกงบลงทุน AI เป็น ${val.toLocaleString()} บาท/คน เรียบร้อยแล้ว 💰`);
                 renderPlayers();
-                if (sound) sound.playSuccess();
+                if (sound && typeof sound.playSuccess === 'function') {
+                    sound.playSuccess();
+                } else if (sound && typeof sound.playClick === 'function') {
+                    sound.playClick();
+                }
             });
         }
 
@@ -1294,6 +1308,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ========================================================
     let voteDrawSelectedTeamId = '';
     let voteDrawWinnersMap = {};
+    let voteDrawShowcaseActive = false;
+    let voteDrawShowcaseAborted = false;
+    let voteDrawShowcaseSkip = false;
 
     function loadSavedVoteDrawnWinners() {
         try {
@@ -1339,7 +1356,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getEligibleCandidatesForTeam(teamId, teamName) {
-        const allUserInv = (typeof state.getAllUserInvestments === 'function') ? state.getAllUserInvestments() : {};
         const members = (typeof state.getMembers === 'function') ? state.getMembers() : [];
         const memberMap = new Map();
         members.forEach(m => {
@@ -1350,64 +1366,62 @@ document.addEventListener('DOMContentLoaded', () => {
         const candidates = [];
         const addedIds = new Set();
 
-        // 1. All users with investment in this teamId
-        if (teamId) {
-            Object.entries(allUserInv).forEach(([empId, uMap]) => {
-                if (!uMap || typeof uMap !== 'object') return;
-                const amt = parseFloat(uMap[teamId]) || 0;
-                if (amt > 0) {
-                    const cleanId = String(empId).trim().toLowerCase();
-                    const m = memberMap.get(cleanId) || {};
-                    candidates.push({
-                        employeeId: m.EmployeeID || m.id || empId,
-                        name: m.EmpName || m.name || ('พนักงาน ' + empId),
-                        department: m.Group || m.department || m.Department || '-',
-                        amount: amt,
-                        photo: m.photo || ''
-                    });
-                    addedIds.add(cleanId);
-                }
+        const addCandidate = (empId, name, department, photo) => {
+            const cleanId = String(empId || '').trim();
+            const idKey = cleanId.toLowerCase();
+            if (!idKey || addedIds.has(idKey)) return;
+            const dbMem = memberMap.get(idKey) || {};
+            const photoUrl = dbMem.photo || photo || '';
+            const isPhotoUsable = photoUrl && photoUrl.length > 30 && !window.brokenImageUrls?.has(photoUrl);
+
+            candidates.push({
+                employeeId: dbMem.EmployeeID || dbMem.id || cleanId,
+                name: dbMem.EmpName || dbMem.name || name || ('พนักงาน ' + cleanId),
+                department: dbMem.Group || dbMem.department || dbMem.Department || department || '-',
+                photo: isPhotoUsable ? photoUrl : ''
+            });
+            addedIds.add(idKey);
+        };
+
+        const targetName = String(teamName || '').trim().toLowerCase();
+        const targetId = String(teamId || '').trim().toLowerCase();
+
+        // 1. สมาชิกในทีมที่สังกัดทีมนี้โดยตรงจากตาราง crsdg_player (สมาชิกในกลุ่ม/ทีมที่เลือก)
+        const players = (typeof state.getPlayers === 'function') ? state.getPlayers() : [];
+        const currentTeam = players.find(p => p.id === teamId || String(p.teamName || '').trim().toLowerCase() === targetName);
+        if (currentTeam && Array.isArray(currentTeam.members) && currentTeam.members.length > 0) {
+            currentTeam.members.forEach(tm => {
+                addCandidate(tm.employeeId || tm.id, tm.name, tm.department, tm.photo);
             });
         }
 
-        // 2. Members who chose this team in chosenTeam
-        const targetName = String(teamName || '').trim().toLowerCase();
-        const targetId = String(teamId || '').trim().toLowerCase();
+        // 2. สมาชิกในตาราง crsdg_team (Team Rosters)
+        const teamsTable = (typeof state.getTeams === 'function') ? state.getTeams() : [];
+        const targetTeamRoster = teamsTable.find(t => t.id === teamId || String(t.name || '').trim().toLowerCase() === targetName);
+        if (targetTeamRoster) {
+            if (targetTeamRoster.captainId) {
+                addCandidate(targetTeamRoster.captainId, '', targetTeamRoster.department, '');
+            }
+            if (Array.isArray(targetTeamRoster.memberIds)) {
+                targetTeamRoster.memberIds.forEach(mid => addCandidate(mid, '', targetTeamRoster.department, ''));
+            }
+        }
+
+        // 3. สมาชิกใน crsdg_member ที่เลือกโหวตทีมนี้ (chosenTeam ตรงกับทีมที่ถูกเลือก)
         members.forEach(m => {
             const cTeam = String(m.chosenTeam || '').trim().toLowerCase();
-            if (cTeam && (cTeam === targetName || cTeam === targetId)) {
-                const cleanId = String(m.EmployeeID || m.id || '').trim().toLowerCase();
-                if (!addedIds.has(cleanId)) {
-                    candidates.push({
-                        employeeId: m.EmployeeID || m.id || cleanId,
-                        name: m.EmpName || m.name || ('พนักงาน ' + cleanId),
-                        department: m.Group || m.department || m.Department || '-',
-                        amount: 0,
-                        photo: m.photo || ''
-                    });
-                    addedIds.add(cleanId);
-                }
+            if (cTeam && (cTeam === targetName || cTeam === targetId || (targetName && targetName.includes(cTeam)) || (cTeam && targetName.includes(cTeam)))) {
+                addCandidate(m.EmployeeID || m.id, m.EmpName || m.name, m.Group || m.department, m.photo);
             }
         });
 
-        // 3. Fallback: team members if neither #1 nor #2 found
-        if (candidates.length === 0 && teamId) {
-            const players = (typeof state.getPlayers === 'function') ? state.getPlayers() : [];
-            const t = players.find(p => p.id === teamId);
-            if (t && Array.isArray(t.members) && t.members.length > 0) {
-                t.members.forEach(tm => {
-                    const cleanId = String(tm.employeeId || tm.id || '').trim().toLowerCase();
-                    const m = memberMap.get(cleanId) || {};
-                    candidates.push({
-                        employeeId: tm.employeeId || tm.id || '-',
-                        name: tm.name || m.EmpName || m.name || '-',
-                        department: tm.department || m.Group || '-',
-                        amount: 0,
-                        photo: tm.photo || m.photo || ''
-                    });
-                });
+        // 4. สมาชิกใน crsdg_member ที่กลุ่ม (Group) ตรงกับชื่อกลุ่ม/ทีมที่เลือก
+        members.forEach(m => {
+            const grp = String(m.Group || m.department || '').trim().toLowerCase();
+            if (grp && (grp === targetName || grp === targetId || (targetName && targetName.includes(grp)))) {
+                addCandidate(m.EmployeeID || m.id, m.EmpName || m.name, m.Group || m.department, m.photo);
             }
-        }
+        });
 
         return candidates;
     }
@@ -1505,15 +1519,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         container.innerHTML = drawnList.map((w, idx) => {
             const initial = (w.name || 'พ').replace(/^(นาย|นางสาว|นาง|คุณ|พี่)/, '').charAt(0) || '👤';
-            const avatarHtml = w.photo
-                ? `<img src="${w.photo}" alt="${w.name}" onerror="this.outerHTML='<span>${initial}</span>'">`
+            const isUsable = w.photo && w.photo.length > 30 && !window.brokenImageUrls?.has(w.photo);
+            const avatarHtml = isUsable
+                ? `<img src="${w.photo}" alt="${w.name}" onerror="this.onerror=null; window.markBrokenImage?.(this.src); this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline';"><span style="display:none;">${initial}</span>`
                 : `<span>${initial}</span>`;
-            const amtText = (w.amount && w.amount > 0)
-                ? ` | 💰 ยอดลงทุน: ฿${w.amount.toLocaleString()} บาท`
-                : '';
+            const isLast = (idx === drawnList.length - 1) ? ' newly-added' : '';
 
             return `
-                <div class="drawn-winner-row">
+                <div class="drawn-winner-row${isLast}">
                     <div class="drawn-winner-rank">#${idx + 1}</div>
                     <div class="drawn-winner-avatar">${avatarHtml}</div>
                     <div class="drawn-winner-info">
@@ -1522,7 +1535,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="drawn-winner-empid">${w.employeeId}</span>
                         </div>
                         <div class="drawn-winner-dept">
-                            <span>กลุ่ม/ฝ่าย: ${w.department || '-'}</span>${amtText}
+                            <span>กลุ่ม/ฝ่าย: ${w.department || '-'}</span>
                         </div>
                     </div>
                     <button type="button" class="btn-del-winner-item" onclick="removeVoteDrawnWinner('${w.employeeId}')" title="ลบรายชื่อนี้ออก (เพื่อกดสุ่มใหม่แทนที่)">
@@ -1531,6 +1544,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
         }).join('');
+
+        // เลื่อนหน้าต่างผลการสุ่มลงล่างสุดเพื่อแสดงรายชื่อล่าสุดทันที
+        container.scrollTop = container.scrollHeight;
     }
 
     window.removeVoteDrawnWinner = function(empId) {
@@ -1547,7 +1563,104 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    function executeVoteDrawAction() {
+    function runRouletteAnimation(candidates, durationMs = 1400) {
+        return new Promise((resolve) => {
+            const nameEl = document.getElementById('showcaseWinnerName');
+            const empIdEl = document.getElementById('showcaseWinnerEmpId');
+            const deptEl = document.getElementById('showcaseWinnerDept');
+            const imgEl = document.getElementById('showcaseAvatarImg');
+            const emojiEl = document.getElementById('showcaseAvatarEmoji');
+
+            if (!candidates || candidates.length === 0) {
+                resolve();
+                return;
+            }
+
+            const startTime = Date.now();
+            const interval = setInterval(() => {
+                if (voteDrawShowcaseAborted || voteDrawShowcaseSkip) {
+                    clearInterval(interval);
+                    resolve();
+                    return;
+                }
+
+                const randCandidate = candidates[Math.floor(Math.random() * candidates.length)];
+                if (nameEl) nameEl.textContent = randCandidate.name || 'กำลังสุ่ม...';
+                if (empIdEl) empIdEl.textContent = randCandidate.employeeId ? `รหัส: ${randCandidate.employeeId}` : '-';
+                if (deptEl) deptEl.textContent = randCandidate.department || '-';
+
+                const initial = (randCandidate.name || 'พ').replace(/^(นาย|นางสาว|นาง|คุณ|พี่)/, '').charAt(0) || '👤';
+                const isPhotoValid = randCandidate.photo && randCandidate.photo.length > 30 && !window.brokenImageUrls?.has(randCandidate.photo);
+                if (isPhotoValid && imgEl && emojiEl) {
+                    imgEl.onerror = () => {
+                        imgEl.onerror = null;
+                        if (imgEl.src) window.markBrokenImage?.(imgEl.src);
+                        imgEl.style.display = 'none';
+                        if (emojiEl) {
+                            emojiEl.style.display = 'inline';
+                            emojiEl.textContent = initial;
+                        }
+                    };
+                    imgEl.src = randCandidate.photo;
+                    imgEl.style.display = 'block';
+                    emojiEl.style.display = 'none';
+                } else if (imgEl && emojiEl) {
+                    imgEl.onerror = null;
+                    imgEl.style.display = 'none';
+                    emojiEl.style.display = 'inline';
+                    emojiEl.textContent = initial;
+                }
+
+                if (Date.now() - startTime >= durationMs) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 65);
+        });
+    }
+
+    function run4SecondCountdown() {
+        return new Promise((resolve) => {
+            const countdownWrap = document.getElementById('showcaseCountdownWrap');
+            const countdownLabel = document.getElementById('showcaseCountdownLabel');
+            const countdownBar = document.getElementById('showcaseCountdownBar');
+            if (!countdownWrap || !countdownLabel || !countdownBar) {
+                setTimeout(resolve, 4000);
+                return;
+            }
+
+            const totalMs = 4000;
+            const intervalMs = 80;
+            let elapsed = 0;
+            if (countdownBar) countdownBar.style.width = '0%';
+
+            const timer = setInterval(() => {
+                if (voteDrawShowcaseAborted || voteDrawShowcaseSkip) {
+                    clearInterval(timer);
+                    resolve(!voteDrawShowcaseAborted);
+                    return;
+                }
+
+                elapsed += intervalMs;
+                const remainingSec = Math.max(1, Math.ceil((totalMs - elapsed) / 1000));
+                const pct = Math.min(100, (elapsed / totalMs) * 100);
+
+                if (countdownLabel) {
+                    countdownLabel.textContent = `⏳ พักรอ 4 วินาที เพื่อสุ่มคนถัดไป (${remainingSec} วิ)...`;
+                }
+                if (countdownBar) {
+                    countdownBar.style.width = `${pct}%`;
+                }
+
+                if (elapsed >= totalMs) {
+                    clearInterval(timer);
+                    resolve(true);
+                }
+            }, intervalMs);
+        });
+    }
+
+    async function executeVoteDrawAction() {
         if (!voteDrawSelectedTeamId) {
             alert('กรุณาเลือกทีมที่จะทำการสุ่มรางวัลก่อน');
             return;
@@ -1572,9 +1685,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const needed = targetQty - currentCount;
         const allCandidates = getEligibleCandidatesForTeam(team.id, team.name);
-
         if (allCandidates.length === 0) {
             alert(`ทีม "${team.name}" ยังไม่มีรายชื่อผู้มีสิทธิ์โหวตหรือสมาชิกในทีมให้ทำการสุ่ม`);
             return;
@@ -1582,40 +1693,151 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Exclude already drawn winners
         const drawnIds = new Set(drawnList.map(w => String(w.employeeId).trim().toLowerCase()));
-        const available = allCandidates.filter(c => !drawnIds.has(String(c.employeeId).trim().toLowerCase()));
+        let available = allCandidates.filter(c => !drawnIds.has(String(c.employeeId).trim().toLowerCase()));
 
         if (available.length === 0) {
             alert(`ไม่มีรายชื่อผู้มีสิทธิ์คงเหลือให้สุ่มแล้ว (สุ่มไปแล้ว ${currentCount} จากทั้งหมด ${allCandidates.length} คน)`);
             return;
         }
 
-        const drawCount = Math.min(needed, available.length);
+        // Open Showcase Lightbox
+        const showcaseModal = document.getElementById('voteDrawShowcaseModal');
+        const showcaseTeamBadge = document.getElementById('showcaseTeamBadge');
+        const showcaseProgressBadge = document.getElementById('showcaseProgressBadge');
+        const showcaseStatusBanner = document.getElementById('showcaseStatusBanner');
+        const showcaseStatusText = document.getElementById('showcaseStatusText');
+        const showcaseAvatarBox = document.getElementById('showcaseAvatarBox');
+        const showcaseAvatarImg = document.getElementById('showcaseAvatarImg');
+        const showcaseAvatarEmoji = document.getElementById('showcaseAvatarEmoji');
+        const showcaseWinnerBadge = document.getElementById('showcaseWinnerBadge');
+        const showcaseWinnerRank = document.getElementById('showcaseWinnerRank');
+        const showcaseWinnerName = document.getElementById('showcaseWinnerName');
+        const showcaseWinnerEmpId = document.getElementById('showcaseWinnerEmpId');
+        const showcaseWinnerDept = document.getElementById('showcaseWinnerDept');
+        const showcaseCountdownWrap = document.getElementById('showcaseCountdownWrap');
+        const showcaseFooterActions = document.getElementById('showcaseFooterActions');
 
-        // Random pick drawCount
-        const pool = [...available];
-        const newlyDrawn = [];
-        for (let i = 0; i < drawCount; i++) {
-            const randIdx = Math.floor(Math.random() * pool.length);
-            const picked = pool.splice(randIdx, 1)[0];
-            newlyDrawn.push({
-                ...picked,
-                drawnAt: new Date().toISOString()
-            });
+        if (showcaseTeamBadge) showcaseTeamBadge.textContent = `🏆 ${team.name}`;
+        if (showcaseModal) showcaseModal.style.display = 'flex';
+
+        voteDrawShowcaseActive = true;
+        voteDrawShowcaseAborted = false;
+        voteDrawShowcaseSkip = false;
+
+        // Step-by-step drawing loop
+        while (voteDrawShowcaseActive && !voteDrawShowcaseAborted) {
+            let currentDrawn = voteDrawWinnersMap[team.id] || [];
+            if (currentDrawn.length >= targetQty || available.length === 0) {
+                break;
+            }
+
+            const currentRank = currentDrawn.length + 1;
+
+            if (showcaseProgressBadge) {
+                showcaseProgressBadge.textContent = `สุ่มคนที่ ${currentRank} / ${targetQty}`;
+                showcaseProgressBadge.style.background = 'rgba(59, 130, 246, 0.18)';
+                showcaseProgressBadge.style.color = '#93c5fd';
+            }
+            if (showcaseStatusText) showcaseStatusText.textContent = `กำลังสุ่มผู้โชคดีคนที่ ${currentRank}...`;
+            if (showcaseStatusBanner) showcaseStatusBanner.style.borderColor = 'rgba(59, 130, 246, 0.35)';
+            if (showcaseWinnerBadge) showcaseWinnerBadge.style.display = 'none';
+            if (showcaseCountdownWrap) showcaseCountdownWrap.style.display = 'none';
+            if (showcaseFooterActions) showcaseFooterActions.style.display = 'none';
+            if (showcaseAvatarBox) {
+                showcaseAvatarBox.classList.add('is-roulette');
+                showcaseAvatarBox.classList.remove('is-winner');
+            }
+
+            // Roulette Animation
+            if (!voteDrawShowcaseSkip) {
+                await runRouletteAnimation(allCandidates, 1400);
+            }
+            if (voteDrawShowcaseAborted) break;
+
+            // Pick winner randomly
+            const randIdx = Math.floor(Math.random() * available.length);
+            const winner = available.splice(randIdx, 1)[0];
+            winner.drawnAt = new Date().toISOString();
+
+            // Display Winner
+            if (showcaseAvatarBox) {
+                showcaseAvatarBox.classList.remove('is-roulette');
+                showcaseAvatarBox.classList.add('is-winner');
+            }
+
+            const initial = (winner.name || 'พ').replace(/^(นาย|นางสาว|นาง|คุณ|พี่)/, '').charAt(0) || '👤';
+            const isWinnerPhotoValid = winner.photo && winner.photo.length > 30 && !window.brokenImageUrls?.has(winner.photo);
+            if (isWinnerPhotoValid && showcaseAvatarImg && showcaseAvatarEmoji) {
+                showcaseAvatarImg.onerror = () => {
+                    showcaseAvatarImg.onerror = null;
+                    if (showcaseAvatarImg.src) window.markBrokenImage?.(showcaseAvatarImg.src);
+                    showcaseAvatarImg.style.display = 'none';
+                    if (showcaseAvatarEmoji) {
+                        showcaseAvatarEmoji.style.display = 'inline';
+                        showcaseAvatarEmoji.textContent = initial;
+                    }
+                };
+                showcaseAvatarImg.src = winner.photo;
+                showcaseAvatarImg.style.display = 'block';
+                showcaseAvatarEmoji.style.display = 'none';
+            } else if (showcaseAvatarImg && showcaseAvatarEmoji) {
+                showcaseAvatarImg.onerror = null;
+                showcaseAvatarImg.style.display = 'none';
+                showcaseAvatarEmoji.style.display = 'inline';
+                showcaseAvatarEmoji.textContent = initial;
+            }
+
+            if (showcaseWinnerBadge) showcaseWinnerBadge.style.display = 'inline-block';
+            if (showcaseWinnerRank) showcaseWinnerRank.textContent = currentRank;
+            if (showcaseWinnerName) showcaseWinnerName.textContent = winner.name || '-';
+            if (showcaseWinnerEmpId) showcaseWinnerEmpId.textContent = winner.employeeId ? `รหัส: ${winner.employeeId}` : '-';
+            if (showcaseWinnerDept) showcaseWinnerDept.textContent = winner.department ? `ฝ่าย: ${winner.department}` : '-';
+
+            if (showcaseStatusText) showcaseStatusText.textContent = `🎉 ได้รับผู้โชคดีคนที่ ${currentRank} แล้ว!`;
+            if (showcaseStatusBanner) showcaseStatusBanner.style.borderColor = 'rgba(16, 185, 129, 0.5)';
+
+            // Sound
+            if (sound && typeof sound.playSuccess === 'function') {
+                sound.playSuccess();
+            } else if (sound && typeof sound.playClick === 'function') {
+                sound.playClick();
+            }
+
+            // Immediately append to winners list & update right box
+            currentDrawn.push(winner);
+            voteDrawWinnersMap[team.id] = currentDrawn;
+            saveVoteDrawnWinnersToStorage();
+            renderVoteDrawnWinnersList();
+
+            // Check if complete
+            const isComplete = (currentDrawn.length >= targetQty) || (available.length === 0);
+
+            if (isComplete) {
+                if (showcaseStatusText) {
+                    showcaseStatusText.textContent = (currentDrawn.length >= targetQty)
+                        ? `🎉 สุ่มครบตามจำนวนที่กำหนดแล้ว (${currentDrawn.length}/${targetQty} ท่าน)`
+                        : `🎉 สุ่มครบจำนวนผู้มีสิทธิ์ทั้งหมดของทีมแล้ว (${currentDrawn.length} ท่าน)`;
+                }
+                if (showcaseProgressBadge) {
+                    showcaseProgressBadge.textContent = `ครบ ${currentDrawn.length} / ${targetQty} ท่าน`;
+                    showcaseProgressBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+                    showcaseProgressBadge.style.color = '#34d399';
+                }
+                if (showcaseCountdownWrap) showcaseCountdownWrap.style.display = 'none';
+                if (showcaseFooterActions) showcaseFooterActions.style.display = 'block';
+                showToast(`🎉 สุ่มรายชื่อผู้ได้รับรางวัลเรียบร้อยแล้ว (${currentDrawn.length} ท่าน)`);
+                break;
+            }
+
+            // If not complete and not skipped: wait 4 seconds countdown
+            if (!voteDrawShowcaseSkip) {
+                if (showcaseCountdownWrap) showcaseCountdownWrap.style.display = 'flex';
+                const cont = await run4SecondCountdown();
+                if (!cont || voteDrawShowcaseAborted) break;
+            }
         }
 
-        drawnList = [...drawnList, ...newlyDrawn];
-        voteDrawWinnersMap[voteDrawSelectedTeamId] = drawnList;
-        saveVoteDrawnWinnersToStorage();
-
-        renderVoteDrawnWinnersList();
-
-        if (drawCount < needed) {
-            showToast(`สุ่มเพิ่ม ${drawCount} ท่าน (ครบจำนวนผู้มีสิทธิ์ทั้งหมดของทีมแล้ว)`);
-        } else {
-            showToast(`🎉 สุ่มเพิ่ม ${drawCount} ท่านเรียบร้อยแล้ว (รวม ${drawnList.length}/${targetQty} ท่าน)`);
-        }
-
-        if (sound) sound.playSuccess();
+        voteDrawShowcaseActive = false;
     }
 
     function clearVoteDrawAction() {
@@ -1625,12 +1847,43 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('ยังไม่มีผลการสุ่มให้ล้าง');
             return;
         }
-        if (!confirm('ยืนยันการล้างผลสุ่มรายชื่อของทีมนี้ทั้งหมดหรือไม่?')) return;
-        delete voteDrawWinnersMap[voteDrawSelectedTeamId];
-        saveVoteDrawnWinnersToStorage();
-        renderVoteDrawnWinnersList();
-        showToast('ล้างผลการสุ่มของทีมนี้เรียบร้อยแล้ว');
-        if (sound) sound.playClick();
+        const confirmModal = document.getElementById('confirmClearVoteDrawModal');
+        if (confirmModal) {
+            confirmModal.style.display = 'flex';
+            if (sound) sound.playClick();
+        }
+    }
+
+    function doConfirmClearVoteDrawAction() {
+        if (voteDrawSelectedTeamId) {
+            delete voteDrawWinnersMap[voteDrawSelectedTeamId];
+            saveVoteDrawnWinnersToStorage();
+            renderVoteDrawnWinnersList();
+            showToast('ล้างผลการสุ่มของทีมนี้เรียบร้อยแล้ว');
+            if (sound) sound.playClick();
+        }
+        const confirmModal = document.getElementById('confirmClearVoteDrawModal');
+        if (confirmModal) {
+            confirmModal.style.display = 'none';
+        }
+    }
+
+    function closeConfirmClearVoteDrawModal() {
+        const confirmModal = document.getElementById('confirmClearVoteDrawModal');
+        if (confirmModal) {
+            confirmModal.style.display = 'none';
+            if (sound) sound.playClick();
+        }
+    }
+
+    function closeVoteDrawShowcase() {
+        voteDrawShowcaseAborted = true;
+        voteDrawShowcaseActive = false;
+        const showcaseModal = document.getElementById('voteDrawShowcaseModal');
+        if (showcaseModal) {
+            showcaseModal.style.display = 'none';
+            if (sound) sound.playClick();
+        }
     }
 
     function exportVoteDrawExcelAction() {
@@ -1788,6 +2041,54 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnExportVoteDrawExcel) {
             btnExportVoteDrawExcel.addEventListener('click', exportVoteDrawExcelAction);
         }
+
+        // Showcase Modal Controls (Skip, Close, Done, Click-outside)
+        const btnShowcaseSkip = document.getElementById('btnShowcaseSkip');
+        const btnCloseShowcaseModal = document.getElementById('btnCloseShowcaseModal');
+        const btnShowcaseDone = document.getElementById('btnShowcaseDone');
+        const voteDrawShowcaseModal = document.getElementById('voteDrawShowcaseModal');
+
+        if (btnShowcaseSkip) {
+            btnShowcaseSkip.addEventListener('click', () => {
+                voteDrawShowcaseSkip = true;
+            });
+        }
+        if (btnCloseShowcaseModal) {
+            btnCloseShowcaseModal.addEventListener('click', closeVoteDrawShowcase);
+        }
+        if (btnShowcaseDone) {
+            btnShowcaseDone.addEventListener('click', closeVoteDrawShowcase);
+        }
+        if (voteDrawShowcaseModal) {
+            voteDrawShowcaseModal.addEventListener('click', (e) => {
+                if (e.target === voteDrawShowcaseModal) {
+                    closeVoteDrawShowcase();
+                }
+            });
+        }
+
+        // Confirm Clear Modal Controls (Cancel, Confirm, Close, Click-outside)
+        const btnCloseConfirmClear = document.getElementById('btnCloseConfirmClearVoteDraw');
+        const btnCancelClear = document.getElementById('btnCancelClearVoteDrawModal');
+        const btnConfirmClear = document.getElementById('btnConfirmClearVoteDrawAction');
+        const confirmClearModal = document.getElementById('confirmClearVoteDrawModal');
+
+        if (btnCloseConfirmClear) {
+            btnCloseConfirmClear.addEventListener('click', closeConfirmClearVoteDrawModal);
+        }
+        if (btnCancelClear) {
+            btnCancelClear.addEventListener('click', closeConfirmClearVoteDrawModal);
+        }
+        if (btnConfirmClear) {
+            btnConfirmClear.addEventListener('click', doConfirmClearVoteDrawAction);
+        }
+        if (confirmClearModal) {
+            confirmClearModal.addEventListener('click', (e) => {
+                if (e.target === confirmClearModal) {
+                    closeConfirmClearVoteDrawModal();
+                }
+            });
+        }
     }
 
     function renderVoteDashboard() {
@@ -1934,21 +2235,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function safeRender(fn, name) {
+        try {
+            fn();
+        } catch (e) {
+            console.warn(`[Admin] Error in ${name}:`, e);
+        }
+    }
+
     function renderAll() {
-        renderStats();
-        renderRegistrationDashboard();
-        renderVoteDashboard();
-        renderGroupFilterOptions();
-        renderTargetTeamSelectOptions();
-        renderParticipants();
-        renderTeamRosters();
-        renderPlayers();
-        renderQuizzes();
-        renderDatalist();
-        renderPrizes();
-        renderWinners();
-        renderEvaluations();
-        if (statTeamsCountBadge) statTeamsCountBadge.textContent = state.getTeams().length;
+        safeRender(renderStats, 'renderStats');
+        safeRender(renderRegistrationDashboard, 'renderRegistrationDashboard');
+        safeRender(renderVoteDashboard, 'renderVoteDashboard');
+        safeRender(renderGroupFilterOptions, 'renderGroupFilterOptions');
+        safeRender(renderTargetTeamSelectOptions, 'renderTargetTeamSelectOptions');
+        safeRender(renderParticipants, 'renderParticipants');
+        safeRender(renderTeamRosters, 'renderTeamRosters');
+        safeRender(renderPlayers, 'renderPlayers');
+        safeRender(renderQuizzes, 'renderQuizzes');
+        safeRender(renderDatalist, 'renderDatalist');
+        safeRender(renderPrizes, 'renderPrizes');
+        safeRender(renderWinners, 'renderWinners');
+        safeRender(renderEvaluations, 'renderEvaluations');
+        if (statTeamsCountBadge) {
+            try {
+                statTeamsCountBadge.textContent = state.getTeams().length;
+            } catch (_) {}
+        }
     }
 
     function renderStats() {
@@ -2305,20 +2618,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnClearSearchParticipant = document.getElementById('btnClearSearchParticipant');
     const btnClearParticipantFilter = document.getElementById('btnClearParticipantFilter');
 
+    window.clearParticipantSearchInput = function () {
+        if (searchParticipantInput) {
+            searchParticipantInput.value = '';
+            if (btnClearSearchParticipant) btnClearSearchParticipant.style.display = 'none';
+        }
+    };
+
     if (searchParticipantInput) {
         searchParticipantInput.value = ''; // Always clear on load
+        searchParticipantInput.setAttribute('autocomplete', 'off');
         searchParticipantInput.addEventListener('input', () => {
             if (btnClearSearchParticipant) {
                 btnClearSearchParticipant.style.display = searchParticipantInput.value.trim() ? 'flex' : 'none';
             }
             renderParticipants();
         });
+        searchParticipantInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.clearParticipantSearchInput();
+                renderParticipants();
+            }
+        });
     }
 
     if (btnClearSearchParticipant && searchParticipantInput) {
         btnClearSearchParticipant.addEventListener('click', () => {
-            searchParticipantInput.value = '';
-            btnClearSearchParticipant.style.display = 'none';
+            window.clearParticipantSearchInput();
             renderParticipants();
             searchParticipantInput.focus();
         });
@@ -2326,10 +2652,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnClearParticipantFilter) {
         btnClearParticipantFilter.addEventListener('click', () => {
-            if (searchParticipantInput) {
-                searchParticipantInput.value = '';
-                if (btnClearSearchParticipant) btnClearSearchParticipant.style.display = 'none';
-            }
+            window.clearParticipantSearchInput();
             if (filterTeamSelect) filterTeamSelect.value = 'all';
             if (filterStatusSelect) filterStatusSelect.value = 'all';
             renderParticipants();
@@ -5272,11 +5595,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     const photoSrc = (foundDb && (foundDb.photo || foundDb.Photo || foundDb.avatar)) || m.photo || '';
                     const displayName = (foundDb && (foundDb.EmpName || foundDb.name)) || m.name || m.employeeId;
 
+                    const isChipPhotoValid = photoSrc && photoSrc.length > 30 && !window.brokenImageUrls?.has(photoSrc);
+
                     return `
                         <div class="team-member-avatar-chip ${m.isCaptain ? 'is-captain' : ''}" title="${displayName} (${m.employeeId}) ${m.isCaptain ? '- 👑 หัวหน้าทีม' : ''}">
                             ${m.isCaptain ? '<span class="chip-crown">👑</span>' : ''}
                             <div class="chip-img">
-                                ${photoSrc ? `<img src="${photoSrc}" alt="${displayName}">` : `<span style="font-size: 0.72rem; font-weight: 700; color: #60a5fa;">${displayName.slice(0, 2)}</span>`}
+                                ${isChipPhotoValid ? `<img src="${photoSrc}" alt="${displayName}" onerror="this.onerror=null; window.markBrokenImage?.(this.src); this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline';"><span style="display:none; font-size: 0.72rem; font-weight: 700; color: #60a5fa;">${displayName.slice(0, 2)}</span>` : `<span style="font-size: 0.72rem; font-weight: 700; color: #60a5fa;">${displayName.slice(0, 2)}</span>`}
                             </div>
                             <div class="chip-name">${displayName}</div>
                         </div>
@@ -5303,11 +5628,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     const displayName = (foundDb && (foundDb.EmpName || foundDb.name)) || m.name || m.employeeId;
                     const displayDept = (foundDb && (foundDb.Group || foundDb.department)) || m.department || '-';
 
+                    const isRowPhotoValid = photoSrc && photoSrc.length > 30 && !window.brokenImageUrls?.has(photoSrc);
+
                     return `
                         <tr>
                             <td style="text-align: center;">
                                 <div class="player-avatar-mini" style="border: 1.5px solid ${m.isCaptain ? '#ffd700' : 'rgba(255,255,255,0.2)'}; width: 34px; height: 34px; border-radius: 50%; overflow: hidden; margin: 0 auto; display: flex; align-items: center; justify-content: center; background: #1e293b; cursor: pointer;" title="คลิกเพื่อซูม/ตัด/เปลี่ยนรูปภาพพนักงาน (${displayName})" onclick="openCropperForMember('${m.employeeId}')">
-                                    ${photoSrc ? `<img src="${photoSrc}" alt="${displayName}" style="width: 100%; height: 100%; object-fit: cover;">` : `<span style="font-size: 0.72rem; font-weight: 700; color: #60a5fa;">${displayName.slice(0, 2)}</span>`}
+                                    ${isRowPhotoValid ? `<img src="${photoSrc}" alt="${displayName}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; window.markBrokenImage?.(this.src); this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline';"><span style="display:none; font-size: 0.72rem; font-weight: 700; color: #60a5fa;">${displayName.slice(0, 2)}</span>` : `<span style="font-size: 0.72rem; font-weight: 700; color: #60a5fa;">${displayName.slice(0, 2)}</span>`}
                                 </div>
                             </td>
                             <td style="font-family: monospace; font-weight: 600; color: #60a5fa;">${m.employeeId}</td>
@@ -5860,7 +6187,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (playerEditId && playerEditId.value) {
                         selectPlayerForEdit(playerEditId.value, false);
                     }
-                    if (sound) sound.playSuccess();
+                    if (sound && typeof sound.playSuccess === 'function') {
+                    sound.playSuccess();
+                } else if (sound && typeof sound.playClick === 'function') {
+                    sound.playClick();
+                }
                     showToast(`รีเซ็ตเงินโหวตทุกทีม (${res.count} ทีม) และเงินลงทุนของผู้ใช้งานทุกคนเป็น 0 เรียบร้อยแล้ว 💰`);
                 });
             }
@@ -5878,7 +6209,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast(`บันทึกงบลงทุน AI เริ่มต้นเป็น ${val.toLocaleString()} บาท/คน เรียบร้อยแล้ว 💰`);
                 renderPlayers();
                 renderVoteDashboard();
-                if (sound) sound.playSuccess();
+                if (sound && typeof sound.playSuccess === 'function') {
+                    sound.playSuccess();
+                } else if (sound && typeof sound.playClick === 'function') {
+                    sound.playClick();
+                }
             });
         }
 
@@ -6343,6 +6678,11 @@ document.addEventListener('DOMContentLoaded', () => {
             tabBtns.forEach(b => b.classList.remove('active'));
             tabPanes.forEach(p => p.classList.remove('active'));
 
+            // Always clear participant search input when navigating between tabs
+            if (typeof window.clearParticipantSearchInput === 'function') {
+                window.clearParticipantSearchInput();
+            }
+
             btn.classList.add('active');
             const targetPane = document.getElementById(tabId);
             if (targetPane) targetPane.classList.add('active');
@@ -6351,6 +6691,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (tabId === 'tab-registration') {
                 renderRegistrationDashboard();
+            }
+            if (tabId === 'tab-competition-teams') {
+                renderPlayers();
+            }
+            if (tabId === 'tab-teams') {
+                renderTeamRosters();
+            }
+            if (tabId === 'tab-quiz') {
+                renderQuizzes();
             }
             if (tabId === 'tab-prizes') {
                 renderPrizes();
@@ -6371,6 +6720,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.FirebaseSync.fetchEvaluationsFromCloud().then(() => renderEvaluations()).catch(() => {});
                 }
             }
+            renderStats();
             if (sound) sound.playClick();
         });
     });

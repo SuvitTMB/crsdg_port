@@ -693,6 +693,7 @@
             console.log('[FirebaseSync] Fetching players from crsdg_player...');
             const docs = await fetchAllRawDocuments(COLS.PLAYER);
             const list = docs.map(d => firestoreDocToObj(d)).filter(Boolean);
+            console.log(`[FirebaseSync] Fetched ${list.length} players from crsdg_player in Firebase.`);
             if (list.length > 0) {
                 if (window.state && typeof window.state.applyCloudPlayers === 'function') {
                     window.state.applyCloudPlayers(list);
@@ -1114,27 +1115,43 @@
     // ALL TABLES PARALLEL SYNC
     // ========================================================
 
+    let activeFetchAllPromise = null;
+
     async function fetchAllDataFromCloud() {
-        console.log('[FirebaseSync] ☁️ Fetching ALL database tables from Cloud Firestore in parallel...');
-        try {
-            const [members, teamNames, teams, players, quizzes, evaluations, voteSettings, userInvestments, prizes, winners] = await Promise.all([
-                fetchMembersFromCloud(),
-                fetchTeamNamesFromCloud(),
-                fetchTeamsFromCloud(),
-                fetchPlayersFromCloud(),
-                fetchQuizzesFromCloud(),
-                fetchEvaluationsFromCloud(),
-                fetchVoteSettingsFromCloud(),
-                fetchUserInvestmentsFromCloud(),
-                fetchPrizesFromCloud(),
-                fetchWinnersFromCloud()
-            ]);
-            console.log('[FirebaseSync] ✅ All database tables synced from Firebase Cloud Firestore successfully.');
-            return { members, teamNames, teams, players, quizzes, evaluations, voteSettings, userInvestments, prizes, winners };
-        } catch (err) {
-            console.error('[FirebaseSync] Error during fetchAllDataFromCloud:', err);
-            return null;
+        if (activeFetchAllPromise) {
+            return activeFetchAllPromise;
         }
+
+        activeFetchAllPromise = (async () => {
+            console.log('[FirebaseSync] ☁️ Fetching ALL database tables from Cloud Firestore in parallel...');
+            try {
+                const [members, teamNames, teams, players, quizzes, evaluations, voteSettings, userInvestments, prizes, winners] = await Promise.all([
+                    fetchMembersFromCloud(),
+                    fetchTeamNamesFromCloud(),
+                    fetchTeamsFromCloud(),
+                    fetchPlayersFromCloud(),
+                    fetchQuizzesFromCloud(),
+                    fetchEvaluationsFromCloud(),
+                    fetchVoteSettingsFromCloud(),
+                    fetchUserInvestmentsFromCloud(),
+                    fetchPrizesFromCloud(),
+                    fetchWinnersFromCloud()
+                ]);
+                console.log('[FirebaseSync] ✅ All database tables synced from Firebase Cloud Firestore successfully.');
+                const result = { members, teamNames, teams, players, quizzes, evaluations, voteSettings, userInvestments, prizes, winners };
+                if (typeof window !== 'undefined' && window.state && typeof window.state.applyCloudData === 'function') {
+                    window.state.applyCloudData(result);
+                }
+                return result;
+            } catch (err) {
+                console.error('[FirebaseSync] Error during fetchAllDataFromCloud:', err);
+                return null;
+            } finally {
+                activeFetchAllPromise = null;
+            }
+        })();
+
+        return activeFetchAllPromise;
     }
 
     // ========================================================

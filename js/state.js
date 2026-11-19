@@ -1861,11 +1861,13 @@ class StateManager {
         if (settings.vote_budget !== undefined) {
             localStorage.setItem('crsdg_vote_budget', String(settings.vote_budget));
         }
-        // ตรวจสอบการเปิดรับการลงทุนของทีมล่าสุด เพื่อแจ้งเตือน Lightbox ไปยังทุกหน้าจอผ่าน Cloud Realtime
+        // ตรวจสอบการเปิดรับการลงทุนของทีมล่าสุด เพื่อแจ้งเตือน Lightbox ไปยังทุกหน้าจอผ่าน Cloud Realtime (ไม่ยิงซ้ำถ้าเคยแจ้งเตือน timestamp นี้ไปแล้ว)
         if (settings.last_opened_team && typeof settings.last_opened_team === 'object') {
             const opTeam = settings.last_opened_team;
             const now = Date.now();
-            if (opTeam.timestamp && (now - opTeam.timestamp < 60000)) {
+            const lastTs = parseInt(localStorage.getItem('crsdg_last_broadcast_opened_ts') || '0', 10);
+            if (opTeam.timestamp && (now - opTeam.timestamp < 60000) && (opTeam.timestamp > lastTs)) {
+                localStorage.setItem('crsdg_last_broadcast_opened_ts', String(opTeam.timestamp));
                 this.broadcast({
                     type: 'TEAM_INVESTMENT_OPENED',
                     ...opTeam
@@ -2316,6 +2318,7 @@ class StateManager {
                     ...eventPayload
                 });
                 try {
+                    localStorage.setItem('crsdg_last_broadcast_opened_ts', String(eventPayload.timestamp));
                     localStorage.setItem('crsdg_team_investment_opened_event', JSON.stringify(eventPayload));
                 } catch (e) {}
 

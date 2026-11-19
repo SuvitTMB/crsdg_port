@@ -314,6 +314,41 @@ class SoundEffects {
             }, i * 220);
         }
     }
+
+    /**
+     * Pleasant success ascending chime for save, confirm, and reset actions
+     */
+    playSuccess() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            const chords = [
+                { freq: 523.25, time: 0.00, dur: 0.12 }, // C5
+                { freq: 659.25, time: 0.09, dur: 0.12 }, // E5
+                { freq: 783.99, time: 0.18, dur: 0.28 }  // G5
+            ];
+            chords.forEach(({ freq, time, dur }) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + time);
+                gain.gain.setValueAtTime(0.24, now + time);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + time + dur);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + time);
+                osc.stop(now + time + dur);
+            });
+        } catch (e) {
+            console.warn('[Audio] playSuccess error:', e);
+        }
+    }
+
+    playDing() {
+        this.playSuccess();
+    }
 }
 
 // Global audio instance

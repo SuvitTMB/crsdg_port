@@ -239,21 +239,10 @@
       window.stateManager.subscribe((msg) => {
         if (!msg) return;
 
-        // แจ้งเตือนเมื่อแอดมินเปิดโหวตของแต่ละทีม (แสดง Lightbox ฝั่งผู้ใช้งาน)
+        // แจ้งเตือนเมื่อแอดมินหรือหน้า showport เปิดโหวตของแต่ละทีม (แสดง Lightbox ฝั่งผู้ใช้งานเพียง 1 ครั้ง ไม่ซ้ำซ้อน)
         if (msg.type === 'TEAM_INVESTMENT_OPENED') {
           if (typeof window.showTeamInvestOpenedModal === 'function') {
             window.showTeamInvestOpenedModal(msg);
-          }
-        } else if (msg.type === 'TEAM_VOTE_STATUS_UPDATED' && msg.status === 'open') {
-          if (typeof window.showTeamInvestOpenedModal === 'function') {
-            window.showTeamInvestOpenedModal({
-              teamId: msg.teamId,
-              teamName: msg.team ? msg.team.teamName : '',
-              orderNo: msg.team ? msg.team.orderNo : '',
-              teamPhoto: msg.team ? msg.team.teamPhoto : '',
-              membersCount: msg.team && msg.team.members ? msg.team.members.length : 0,
-              timestamp: Date.now()
-            });
           }
         }
 
@@ -366,7 +355,10 @@
       if (appFixedBottomBar) appFixedBottomBar.style.display = 'none';
       if (appScrollContainer) appScrollContainer.classList.remove('has-fixed-bars');
       document.body.classList.remove('portal-mode-white');
-      if (mobileDeviceFrame) mobileDeviceFrame.classList.remove('portal-mode-white');
+      if (mobileDeviceFrame) {
+        mobileDeviceFrame.classList.remove('portal-mode-white');
+        mobileDeviceFrame.classList.remove('tab-home-active');
+      }
     }
 
     // Scroll to top
@@ -382,6 +374,16 @@
 
     // Expose switchHomeTab globally
     window.switchHomeTab = switchHomeTab;
+
+    // Toggle background.jpg on Home tab
+    const mobileDeviceFrame = document.querySelector('.mobile-device-frame');
+    if (mobileDeviceFrame) {
+      if (tabName === 'home') {
+        mobileDeviceFrame.classList.add('tab-home-active');
+      } else {
+        mobileDeviceFrame.classList.remove('tab-home-active');
+      }
+    }
 
     // Update bottom nav button active states
     document.querySelectorAll('.bottom-nav-item').forEach(btn => {
@@ -1203,18 +1205,32 @@
   // ========================================================
   let lastAnnouncedOpenedTeamId = null;
   let lastAnnouncedTimestamp = 0;
+  let lastAnnouncedEventTs = 0;
 
   window.showTeamInvestOpenedModal = function (team) {
     if (!team) return;
     const modal = document.getElementById('teamInvestOpenedModal');
     if (!modal) return;
 
-    // ป้องกันการแจ้งเตือนซ้ำซ้อนภายใน 2 วินาทีสำหรับทีมเดียวกัน
-    const now = Date.now();
-    if (lastAnnouncedOpenedTeamId === team.teamId && (now - lastAnnouncedTimestamp < 2000)) {
+    // 1. ถ้า Modal กำลังเปิดแสดงผลอยู่บนหน้าจอแล้ว ไม่ต้องสั่งเปิดซ้ำ
+    if (modal.classList.contains('is-active') || modal.style.display === 'flex') {
       return;
     }
-    lastAnnouncedOpenedTeamId = team.teamId;
+
+    const teamId = String(team.teamId || team.id || '').trim();
+    const eventTs = parseInt(team.timestamp, 10) || 0;
+    const now = Date.now();
+
+    // 2. ป้องกันการเด้งซ้ำซ้อนจาก Cloud sync, Broadcast หรือ storage event:
+    // - ถ้าเป็น event เดียวกัน (timestamp เดียวกัน)
+    // - หรือถ้าเคยเปิดแจ้งเตือนทีมเดียวกันนี้ไปแล้วไม่เกิน 30 วินาที
+    if ((eventTs && eventTs === lastAnnouncedEventTs) ||
+        (lastAnnouncedOpenedTeamId === teamId && (now - lastAnnouncedTimestamp < 30000))) {
+      return;
+    }
+
+    lastAnnouncedEventTs = eventTs;
+    lastAnnouncedOpenedTeamId = teamId;
     lastAnnouncedTimestamp = now;
 
     const orderEl = document.getElementById('investOpenedTeamOrder');
