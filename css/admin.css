@@ -1894,11 +1894,20 @@ b {
     white-space: nowrap;
 }
 
+.col-th-member,
+.col-td-member {
+    width: 6.5%;
+    min-width: 60px;
+    max-width: 85px;
+    text-align: center;
+    white-space: nowrap;
+}
+
 .col-th-team,
 .col-td-team {
-    width: 10%;
-    min-width: 85px;
-    max-width: 120px;
+    width: 9.5%;
+    min-width: 80px;
+    max-width: 115px;
     white-space: nowrap;
 }
 
