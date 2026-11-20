@@ -188,6 +188,16 @@
            VIEW: PHOTO UPLOAD & ZOOM/SCALE VIEW (ตรวจสอบและอัปโหลดรูปภาพ ย่อ/ขยาย)
            ======================================================== -->
       <section id="photoUploadView" class="photo-upload-view" style="display: none;">
+        <!-- Top Back to Home Button -->
+        <div class="photo-top-bar">
+          <button type="button" class="btn-back-home-photo" id="btnBackToHomeFromPhoto">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span>กลับหน้าแรก</span>
+          </button>
+        </div>
+
         <!-- Header Banner -->
         <div class="reward-header photo-header">
           <div class="header-image-wrapper">
@@ -211,7 +221,7 @@
 
           <!-- Step 1: File selection Dropzone (shown when no photo loaded into canvas yet) -->
           <div class="photo-dropzone-box" id="photoDropzoneBox">
-            <input type="file" id="memberPhotoFileInput" accept="image/*" class="sr-only" capture="user">
+            <input type="file" id="memberPhotoFileInput" accept="image/*" class="sr-only">
             <label for="memberPhotoFileInput" class="photo-dropzone-label">
               <div class="dropzone-icon-circle">
                 <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2">
@@ -219,17 +229,22 @@
                   <circle cx="12" cy="13" r="4"></circle>
                 </svg>
               </div>
-              <span class="dropzone-title">แตะเพื่อถ่ายรูป หรือเลือกรูปภาพ</span>
-              <span class="dropzone-sub">รองรับไฟล์ JPG, PNG, WebP (จากกล้องหรือคลังภาพ)</span>
+              <span class="dropzone-title">แตะเพื่อเลือกรูปภาพจากเครื่อง</span>
+              <span class="dropzone-sub">รองรับไฟล์ JPG, PNG, WebP (จากคลังภาพหรือกล้อง)</span>
               <span class="btn-choose-file">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                   <polyline points="17 8 12 3 7 8"></polyline>
                   <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
-                📸 เลือกรูปภาพ
+                🖼️ เลือกรูปภาพจากเครื่อง
               </span>
             </label>
+            <div style="text-align: center; margin-top: 14px;">
+              <button type="button" class="btn-cancel-upload-home" id="btnCancelUploadHome">
+                ◀ กลับหน้าแรก
+              </button>
+            </div>
           </div>
 
           <!-- Step 2: Interactive Cropper & Scale Workspace (shown after photo selected) -->
@@ -284,10 +299,10 @@
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
-                <span>💾 บันทึกรูปภาพและดำเนินการต่อ</span>
+                <span>💾 บันทึกรูปภาพ</span>
               </button>
-              <button type="button" class="btn-skip-photo" id="btnSkipPhoto" style="display: none;">
-                ข้ามขั้นตอนนี้ไปก่อน
+              <button type="button" class="btn-skip-photo" id="btnSkipPhoto" style="display: block;">
+                ◀ กลับหน้าแรก (ไม่บันทึกรูป)
               </button>
             </div>
           </div>
@@ -315,7 +330,7 @@
         <section id="tabPaneHome" class="home-tab-pane is-active">
           <!-- Hero Brand Logo (แทนกล่องสวัสดี) -->
           <div class="home-brand-logo-wrap">
-            <img src="./images/logo@.png" alt="CRSDG AI Showcase & New Year Celebration" class="home-hero-logo">
+            <img src="./images/logo@.png" alt="CRSDG AI Showcase & New Year Celebration" class="header-logo animate-float">
           </div>
 
           <!-- Quick Navigation 4 Boxes (Line-Art SVG Icons) -->
@@ -942,16 +957,12 @@
     </div>
 
     <!-- User System Alert Lightbox Modal -->
-    <div class="modal-backdrop" id="userAlertModal" role="dialog" aria-modal="true" style="display: none; z-index: 100050;">
-      <div class="modal-card" style="max-width: 360px; width: 90%; text-align: center; padding: 24px 20px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.4);">
-        <div class="modal-badge-wrapper" style="margin-bottom: 12px; display: flex; justify-content: center;">
-          <div class="modal-badge" id="userAlertBadge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1.5px solid rgba(245, 158, 11, 0.4); font-size: 1.8rem; width: 54px; height: 54px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;">
-            ⚠️
-          </div>
-        </div>
-        <h3 id="userAlertTitle" style="font-size: 1.15rem; font-weight: 700; color: #1e293b; margin: 0 0 10px;">แจ้งเตือนระบบ</h3>
-        <p id="userAlertMessage" style="font-size: 0.95rem; color: #475569; line-height: 1.6; white-space: pre-line; margin: 0 0 20px;"></p>
-        <button type="button" class="btn-primary" id="btnConfirmUserAlert" style="width: 100%; padding: 12px; font-size: 1rem; font-weight: 700; border-radius: 12px; cursor: pointer;">
+    <div class="modal-backdrop user-alert-backdrop" id="userAlertModal" role="dialog" aria-modal="true" style="display: none;">
+      <div class="alert-modal-card">
+        <div class="alert-badge-wrap" id="userAlertBadge">⚠️</div>
+        <h3 id="userAlertTitle" class="alert-modal-title">แจ้งเตือนระบบ</h3>
+        <p id="userAlertMessage" class="alert-modal-message"></p>
+        <button type="button" class="alert-modal-btn" id="btnConfirmUserAlert">
           ตกลง
         </button>
       </div>

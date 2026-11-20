@@ -1061,6 +1061,14 @@
                         <span>🎲</span>
                         <span>สุ่มรางวัล</span>
                     </button>
+
+                    <!-- ปุ่ม Reset โหวต -->
+                    <button type="button" class="btn-danger btn-reset-game-votes" id="btnOpenResetGameVotesModal"
+                        title="รีเซ็ตผลการโหวตทายผลทีมชนะของพนักงานทั้งหมด"
+                        style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border: 1px solid #f87171; font-weight: 700; padding: 6px 16px; border-radius: 8px; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: #ffffff; font-size: 0.88rem;">
+                        <span>🔄</span>
+                        <span>Reset โหวต</span>
+                    </button>
                 </div>
             </div>
 
@@ -2463,6 +2471,56 @@
                 <button type="button" class="btn-danger" id="confirmResetPlayerVotesBtn" disabled
                     style="opacity: 0.45; cursor: not-allowed; transition: all 0.2s ease;">
                     🔄 ยืนยันการ Reset การโหวตเป็น 0
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX: RESET GAME VOTES CONFIRMATION MODAL (crsdg_vote / chosenTeam)
+         ======================================================== -->
+    <div class="modal-overlay" id="confirmResetGameVotesModal" style="display: none;">
+        <div class="admin-card modal-card-box warning-box" style="max-width: 520px; width: 92%;">
+            <div class="admin-card-header">
+                <div class="lightbox-header-title">
+                    <span class="lightbox-icon" style="color: #ef4444;">🔄</span>
+                    <h3 class="admin-card-title" style="color: #f87171;">ยืนยันการ Reset ผลการโหวตทั้งหมด</h3>
+                </div>
+                <button type="button" class="btn-modal-close" id="closeResetGameVotesModalBtn">✕</button>
+            </div>
+            <div style="padding: 10px 0 16px;">
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 12px;">
+                    ข้อมูลสรุปการโหวตทายผลทีมชนะในระบบปัจจุบัน:
+                </p>
+                <div class="delete-warning-banner"
+                    style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 14px;">
+                    <div style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 4px;">จำนวนผู้ร่วมโหวตในปัจจุบัน</div>
+                    <div class="warning-count-highlight" id="resetGameVotesCountText"
+                        style="font-size: 1.8rem; font-weight: 800; color: #f87171;">
+                        0 ท่าน
+                    </div>
+                    <div id="resetGameVotesTeamBreakdown"
+                        style="margin-top: 10px; font-size: 0.85rem; color: #e2e8f0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
+                    </div>
+                </div>
+
+                <div class="warning-banner"
+                    style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 10px; padding: 12px; font-size: 0.84rem; color: #fde68a; line-height: 1.55;">
+                    ⚠️ เมื่อยืนยันการลบผลโหวตทั้งหมด:
+                    <ul style="margin: 6px 0 0 18px; padding: 0;">
+                        <li>ข้อมูลการโหวตทายผลทีมชนะ (<code>chosenTeam</code>) ของพนักงานทุกคนจะถูกล้างออกเป็นค่าว่าง</li>
+                        <li>ข้อมูลประวัติผู้ได้รับรางวัลจากการสุ่มทีมชนะจะถูกล้างทั้งหมด</li>
+                        <li>ข้อมูลพนักงาน รหัส ชื่อ สังกัด และสถานะการลงทะเบียนจะ<strong>ไม่ถูกลบ</strong></li>
+                        <li>ระบบจะซิงค์การลบข้อมูลไปยัง Firebase Firestore และอัปเดตหน้าจอแบบ Real-time ทันที</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-actions-right"
+                style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px;">
+                <button type="button" class="btn-secondary" id="cancelResetGameVotesModalBtn">ยกเลิก</button>
+                <button type="button" class="btn-danger" id="confirmResetGameVotesBtn"
+                    style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border: 1px solid #f87171; color: #fff; font-weight: 700; padding: 9px 20px; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);">
+                    🗑️ ยืนยันการลบผลโหวตทั้งหมด
                 </button>
             </div>
         </div>
