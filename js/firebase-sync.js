@@ -582,6 +582,76 @@
         }
     }
 
+    async function resetAllMemberVotesInCloud() {
+        isBatchWriting = true;
+        try {
+            console.log('[FirebaseSync] Resetting all member chosenTeam/vote in crsdg_member to null...');
+            if (db) {
+                const snapshot = await db.collection(COLS.MEMBERS).get();
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    let count = 0;
+                    snapshot.forEach(doc => {
+                        const d = doc.data() || {};
+                        if (d.chosenTeam || d.vote) {
+                            batch.update(doc.ref, {
+                                chosenTeam: null,
+                                vote: null,
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            count++;
+                        }
+                    });
+                    if (count > 0) {
+                        await batch.commit();
+                        console.log(`[FirebaseSync] SDK successfully reset votes of ${count} members in crsdg_member`);
+                    }
+                }
+                try {
+                    await db.collection('crsdg_vote').doc('settings').set({
+                        reset_game_votes_timestamp: Date.now(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                } catch (_) {}
+                return true;
+            }
+
+            const docs = await fetchAllRawDocuments(COLS.MEMBERS);
+            if (!docs || !docs.length) return true;
+
+            const votedDocs = docs.filter(d => {
+                const f = d.fields || {};
+                return (f.chosenTeam && f.chosenTeam.stringValue) || (f.vote && f.vote.stringValue);
+            });
+
+            if (!votedDocs.length) return true;
+
+            const updateWrites = votedDocs.map(doc => {
+                const f = doc.fields || {};
+                return {
+                    update: {
+                        name: doc.name,
+                        fields: {
+                            ...f,
+                            chosenTeam: { nullValue: null },
+                            vote: { nullValue: null },
+                            updatedAt: { stringValue: new Date().toISOString() }
+                        }
+                    }
+                };
+            });
+
+            await commitBatchedWrites(updateWrites);
+            console.log(`[FirebaseSync] Successfully reset votes of ${votedDocs.length} members in crsdg_member`);
+            return true;
+        } catch (err) {
+            console.error('[FirebaseSync] Failed to reset member votes in cloud:', err);
+            return false;
+        } finally {
+            isBatchWriting = false;
+        }
+    }
+
     async function resetAllMemberWinnerStatusesInCloud() {
         isBatchWriting = true;
         try {
@@ -1496,6 +1566,7 @@
         clearAllMembersFromCloud: clearAllMembersFromCloud,
         resetAllMembersRegistrationInCloud: resetAllMembersRegistrationInCloud,
         resetAllMemberWinnerStatusesInCloud: resetAllMemberWinnerStatusesInCloud,
+        resetAllMemberVotesInCloud: resetAllMemberVotesInCloud,
         updateMemberRegistration: updateMemberRegistration,
         // Teams 4v4
         fetchTeamNamesFromCloud: fetchTeamNamesFromCloud,

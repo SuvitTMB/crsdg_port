@@ -1718,6 +1718,20 @@ class StateManager {
         return { success: true, message: `รีเซ็ตสถานะการลงทะเบียนของพนักงานทั้งหมด ${members.length} ท่านเรียบร้อยแล้ว` };
     }
 
+    resetAllMemberVotes() {
+        const members = this.getMembers().map(m => ({
+            ...m,
+            chosenTeam: null,
+            vote: null
+        }));
+        this.saveMembers(members);
+        try {
+            localStorage.removeItem('crsdg_vote_drawn_winners');
+        } catch (e) {}
+        this.broadcast({ type: 'ALL_MEMBER_VOTES_RESET' });
+        return { success: true, count: members.length };
+    }
+
     // ========================================================
     // CLOUD INTEGRATION (crsdg_member Sync from Firebase)
     // ========================================================

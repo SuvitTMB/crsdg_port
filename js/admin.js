@@ -1372,6 +1372,108 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Reset Game Votes Modal Handlers
+        const btnOpenResetGameVotesModal = document.getElementById('btnOpenResetGameVotesModal');
+        const confirmResetGameVotesModal = document.getElementById('confirmResetGameVotesModal');
+        const closeResetGameVotesModalBtn = document.getElementById('closeResetGameVotesModalBtn');
+        const cancelResetGameVotesModalBtn = document.getElementById('cancelResetGameVotesModalBtn');
+        const confirmResetGameVotesBtn = document.getElementById('confirmResetGameVotesBtn');
+        const resetGameVotesCountText = document.getElementById('resetGameVotesCountText');
+        const resetGameVotesTeamBreakdown = document.getElementById('resetGameVotesTeamBreakdown');
+
+        if (btnOpenResetGameVotesModal && confirmResetGameVotesModal) {
+            btnOpenResetGameVotesModal.addEventListener('click', () => {
+                const members = (typeof state.getMembers === 'function') ? state.getMembers() : [];
+                const votedMembers = members.filter(m => m.chosenTeam && String(m.chosenTeam).trim());
+                const totalVotes = votedMembers.length;
+
+                // Team breakdown counts
+                const teamCounts = {};
+                votedMembers.forEach(m => {
+                    const t = String(m.chosenTeam).trim();
+                    teamCounts[t] = (teamCounts[t] || 0) + 1;
+                });
+
+                if (resetGameVotesCountText) {
+                    resetGameVotesCountText.textContent = `${totalVotes.toLocaleString()} ท่าน`;
+                }
+
+                if (resetGameVotesTeamBreakdown) {
+                    const teamKeys = Object.keys(teamCounts);
+                    if (teamKeys.length > 0) {
+                        resetGameVotesTeamBreakdown.innerHTML = teamKeys.map(t => `
+                            <span style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(239, 68, 68, 0.4); padding: 4px 10px; border-radius: 6px;">
+                                <strong>${t}</strong>: ${teamCounts[t]} คน
+                            </span>
+                        `).join('');
+                    } else {
+                        resetGameVotesTeamBreakdown.innerHTML = `<span style="color: #94a3b8;">ยังไม่มีข้อมูลการโหวตในระบบ</span>`;
+                    }
+                }
+
+                confirmResetGameVotesModal.style.display = 'flex';
+                if (sound && typeof sound.playClick === 'function') sound.playClick();
+            });
+
+            const hideResetGameVotesModal = () => {
+                confirmResetGameVotesModal.style.display = 'none';
+                if (sound && typeof sound.playClick === 'function') sound.playClick();
+            };
+
+            if (closeResetGameVotesModalBtn) closeResetGameVotesModalBtn.addEventListener('click', hideResetGameVotesModal);
+            if (cancelResetGameVotesModalBtn) cancelResetGameVotesModalBtn.addEventListener('click', hideResetGameVotesModal);
+
+            confirmResetGameVotesModal.addEventListener('click', (e) => {
+                if (e.target === confirmResetGameVotesModal) hideResetGameVotesModal();
+            });
+
+            if (confirmResetGameVotesBtn) {
+                confirmResetGameVotesBtn.addEventListener('click', async () => {
+                    confirmResetGameVotesBtn.disabled = true;
+                    confirmResetGameVotesBtn.textContent = '⏳ กำลังลบผลโหวต...';
+
+                    // 1. Reset in local State
+                    if (typeof state.resetAllMemberVotes === 'function') {
+                        state.resetAllMemberVotes();
+                    } else {
+                        const members = state.getMembers().map(m => ({ ...m, chosenTeam: null, vote: null }));
+                        state.saveMembers(members);
+                    }
+
+                    // 2. Clear local drawn winners
+                    try {
+                        localStorage.removeItem('crsdg_vote_drawn_winners');
+                        voteDrawWinnersMap = {};
+                    } catch (e) {}
+
+                    // 3. Reset in Cloud Firestore
+                    if (window.FirebaseSync && typeof window.FirebaseSync.resetAllMemberVotesInCloud === 'function') {
+                        try {
+                            await window.FirebaseSync.resetAllMemberVotesInCloud();
+                        } catch (cloudErr) {
+                            console.warn('[Admin] Reset votes in cloud error:', cloudErr);
+                        }
+                    }
+
+                    confirmResetGameVotesBtn.disabled = false;
+                    confirmResetGameVotesBtn.textContent = '🗑️ ยืนยันการลบผลโหวตทั้งหมด';
+                    hideResetGameVotesModal();
+
+                    // Re-render dashboards
+                    renderVoteDashboard();
+                    renderParticipants();
+                    if (typeof renderTeamRosters === 'function') renderTeamRosters();
+
+                    if (sound && typeof sound.playSuccess === 'function') {
+                        sound.playSuccess();
+                    } else if (sound && typeof sound.playClick === 'function') {
+                        sound.playClick();
+                    }
+                    showToast('ลบผลการโหวตทายผลทีมชนะทั้งหมดเรียบร้อยแล้ว 🔄');
+                });
+            }
+        }
+
         // Initialize Vote Winning Team Lucky Draw Modal (90% Width)
         initVoteDrawModal();
     }

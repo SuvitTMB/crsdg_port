@@ -170,6 +170,8 @@
   const btnChangePhoto = document.getElementById('btnChangePhoto');
   const btnSavePhoto = document.getElementById('btnSavePhoto');
   const btnSkipPhoto = document.getElementById('btnSkipPhoto');
+  const btnBackToHomeFromPhoto = document.getElementById('btnBackToHomeFromPhoto');
+  const btnCancelUploadHome = document.getElementById('btnCancelUploadHome');
 
   // Photo View Header
   const uploadAvatarInitial = document.getElementById('uploadAvatarInitial');
@@ -1099,7 +1101,7 @@
 
     const res = sm.setUserInvestment(empId, teamId, newAmt);
     if (!res.success) {
-      alert(res.message || 'ไม่สามารถปรับเปลี่ยนเงินลงทุนได้');
+      showUserAlert(res.message || 'ไม่สามารถปรับเปลี่ยนเงินลงทุนได้', 'แจ้งเตือนการลงทุน', '⚠️');
       return;
     }
 
@@ -1115,7 +1117,7 @@
 
     const res = sm.setUserInvestment(empId, teamId, val);
     if (!res.success) {
-      alert(res.message || 'ไม่สามารถปรับเปลี่ยนเงินลงทุนได้');
+      showUserAlert(res.message || 'ไม่สามารถปรับเปลี่ยนเงินลงทุนได้', 'แจ้งเตือนการลงทุน', '⚠️');
       renderVoteTab(currentEmployee);
       return;
     }
@@ -1134,14 +1136,14 @@
     const remaining = Math.max(0, maxBudget - totalInvested);
 
     if (remaining <= 0) {
-      alert('คุณใช้งบประมาณเต็มจำนวน ' + maxBudget.toLocaleString() + ' บาทแล้ว');
+      showUserAlert('คุณใช้งบประมาณเต็มจำนวน ' + maxBudget.toLocaleString() + ' บาทแล้ว', 'งบประมาณเต็มแล้ว', '💡');
       return;
     }
 
     const newTarget = curAmt + remaining;
     const res = sm.setUserInvestment(empId, teamId, newTarget);
     if (!res.success) {
-      alert(res.message || 'ไม่สามารถปรับเปลี่ยนเงินลงทุนได้');
+      showUserAlert(res.message || 'ไม่สามารถปรับเปลี่ยนเงินลงทุนได้', 'แจ้งเตือนการลงทุน', '⚠️');
       return;
     }
 
@@ -1522,20 +1524,36 @@
     if (quickPillProfile) quickPillProfile.addEventListener('click', () => switchHomeTab('profile'));
 
     // Tab 5 Profile actions (แก้ไขรูปภาพ / ออกจากระบบ)
+    const getActiveProfileEmp = () => {
+      if (currentEmployee) return currentEmployee;
+      const cachedEmpId = localStorage.getItem('crsdg_active_user_emp_id');
+      if (cachedEmpId && window.stateManager) {
+        const matched = window.stateManager.getMembers().find(m => String(m.EmployeeID || m.id).trim().toLowerCase() === String(cachedEmpId).trim().toLowerCase());
+        if (matched) {
+          currentEmployee = matched;
+          return matched;
+        }
+      }
+      return null;
+    };
+
     if (profileAvatarCircle) {
       profileAvatarCircle.addEventListener('click', () => {
-        if (currentEmployee) openPhotoUploadView(currentEmployee);
+        const emp = getActiveProfileEmp();
+        if (emp) openPhotoUploadView(emp);
       });
     }
     if (btnEditProfilePhoto) {
       btnEditProfilePhoto.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (currentEmployee) openPhotoUploadView(currentEmployee);
+        const emp = getActiveProfileEmp();
+        if (emp) openPhotoUploadView(emp);
       });
     }
     if (btnChangePhotoAction) {
       btnChangePhotoAction.addEventListener('click', () => {
-        if (currentEmployee) openPhotoUploadView(currentEmployee);
+        const emp = getActiveProfileEmp();
+        if (emp) openPhotoUploadView(emp);
       });
     }
     if (btnLogoutProfile) {
@@ -1668,8 +1686,12 @@
       return;
     }
 
-    // 1. Fetch photo strictly from the designated Firebase Storage location: Member/<empId>
-    if (window.FirebaseStorageManager && typeof window.FirebaseStorageManager.getMemberPhotoUrl === 'function') {
+    // Direct transition to home portal immediately without checking photo
+    showView('home');
+    triggerConfetti();
+
+    // Background asynchronous check for employee photo in Firebase Storage
+    if (!employee.photo && window.FirebaseStorageManager && typeof window.FirebaseStorageManager.getMemberPhotoUrl === 'function') {
       try {
         const fbUrl = await window.FirebaseStorageManager.getMemberPhotoUrl(empId);
         if (fbUrl) {
@@ -1678,25 +1700,13 @@
           if (window.stateManager) {
             window.stateManager.updateMember(empId, { photo: fbUrl, photoPath: employee.photoPath });
           }
-          showView('home');
-          triggerConfetti();
-          return;
+          renderTopBar(employee);
+          renderProfileTab(employee);
         }
       } catch (err) {
         console.warn('[CheckPhoto] Firebase lookup notice:', err);
       }
     }
-
-    // 2. If employee record already contains a valid Firebase download URL
-    const photo = employee.photo || '';
-    if (photo && (photo.startsWith('https://firebasestorage.googleapis.com') || photo.startsWith('data:image/'))) {
-      showView('home');
-      triggerConfetti();
-      return;
-    }
-
-    // 3. No photo found at designated location: prompt user to upload & crop photo (max 350x350)
-    openPhotoUploadView(employee);
   }
 
   function openPhotoUploadView(employee) {
@@ -1721,6 +1731,20 @@
   // 13. INTERACTIVE CROPPER & ZOOM/SCALE
   // ========================================================
   function bindCropperEvents() {
+    const returnToHomeFromPhoto = () => {
+      activeTab = 'home';
+      showView('home');
+      switchHomeTab('home');
+    };
+
+    if (btnBackToHomeFromPhoto) {
+      btnBackToHomeFromPhoto.addEventListener('click', returnToHomeFromPhoto);
+    }
+
+    if (btnCancelUploadHome) {
+      btnCancelUploadHome.addEventListener('click', returnToHomeFromPhoto);
+    }
+
     if (memberPhotoFileInput) {
       memberPhotoFileInput.addEventListener('change', (e) => {
         const file = e.target.files && e.target.files[0];
@@ -1774,9 +1798,7 @@
     }
 
     if (btnSkipPhoto) {
-      btnSkipPhoto.addEventListener('click', () => {
-        if (currentEmployee) showView('home');
-      });
+      btnSkipPhoto.addEventListener('click', returnToHomeFromPhoto);
     }
 
     // Touch & Mouse Drag on Canvas
@@ -1862,7 +1884,7 @@
 
   function loadCropperFile(file) {
     if (!file.type.startsWith('image/')) {
-      alert('กรุณาเลือกไฟล์รูปภาพเท่านั้น');
+      showUserAlert('กรุณาเลือกไฟล์รูปภาพเท่านั้น (JPG, PNG, WebP)', 'รูปแบบไฟล์ไม่ถูกต้อง', '⚠️');
       return;
     }
 
@@ -1912,13 +1934,13 @@
 
   async function saveCroppedPhoto() {
     if (!cropperImage || !currentEmployee) {
-      alert('ไม่พบรูปภาพสำหรับการบันทึก');
+      showUserAlert('ไม่พบรูปภาพสำหรับการบันทึก', 'แจ้งเตือน', '⚠️');
       return;
     }
 
     const empId = String(currentEmployee.EmployeeID || currentEmployee.id || '').trim();
     if (!empId || empId.toLowerCase() === 'null' || empId.toLowerCase() === 'undefined') {
-      alert('ไม่พบรหัสพนักงานสำหรับการจัดเก็บรูปภาพ');
+      showUserAlert('ไม่พบรหัสพนักงานสำหรับการจัดเก็บรูปภาพ', 'แจ้งเตือน', '⚠️');
       return;
     }
 
@@ -1996,7 +2018,7 @@
 
     } catch (err) {
       console.error('[SaveCroppedPhoto] Error:', err);
-      alert('เกิดข้อผิดพลาดในการบันทึกรูปภาพ กรุณาลองใหม่อีกครั้ง');
+      showUserAlert('เกิดข้อผิดพลาดในการบันทึกรูปภาพ กรุณาลองใหม่อีกครั้ง', 'บันทึกไม่สำเร็จ', '❌');
     } finally {
       if (btnSavePhoto) {
         btnSavePhoto.classList.remove('is-loading');
@@ -2201,7 +2223,7 @@
     const sm = window.stateManager;
     const isGameVoteOpen = sm && typeof sm.isGameVoteOpen === 'function' ? sm.isGameVoteOpen() : true;
     if (!isGameVoteOpen) {
-      alert('🔒 ขณะนี้ระบบปิดรับโหวตแล้ว ไม่สามารถโหวตหรือแก้ไขการโหวตได้');
+      showUserAlert('🔒 ขณะนี้ระบบปิดรับโหวตแล้ว ไม่สามารถโหวตหรือแก้ไขการโหวตได้', 'ปิดรับโหวตแล้ว', '🔒');
       return;
     }
 
@@ -2215,7 +2237,7 @@
     }
 
     if (!emp) {
-      alert('กรุณาลงทะเบียนหรือเข้าสู่ระบบก่อนทำการโหวต');
+      showUserAlert('กรุณาลงทะเบียนหรือเข้าสู่ระบบก่อนทำการโหวต', 'แจ้งเตือน', '⚠️');
       return;
     }
 
@@ -2229,7 +2251,7 @@
     if (sm && typeof sm.setMemberChosenTeam === 'function') {
       const res = sm.setMemberChosenTeam(empId, teamName);
       if (!res.success) {
-        alert(res.message || 'ไม่สามารถทำการโหวตได้');
+        showUserAlert(res.message || 'ไม่สามารถทำการโหวตได้', 'แจ้งเตือน', '⚠️');
         return;
       }
       if (window.FirebaseSync && typeof window.FirebaseSync.updateMemberRegistration === 'function') {
@@ -2281,7 +2303,7 @@
       ? window.stateManager.isEvalOpen()
       : (localStorage.getItem('crsdg_eval_open') !== 'false');
     if (!isEvalOpen) {
-      alert('ขณะนี้ระบบปิดรับแบบประเมินผลกิจกรรมแล้ว');
+      showUserAlert('ขณะนี้ระบบปิดรับแบบประเมินผลกิจกรรมแล้ว', 'ปิดรับแบบประเมิน', '🔒');
       return;
     }
 
@@ -2477,7 +2499,7 @@
     const hiddenScore = document.getElementById('evalScoreOverall');
     const scoreVal = hiddenScore && hiddenScore.value ? parseInt(hiddenScore.value, 10) : 0;
     if (!scoreVal || scoreVal < 1) {
-      alert('กรุณาแตะเพื่อให้คะแนนดาวความพึงพอใจในภาพรวมของกิจกรรม (ข้อ 1)');
+      showUserAlert('กรุณาแตะเพื่อให้คะแนนดาวความพึงพอใจในภาพรวมของกิจกรรม (ข้อ 1)', 'ประเมินความพึงพอใจ', '⭐');
       const starContainer = document.getElementById('evalStarContainer');
       if (starContainer) starContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -2501,7 +2523,7 @@
     };
 
     if (!ratings.pitch || !ratings.game || !ratings.food || !ratings.app) {
-      alert('กรุณาเลือกประเมินความพึงพอใจในกิจกรรมย่อยให้ครบทั้ง 4 ด้าน (ข้อ 2)');
+      showUserAlert('กรุณาเลือกประเมินความพึงพอใจในกิจกรรมย่อยให้ครบทั้ง 4 ด้าน (ข้อ 2)', 'ประเมินความพึงพอใจ', '📝');
       const subGroup = document.querySelector('.eval-sub-questions-list');
       if (subGroup) subGroup.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
