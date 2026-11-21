@@ -1019,3 +1019,545 @@
     border-color: rgba(239, 68, 68, 0.5);
     box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(239, 68, 68, 0.3);
 }
+
+/* ========================================================
+   ANNOUNCE RESULT BUTTON (ปุ่มประกาศผล แถว CRSDG AI Showcase)
+   ======================================================== */
+.btn-announce-result {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #f59e0b 0%, #ea580c 50%, #dc2626 100%);
+    border: 1.5px solid #fde047;
+    color: #ffffff;
+    font-size: 0.92rem;
+    font-weight: 700;
+    font-family: 'Kanit', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.45), 0 0 12px rgba(251, 191, 36, 0.35);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    animation: announcePulse 2.4s infinite;
+}
+
+@keyframes announcePulse {
+    0%, 100% {
+        box-shadow: 0 4px 16px rgba(245, 158, 11, 0.45), 0 0 10px rgba(251, 191, 36, 0.3);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 6px 24px rgba(245, 158, 11, 0.75), 0 0 20px rgba(251, 191, 36, 0.6);
+        transform: scale(1.04);
+    }
+}
+
+.btn-announce-result:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #f97316 50%, #ef4444 100%);
+    border-color: #ffffff;
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 28px rgba(245, 158, 11, 0.8), 0 0 24px rgba(253, 224, 71, 0.7);
+}
+
+.btn-announce-result:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.btn-announce-icon {
+    font-size: 1.15rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+/* ========================================================
+   LIGHTBOX MODAL: ANNOUNCE RESULT (ขนาดกว้าง 90% สูง 90%)
+   ======================================================== */
+.announce-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(3, 7, 18, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2vh 2vw;
+    box-sizing: border-box;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.announce-modal-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.announce-modal-card {
+    width: 90vw;
+    height: 90vh;
+    max-width: 90vw;
+    max-height: 90vh;
+    background: linear-gradient(180deg, #0d172e 0%, #070d1e 100%);
+    border: 1.5px solid rgba(245, 158, 11, 0.45);
+    border-radius: 24px;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 50px rgba(245, 158, 11, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    font-family: 'Kanit', sans-serif;
+    transform: scale(0.95);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* บังคับให้ตัวอักษรทั้งหมดใน Lightbox ใช้ font-weight ปกติ 400 และกรณีตัวหนาให้จำกัดไว้ที่ font-weight: 500 */
+.announce-modal-card * {
+    font-weight: 400;
+}
+
+.announce-modal-card strong,
+.announce-modal-card b,
+.announce-modal-card h1,
+.announce-modal-card h2,
+.announce-modal-card h3,
+.announce-modal-card .font-bold,
+.announce-modal-card .font-semibold,
+.announce-modal-title,
+.announce-closed-badge,
+.announce-kpi-val,
+.announce-group-box-title,
+.announce-group-count-pill,
+.announce-group-item-name,
+.announce-group-item-amt,
+.announce-chart-title-tag,
+.announce-line-legend-tag {
+    font-weight: 500 !important;
+}
+
+.announce-modal-backdrop.show .announce-modal-card {
+    transform: scale(1);
+}
+
+/* Header */
+.announce-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 24px;
+    background: rgba(15, 23, 42, 0.85);
+    border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+    flex-shrink: 0;
+}
+
+.announce-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.announce-trophy-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45);
+    flex-shrink: 0;
+}
+
+.announce-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.announce-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.announce-modal-title {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 500 !important;
+    color: #ffffff;
+    background: linear-gradient(135deg, #ffffff 40%, #fde047 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.01em;
+}
+
+.announce-closed-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    color: #fca5a5;
+    font-size: 0.78rem;
+    font-weight: 500 !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+}
+
+.announce-modal-sub {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.btn-close-announce {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+    font-size: 1.15rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.btn-close-announce:hover {
+    background: rgba(239, 68, 68, 0.35);
+    border-color: #ef4444;
+    color: #ffffff;
+    transform: rotate(90deg) scale(1.1);
+}
+
+/* ========================================================
+   ROW 1: กล่องสรุปผลด้านบน 5 กล่อง (KPI Summary Grid)
+   จำนวนนักลงทุน | ผู้ลงทุน (ไม่นับซ้ำ) | เงินทุนทั้งหมด | เงินที่ลงทุน | สัดส่วนการลงทุน
+   ======================================================== */
+.announce-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    padding: 12px 24px 0;
+    flex-shrink: 0;
+}
+
+.announce-kpi-card {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    backdrop-filter: blur(8px);
+}
+
+.announce-kpi-card:hover {
+    border-color: rgba(245, 158, 11, 0.4);
+    transform: translateY(-2px);
+}
+
+.announce-kpi-card.card-kpi-blue { border-left: 3.5px solid #38bdf8; }
+.announce-kpi-card.card-kpi-purple { border-left: 3.5px solid #a855f7; }
+.announce-kpi-card.card-kpi-gold { border-left: 3.5px solid #fbbf24; }
+.announce-kpi-card.card-kpi-amber { border-left: 3.5px solid #f97316; }
+.announce-kpi-card.card-kpi-emerald { border-left: 3.5px solid #10b981; }
+
+.announce-kpi-icon {
+    font-size: 1.55rem;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+.announce-kpi-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.announce-kpi-label {
+    font-size: 0.74rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    font-weight: 400;
+}
+
+.announce-kpi-val-row {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
+
+.announce-kpi-val {
+    font-size: 1.15rem;
+    font-weight: 500 !important;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+}
+
+.card-kpi-blue .announce-kpi-val { color: #38bdf8; }
+.card-kpi-purple .announce-kpi-val { color: #c084fc; }
+.card-kpi-gold .announce-kpi-val { color: #fde047; }
+.card-kpi-amber .announce-kpi-val { color: #fb923c; }
+.card-kpi-emerald .announce-kpi-val { color: #34d399; }
+
+.announce-kpi-unit {
+    font-size: 0.72rem;
+    color: #64748b;
+    font-weight: 400;
+}
+
+.announce-kpi-hint {
+    font-size: 0.67rem;
+    color: #64748b;
+    white-space: nowrap;
+    font-weight: 400;
+}
+
+/* ========================================================
+   ROW 2: ส่วนล่างแบบแยกซ้าย-ขวา (Body Split View)
+   ซ้าย = กล่องข้อความ Group | ขวา = กราฟแท่ง + กราฟเส้นประสีเขียว
+   ======================================================== */
+.announce-modal-body-split {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    gap: 14px;
+    padding: 10px 24px 14px;
+    overflow: hidden;
+}
+
+/* ด้านซ้าย: กล่องข้อความ Group */
+.announce-group-side-box {
+    width: 310px;
+    flex-shrink: 0;
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+}
+
+.announce-group-box-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.announce-group-box-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.05rem;
+    font-weight: 500 !important;
+    color: #f1f5f9;
+}
+
+.announce-group-count-pill {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #93c5fd;
+    font-size: 0.85rem;
+    font-weight: 500 !important;
+}
+
+.announce-group-box-sub {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #94a3b8;
+    font-weight: 400;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 8px;
+}
+
+.announce-group-items-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 4px;
+}
+
+.announce-group-item-card {
+    background: rgba(30, 41, 59, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 9px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: background 0.2s ease;
+}
+
+.announce-group-item-card:hover {
+    background: rgba(51, 65, 85, 0.85);
+}
+
+.announce-group-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.announce-group-item-name-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+
+.announce-group-item-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.announce-group-item-name {
+    font-size: 1.02rem;
+    font-weight: 500 !important;
+    color: #f1f5f9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.announce-group-item-amt {
+    font-size: 0.95rem;
+    font-weight: 500 !important;
+    color: #fbbf24;
+    white-space: nowrap;
+}
+
+.announce-group-item-bottom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.announce-group-bar-track {
+    flex: 1;
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.announce-group-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+.announce-group-item-pct {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    font-weight: 400;
+    width: 44px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* ด้านขวา: ส่วนกราฟความกว้างยาวขึ้น */
+.announce-chart-main-stage {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 12px 18px 8px;
+    overflow: hidden;
+}
+
+.announce-chart-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+}
+
+.announce-chart-title-tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.05rem;
+    font-weight: 500 !important;
+    color: #cbd5e1;
+}
+
+.announce-line-legend-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 500 !important;
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.12);
+    padding: 5px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.legend-line-indicator {
+    display: inline-block;
+    width: 28px;
+    height: 0;
+    border-top: 3px dashed #10b981;
+}
+
+.announce-chart-container {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    font-family: 'Kanit', sans-serif !important;
+}
+
+.announce-chart-container svg,
+.announce-chart-container text,
+.announce-chart-container tspan {
+    font-family: 'Kanit', sans-serif !important;
+}
+
+.announce-chart-container svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}

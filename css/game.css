@@ -239,6 +239,23 @@ b {
     box-shadow: 0 6px 24px rgba(245, 158, 11, 0.6);
 }
 
+/* ปุ่ม เริ่มเกม (Top Right Control: Start Game / Return to Home) */
+.btn-pill-start-game {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.22), rgba(245, 158, 11, 0.32));
+    border: 1.5px solid #ffd700;
+    color: #ffd700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-pill-start-game:hover {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-color: #ffd700;
+    color: #000000;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.75);
+    transform: translateY(-2px) scale(1.03);
+}
+
 .btn-fullscreen:active {
     transform: translateY(0) scale(0.99);
 }
@@ -911,9 +928,9 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(5, 10, 24, 0.82);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: rgba(8, 14, 28, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 2000;
     display: none;
     align-items: center;
@@ -927,8 +944,8 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
 
 /* Lightbox Cards fixed at 70% width */
 .game-modal-card {
-    background: linear-gradient(145deg, rgba(18, 27, 48, 0.96), rgba(10, 16, 32, 0.96));
-    border: 1px solid rgba(255, 215, 0, 0.35);
+    background: linear-gradient(145deg, #1e293b 0%, #1e3a8a 50%, #0f172a 100%);
+    border: 2px solid rgba(255, 215, 0, 0.5);
     border-radius: 24px;
     padding: 28px 32px;
     width: 70%;
@@ -937,7 +954,7 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
     /* Capped at 70% viewport width */
     max-height: 86vh;
     overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 45px rgba(255, 215, 0, 0.2);
+    box-shadow: 0 0 55px rgba(255, 215, 0, 0.35), 0 20px 60px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     animation: bounceModal 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     color: #ffffff;
     box-sizing: border-box;
@@ -2193,9 +2210,26 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
     flex-shrink: 0;
 }
 
+.game-question-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-heading, 'Kanit', sans-serif);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.16);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 999px;
+    padding: 3px 16px;
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
 .game-question-title {
     font-family: var(--font-heading, 'Kanit', sans-serif);
-    font-size: 1.45rem;
+    font-size: 2.40rem;
     font-weight: 600;
     color: #ffffff;
     margin: 0;
@@ -2280,10 +2314,53 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
 }
 
-/* การ์ดเฉลยคำตอบเมื่อขโมยไม่สำเร็จ: สีพื้นเป็นสีเทา */
+/* การ์ดที่ทีมสีน้ำเงินตอบถูก (กรอบสีน้ำเงิน) */
+.answer-card-slot.is-revealed.revealed-by-blue .answer-slot-back {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 45%, #0f172a 100%) !important;
+    border: 3.5px solid #00e5ff !important;
+    box-shadow: 0 0 24px rgba(0, 229, 255, 0.7), inset 0 0 14px rgba(0, 229, 255, 0.25) !important;
+}
+
+.answer-card-slot.is-revealed.revealed-by-blue .answer-points-badge {
+    border-color: #00e5ff !important;
+    color: #ffd700 !important;
+    box-shadow: 0 0 14px rgba(0, 229, 255, 0.5) !important;
+}
+
+/* การ์ดที่ทีมสีแดง/ส้มตอบถูก (กรอบสีแดง) */
+.answer-card-slot.is-revealed.revealed-by-red .answer-slot-back,
+.answer-card-slot.is-revealed.revealed-by-orange .answer-slot-back {
+    background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 45%, #1a0505 100%) !important;
+    border: 3.5px solid #ef4444 !important;
+    box-shadow: 0 0 24px rgba(239, 68, 68, 0.75), inset 0 0 14px rgba(239, 68, 68, 0.25) !important;
+}
+
+.answer-card-slot.is-revealed.revealed-by-red .answer-points-badge,
+.answer-card-slot.is-revealed.revealed-by-orange .answer-points-badge {
+    border-color: #ef4444 !important;
+    color: #ffd700 !important;
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.5) !important;
+}
+
+/* การ์ดที่เปิดก่อนเลือกทีมแข่ง (กรอบสีเหลือง) */
+.answer-card-slot.is-revealed.revealed-no-team .answer-slot-back,
+.answer-card-slot.is-revealed.revealed-by-yellow .answer-slot-back {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.96) 0%, rgba(20, 28, 44, 0.98) 100%) !important;
+    border: 3.5px solid #ffd700 !important;
+    box-shadow: 0 0 24px rgba(255, 215, 0, 0.75), inset 0 0 14px rgba(255, 215, 0, 0.25) !important;
+}
+
+.answer-card-slot.is-revealed.revealed-no-team .answer-points-badge,
+.answer-card-slot.is-revealed.revealed-by-yellow .answer-points-badge {
+    border-color: #ffd700 !important;
+    color: #ffd700 !important;
+    box-shadow: 0 0 14px rgba(255, 215, 0, 0.5) !important;
+}
+
+/* การ์ดเฉลยคำตอบเมื่อขโมยไม่สำเร็จ: สีพื้นและกรอบเป็นสีเทา */
 .answer-card-slot.is-revealed.is-revealed-gray .answer-slot-back {
     background: linear-gradient(135deg, #475569 0%, #334155 50%, #1e293b 100%) !important;
-    border: 2px solid #94a3b8 !important;
+    border: 2.5px solid #94a3b8 !important;
     box-shadow: 0 0 18px rgba(100, 116, 139, 0.45) !important;
 }
 
@@ -2304,7 +2381,7 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
     width: 100%;
     min-width: 0;
     font-family: 'Kanit', sans-serif;
-    font-size: 1.15rem;
+    font-size: 1.80rem;
     font-weight: 600;
     color: #ffffff;
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
@@ -2565,14 +2642,14 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
    MODAL: QUIZ RANDOM RESULT LIGHTBOX (เมื่อสุ่มได้แล้วแสดง Lightbox)
    ======================================================== */
 .quiz-result-modal-card {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.98));
-    border: 2px solid #00e5ff;
-    border-radius: 24px;
-    padding: 32px 36px 28px;
-    max-width: 620px;
-    width: 90%;
+    background: linear-gradient(145deg, #1e293b 0%, #1e3a8a 50%, #0f172a 100%);
+    border: 2.5px solid #00e5ff;
+    border-radius: 26px;
+    padding: 32px 38px 28px;
+    max-width: 660px;
+    width: 92%;
     box-sizing: border-box;
-    box-shadow: 0 0 50px rgba(0, 229, 255, 0.45), 0 20px 50px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 0 55px rgba(0, 229, 255, 0.5), 0 20px 60px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     text-align: center;
     animation: zoomInModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
@@ -2616,6 +2693,31 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
     color: #ffd700;
     font-size: 0.95rem;
     font-weight: 600;
+}
+
+.quiz-result-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-heading, 'Kanit', sans-serif);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.16);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 999px;
+    padding: 3px 16px;
+    margin: 6px auto 4px;
+}
+
+.quiz-card-category-sub {
+    font-size: 0.8rem;
+    color: #38bdf8;
+    font-weight: 500;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .quiz-result-title {
@@ -2783,14 +2885,14 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
    MODAL: MATCH RESULT LIGHTBOX (สรุปผลการแข่งขันรอบนี้)
    ======================================================== */
 .match-result-modal-card {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
-    border: 2px solid #ffd700;
+    background: linear-gradient(145deg, #1e293b 0%, #1e3a8a 50%, #0f172a 100%);
+    border: 2.5px solid #ffd700;
     border-radius: 26px;
-    padding: 30px 36px 28px;
-    max-width: 680px;
+    padding: 30px 38px 28px;
+    max-width: 720px;
     width: 92%;
     box-sizing: border-box;
-    box-shadow: 0 0 55px rgba(255, 215, 0, 0.45), 0 20px 60px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 0 60px rgba(255, 215, 0, 0.55), 0 20px 60px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     text-align: center;
     animation: zoomInModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
@@ -2868,8 +2970,8 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
 }
 
 .match-result-team-col {
-    background: rgba(15, 23, 42, 0.75);
-    border: 2px solid rgba(255, 255, 255, 0.18);
+    background: rgba(30, 41, 59, 0.85);
+    border: 2px solid rgba(255, 255, 255, 0.25);
     border-radius: 18px;
     padding: 16px 14px;
     display: flex;
@@ -2877,16 +2979,19 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
     align-items: center;
     gap: 6px;
     transition: all 0.3s;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .match-result-team-col.match-team-blue {
-    border-color: rgba(59, 130, 246, 0.5);
-    background: linear-gradient(135deg, rgba(30, 58, 138, 0.4), rgba(15, 23, 42, 0.8));
+    border-color: #60a5fa;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.55) 0%, rgba(30, 58, 138, 0.88) 100%);
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
 }
 
 .match-result-team-col.match-team-orange {
-    border-color: rgba(249, 115, 22, 0.5);
-    background: linear-gradient(135deg, rgba(154, 52, 18, 0.4), rgba(15, 23, 42, 0.8));
+    border-color: #fb923c;
+    background: linear-gradient(135deg, rgba(234, 88, 12, 0.55) 0%, rgba(154, 52, 18, 0.88) 100%);
+    box-shadow: 0 0 25px rgba(249, 115, 22, 0.4);
 }
 
 .match-result-team-col.is-winner {
@@ -3060,14 +3165,14 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
    MODAL: GAME CUSTOM DIALOG LIGHTBOX (Alert & Confirm)
    ======================================================== */
 .game-dialog-modal-card {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
-    border: 2px solid #38bdf8;
+    background: linear-gradient(145deg, #1e293b 0%, #1e3a8a 50%, #0f172a 100%);
+    border: 2.5px solid #38bdf8;
     border-radius: 24px;
     padding: 28px 32px 24px;
-    max-width: 520px;
+    max-width: 540px;
     width: 90%;
     box-sizing: border-box;
-    box-shadow: 0 0 50px rgba(56, 189, 248, 0.4), 0 20px 50px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 0 55px rgba(56, 189, 248, 0.5), 0 20px 50px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     text-align: center;
     animation: zoomInModal 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
@@ -3151,14 +3256,14 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
    MODAL: AWARD SCORE LIGHTBOX (มอบคะแนนสำเร็จ)
    ======================================================== */
 .award-score-modal-card {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
-    border: 2px solid #ffd700;
+    background: linear-gradient(145deg, #1e293b 0%, #1e3a8a 50%, #0f172a 100%);
+    border: 2.5px solid #ffd700;
     border-radius: 24px;
     padding: 28px 34px 24px;
-    max-width: 520px;
+    max-width: 540px;
     width: 90%;
     box-sizing: border-box;
-    box-shadow: 0 0 50px rgba(255, 215, 0, 0.45), 0 20px 50px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 0 55px rgba(255, 215, 0, 0.55), 0 20px 50px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     text-align: center;
     animation: zoomInModal 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
@@ -3286,8 +3391,15 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
 }
 
 @keyframes turnCardPopIn {
-    0% { transform: scale(0.65) translateY(25px); opacity: 0; }
-    100% { transform: scale(1) translateY(0); opacity: 1; }
+    0% {
+        transform: scale(0.65) translateY(25px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
 }
 
 .turn-announce-card.card-blue {
@@ -3384,14 +3496,14 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
    MODAL: TURN PICKER LIGHTBOX (เลือกทีมที่ได้สิทธิ์ตอบคำถาม)
    ======================================================== */
 .turn-picker-modal-card {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(145deg, #1e293b 0%, #1e3a8a 50%, #0f172a 100%);
+    border: 2.5px solid #38bdf8;
     border-radius: 26px;
     padding: 28px 34px 32px;
     max-width: 760px;
     width: 92%;
     box-sizing: border-box;
-    box-shadow: 0 0 60px rgba(0, 0, 0, 0.85), 0 20px 60px rgba(0, 0, 0, 0.95);
+    box-shadow: 0 0 55px rgba(56, 189, 248, 0.5), 0 20px 60px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     text-align: center;
     animation: zoomInModal 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
@@ -3606,14 +3718,14 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
    MODAL: AWARD SCORE CONFIRMATION LIGHTBOX (ยืนยันการมอบคะแนน)
    ======================================================== */
 .award-confirm-modal-card {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(145deg, #1e293b 0%, #1e3a8a 50%, #0f172a 100%);
+    border: 2.5px solid rgba(255, 255, 255, 0.35);
     border-radius: 26px;
     padding: 26px 32px 30px;
-    max-width: 580px;
+    max-width: 620px;
     width: 92%;
     box-sizing: border-box;
-    box-shadow: 0 0 60px rgba(0, 0, 0, 0.85), 0 20px 60px rgba(0, 0, 0, 0.95);
+    box-shadow: 0 0 55px rgba(56, 189, 248, 0.45), 0 20px 60px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     text-align: center;
     animation: zoomInModal 0.26s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
@@ -3871,14 +3983,14 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
    MODAL: STEAL TURN LIGHTBOX (เปลี่ยนสิทธิ์ตอบคำถามเมื่อผิด 3 ครั้ง)
    ======================================================== */
 .steal-turn-modal-card {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
-    border: 2px solid rgba(255, 255, 255, 0.22);
+    background: linear-gradient(145deg, #1e293b 0%, #1e3a8a 50%, #0f172a 100%);
+    border: 2.5px solid #f97316;
     border-radius: 26px;
     padding: 26px 34px 28px;
     max-width: 760px;
     width: 92%;
     box-sizing: border-box;
-    box-shadow: 0 0 60px rgba(0, 0, 0, 0.85), 0 20px 60px rgba(0, 0, 0, 0.95);
+    box-shadow: 0 0 55px rgba(249, 115, 22, 0.5), 0 20px 60px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     text-align: center;
     animation: zoomInModal 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
@@ -4404,4 +4516,79 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
     border-radius: 9999px;
     box-shadow: 0 0 18px rgba(245, 158, 11, 0.6);
     letter-spacing: 0.5px;
+}
+
+/* ========================================================
+   LIGHTBOX LUMINOUS & FULLSCREEN ENHANCEMENTS
+   ปรับความสว่าง คมชัด และสัดส่วนขนาดกล่อง Lightbox บนจอใหญ่/เต็มจอ
+   ======================================================== */
+@media (min-width: 1024px) {
+    .quiz-result-modal-card {
+        max-width: 720px;
+    }
+    .match-result-modal-card {
+        max-width: 760px;
+    }
+}
+
+:fullscreen .modal-overlay,
+:-webkit-full-screen .modal-overlay {
+    background: rgba(8, 14, 28, 0.60);
+}
+
+:fullscreen .quiz-result-modal-card,
+:-webkit-full-screen .quiz-result-modal-card,
+:fullscreen .match-result-modal-card,
+:-webkit-full-screen .match-result-modal-card,
+:fullscreen .award-confirm-modal-card,
+:-webkit-full-screen .award-confirm-modal-card,
+:fullscreen .award-score-modal-card,
+:-webkit-full-screen .award-score-modal-card,
+:fullscreen .turn-picker-modal-card,
+:-webkit-full-screen .turn-picker-modal-card,
+:fullscreen .steal-turn-modal-card,
+:-webkit-full-screen .steal-turn-modal-card,
+:fullscreen .game-dialog-modal-card,
+:-webkit-full-screen .game-dialog-modal-card,
+:fullscreen .game-modal-card,
+:-webkit-full-screen .game-modal-card {
+    filter: brightness(1.08) contrast(1.02);
+}
+
+
+/* ========================================================
+   LIGHTBOX LUMINOUS & FULLSCREEN ENHANCEMENTS
+   ปรับความสว่าง คมชัด และสัดส่วนขนาดกล่อง Lightbox บนจอใหญ่/เต็มจอ
+   ======================================================== */
+@media (min-width: 1024px) {
+    .quiz-result-modal-card {
+        max-width: 720px;
+    }
+    .match-result-modal-card {
+        max-width: 760px;
+    }
+}
+
+:fullscreen .modal-overlay,
+:-webkit-full-screen .modal-overlay {
+    background: rgba(8, 14, 28, 0.60);
+}
+
+:fullscreen .quiz-result-modal-card,
+:-webkit-full-screen .quiz-result-modal-card,
+:fullscreen .match-result-modal-card,
+:-webkit-full-screen .match-result-modal-card,
+:fullscreen .award-confirm-modal-card,
+:-webkit-full-screen .award-confirm-modal-card,
+:fullscreen .award-score-modal-card,
+:-webkit-full-screen .award-score-modal-card,
+:fullscreen .turn-picker-modal-card,
+:-webkit-full-screen .turn-picker-modal-card,
+:fullscreen .steal-turn-modal-card,
+:-webkit-full-screen .steal-turn-modal-card,
+:fullscreen .game-dialog-modal-card,
+:-webkit-full-screen .game-dialog-modal-card,
+:fullscreen .game-modal-card,
+:-webkit-full-screen .game-modal-card {
+    filter: brightness(1.08) contrast(1.02);
 }

@@ -1183,6 +1183,28 @@ body.remote-body {
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
 
+.ans-status-btn.status-blue {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    border: 1px solid #60a5fa;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.ans-status-btn.status-red {
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    border: 1px solid #f87171;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+}
+
+.remote-ans-item.revealed-by-blue {
+    border-color: #3b82f6 !important;
+}
+
+.remote-ans-item.revealed-by-red {
+    border-color: #ef4444 !important;
+}
+
 .ans-status-btn.status-gray {
     background: #475569;
     border: 1px solid #94a3b8;

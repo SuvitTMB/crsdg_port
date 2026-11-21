@@ -7820,3 +7820,36 @@ textarea {
 #userAlertModal .alert-modal-btn:active {
   transform: scale(0.97);
 }
+
+#userAlertModal .alert-modal-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+#userAlertModal .alert-modal-btn-cancel {
+  flex: 1;
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: none !important;
+}
+
+#userAlertModal .alert-modal-btn-cancel:hover {
+  background: #e2e8f0 !important;
+  color: #1e293b !important;
+  border-color: #94a3b8 !important;
+}
+
+#userAlertModal .alert-modal-btn-confirm {
+  flex: 1;
+}
+
+#userAlertModal .alert-modal-btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.35) !important;
+}
+
+#userAlertModal .alert-modal-btn-danger:hover {
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.45) !important;
+}
