@@ -36,9 +36,17 @@
     </audio>
 
     <!-- ========================================================
-         TOP RIGHT CONTROLS: ปุ่มเปิด-ปิดเสียง & ปุ่มขยายหน้าจอ
+         TOP RIGHT CONTROLS: ปุ่มเริ่มเกม, ปุ่มเปิด-ปิดเสียง & ปุ่มขยายหน้าจอ
          ======================================================== -->
     <div class="top-right-controls">
+        <!-- ปุ่ม เริ่มเกม (พามาที่หน้าแรกของจุดเริ่มต้นเกมทันที) -->
+        <button type="button" class="btn-pill-dark btn-pill-start-game" id="btnRestartGameHome" title="กลับสู่หน้าแรกของจุดเริ่มต้นเกม (เริ่มเกม)">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span>เริ่มเกม</span>
+        </button>
+
         <!-- ปุ่มเปิด-ปิดเสียง (Sound Toggle) -->
         <button type="button" class="btn-pill-dark" id="soundToggleBtn" title="เปิด/ปิดเสียง (M)">
             <svg class="btn-icon" id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -315,6 +323,7 @@
                     <div class="stage-center-play-area">
                         <!-- Question Title Banner -->
                         <div class="game-question-banner">
+                            <div class="game-question-category" id="gameQuestionCategory" style="display: none;"></div>
                             <h2 class="game-question-title" id="gameQuestionTitle">
                                 คำถาม: กำลังโหลดชุดคำถาม...
                             </h2>
@@ -497,6 +506,7 @@
             </div>
             <div class="quiz-result-body">
                 <div class="quiz-result-number" id="quizResultNumber">ชุดที่ 1</div>
+                <div class="quiz-result-category" id="quizResultCategory" style="display: none;"></div>
                 <h2 class="quiz-result-title" id="quizResultTitle">คำถาม</h2>
                 <div class="quiz-result-meta" id="quizResultMeta">📋 จำนวน 4 คำตอบ</div>
             </div>
@@ -512,7 +522,7 @@
          MODAL: TEAM RANDOM RESULT LIGHTBOX (สุ่มคู่แข่งขันสำเร็จ)
          ======================================================== -->
     <div class="modal-overlay" id="teamRandomResultModal">
-        <div class="quiz-result-modal-card" style="max-width: 620px;">
+        <div class="quiz-result-modal-card">
             <div class="quiz-result-header-bar">
                 <span class="quiz-result-badge-top">🎲 สุ่มคู่แข่งขันสำเร็จ!</span>
                 <button type="button" class="modal-close-btn" id="closeTeamRandomResultBtn" title="ปิด">✕</button>
@@ -565,7 +575,7 @@
          MODAL: GAME END LIGHTBOX (สรุปผลการแข่งขันในแต่ละครั้ง ครั้งที่ 1, 2, 3)
          ======================================================== -->
     <div class="modal-overlay" id="gameIntermissionModal">
-        <div class="quiz-result-modal-card" style="max-width: 640px;">
+        <div class="quiz-result-modal-card">
             <div class="quiz-result-header-bar">
                 <span class="quiz-result-badge-top" id="intermissionBadge">🎉 จบการแข่งขัน ครั้งที่ 1 แล้ว!</span>
                 <button type="button" class="modal-close-btn" id="closeIntermissionBtn" title="ปิด">✕</button>

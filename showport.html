@@ -66,6 +66,10 @@
                     </svg>
                     <span>แอดมิน</span>
                 </a>
+                <button type="button" class="btn-announce-result" id="btnAnnounceResult" title="ประกาศผลพอร์ตการลงทุน (ปิดระบบการลงทุนอัตโนมัติ)">
+                    <span class="btn-announce-icon">📢</span>
+                    <span>ประกาศผล</span>
+                </button>
                 <button type="button" class="icon-btn-ctrl" id="btnRefresh" title="รีเฟรชข้อมูลล่าสุด">
                     🔄
                 </button>
@@ -379,6 +383,132 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX: กล่องประกาศผลพอร์ตการลงทุน (ขนาด 90% x 90%)
+         ======================================================== -->
+    <div class="announce-modal-backdrop" id="announceResultModal" style="display: none;">
+        <div class="announce-modal-card" role="dialog" aria-modal="true" aria-labelledby="announceModalTitle">
+            <!-- Modal Header -->
+            <div class="announce-modal-header">
+                <div class="announce-header-left">
+                    <div class="announce-trophy-badge">🏆</div>
+                    <div class="announce-title-wrap">
+                        <div class="announce-title-row">
+                            <h2 class="announce-modal-title" id="announceModalTitle">ประกาศผลการจัดสรรพอร์ตการลงทุน AI Showcase</h2>
+                            <span class="announce-closed-badge">🔒 ปิดระบบการลงทุนแล้ว</span>
+                        </div>
+                        <p class="announce-modal-sub">จัดอันดับผลพอร์ตการลงทุนเวที AI Pitching </p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close-announce" id="btnCloseAnnounceModal" title="ปิดหน้าต่างประกาศผล">
+                    ✕
+                </button>
+            </div>
+
+            <!-- กล่องด้านบน: สรุปผล 5 กล่อง (จำนวนนักลงทุน, จำนวนผู้ลงทุนไม่นับซ้ำ, จำนวนเงินทุนทั้งหมด, จำนวนเงินที่ลงทุน, สัดส่วนการลงทุน) -->
+            <section class="announce-kpi-grid" id="announceKpiGrid">
+                <!-- กล่องที่ 1: จำนวนนักลงทุน -->
+                <div class="announce-kpi-card card-kpi-blue">
+                    <div class="announce-kpi-icon">👥</div>
+                    <div class="announce-kpi-content">
+                        <div class="announce-kpi-label">จำนวนนักลงทุน</div>
+                        <div class="announce-kpi-val-row">
+                            <span class="announce-kpi-val" id="announceKpiTotalEligible">0</span>
+                            <span class="announce-kpi-unit">ท่าน</span>
+                        </div>
+                        <div class="announce-kpi-hint">(ผู้มีสิทธิ์ในระบบ)</div>
+                    </div>
+                </div>
+
+                <!-- กล่องที่ 2: จำนวนผู้ลงทุน (ไม่นับซ้ำ) -->
+                <div class="announce-kpi-card card-kpi-purple">
+                    <div class="announce-kpi-icon">👤</div>
+                    <div class="announce-kpi-content">
+                        <div class="announce-kpi-label">จำนวนผู้ลงทุน (ไม่นับซ้ำ)</div>
+                        <div class="announce-kpi-val-row">
+                            <span class="announce-kpi-val" id="announceKpiActiveVoters">0</span>
+                            <span class="announce-kpi-unit">ท่าน</span>
+                        </div>
+                        <div class="announce-kpi-hint">(ผู้ใช้สิทธิ์ลงทุนจริง)</div>
+                    </div>
+                </div>
+
+                <!-- กล่องที่ 3: จำนวนเงินทุนทั้งหมด -->
+                <div class="announce-kpi-card card-kpi-gold">
+                    <div class="announce-kpi-icon">💰</div>
+                    <div class="announce-kpi-content">
+                        <div class="announce-kpi-label">จำนวนเงินทุนทั้งหมด</div>
+                        <div class="announce-kpi-val-row">
+                            <span class="announce-kpi-val" id="announceKpiTotalBudget">0</span>
+                            <span class="announce-kpi-unit">บาท</span>
+                        </div>
+                        <div class="announce-kpi-hint">(งบประมาณรวมทั้งระบบ)</div>
+                    </div>
+                </div>
+
+                <!-- กล่องที่ 4: จำนวนเงินที่ลงทุน -->
+                <div class="announce-kpi-card card-kpi-amber">
+                    <div class="announce-kpi-icon">💵</div>
+                    <div class="announce-kpi-content">
+                        <div class="announce-kpi-label">จำนวนเงินที่ลงทุน</div>
+                        <div class="announce-kpi-val-row">
+                            <span class="announce-kpi-val" id="announceKpiTotalInvested">0</span>
+                            <span class="announce-kpi-unit">บาท</span>
+                        </div>
+                        <div class="announce-kpi-hint">(ยอดเงินที่ลงทุนในพอร์ต)</div>
+                    </div>
+                </div>
+
+                <!-- กล่องที่ 5: สัดส่วนการลงทุน -->
+                <div class="announce-kpi-card card-kpi-emerald">
+                    <div class="announce-kpi-icon">📈</div>
+                    <div class="announce-kpi-content">
+                        <div class="announce-kpi-label">สัดส่วนการลงทุน</div>
+                        <div class="announce-kpi-val-row">
+                            <span class="announce-kpi-val" id="announceKpiInvestedPct">0.0%</span>
+                        </div>
+                        <div class="announce-kpi-hint">(เทียบกับเงินทุนทั้งหมด)</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ส่วนด้านล่าง: กล่องข้อความ Group อยู่ทางด้านซ้ายของกราฟ และ ส่วนกราฟด้านขวา -->
+            <div class="announce-modal-body-split">
+                <!-- กล่องข้อความ Group ทางด้านซ้าย -->
+                <aside class="announce-group-side-box" id="announceGroupSideBox">
+                    <div class="announce-group-box-header">
+                        <div class="announce-group-box-title">
+                            <span>🏢</span>
+                            <span>ที่มาเงินทุนแยกตาม Group</span>
+                        </div>
+                        <span class="announce-group-count-pill" id="announceGroupCountPill">0 กลุ่ม</span>
+                    </div>
+                    <p class="announce-group-box-sub">สีจำแนกสัดส่วนเงินทุนในแท่งกราฟ</p>
+                    <div class="announce-group-items-list" id="announceGroupItemsList">
+                        <!-- Populated dynamically by JS -->
+                    </div>
+                </aside>
+
+                <!-- ส่วนแสดงผลกราฟทางด้านขวา (ขยายความกว้างเต็มพื้นที่) -->
+                <main class="announce-chart-main-stage">
+                    <div class="announce-chart-header-row">
+                        <div class="announce-chart-title-tag">
+                            <span>📊</span>
+                            <span>กราฟแท่งพอร์ตการลงทุน AI</span>
+                        </div>
+                        <div class="announce-line-legend-tag">
+                            <span class="legend-line-indicator"></span>
+                            <span>จำนวนพนักงาน (คน)</span>
+                        </div>
+                    </div>
+                    <div class="announce-chart-container" id="announceChartContainer">
+                        <!-- High-Resolution Vector Chart injected dynamically by JS -->
+                    </div>
+                </main>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts: Firebase, State, Audio, and ShowPort Controller -->
