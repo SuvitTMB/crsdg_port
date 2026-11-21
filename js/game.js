@@ -306,6 +306,7 @@
             const roundSummaryTxt = document.getElementById('roundSummaryTxt');
             const btnTriggerRoundSummary = document.getElementById('btnTriggerRoundSummary');
             let pendingRoundResultInfo = null;
+            let pendingRoundActionCallback = null;
             let pendingStealTurnSide = null;
             let isStealPhase = false;
             let stealingSide = null;
@@ -1139,6 +1140,55 @@
                 if (typeof broadcastGameState === 'function') broadcastGameState();
             }
 
+            // Function to return to the very start of the game (หน้าแรกของจุดเริ่มต้นเกมทันที)
+            function returnToStartHome() {
+                if (sound) { sound.init(); sound.playClick(); }
+                closeAllGameModals(true);
+
+                // Hide overlays
+                if (quizGameStageOverlay) quizGameStageOverlay.classList.remove('active');
+                if (quizSelectOverlay) quizSelectOverlay.classList.remove('active');
+                if (matchArenaOverlay) matchArenaOverlay.classList.remove('active');
+
+                // Return to start home screen background and stage box
+                if (mainStageImg) mainStageImg.src = 'assets/images/background.jpg';
+                if (stageStartBox) stageStartBox.style.display = 'flex';
+                if (bottomHint) bottomHint.style.display = 'block';
+
+                // Hide action bars if visible
+                const roundSummaryActionBar = document.getElementById('roundSummaryActionBar');
+                if (roundSummaryActionBar) roundSummaryActionBar.classList.remove('active');
+                const stealPhaseActionBar = document.getElementById('stealPhaseActionBar');
+                if (stealPhaseActionBar) stealPhaseActionBar.classList.remove('active');
+
+                // Reset scores & progress
+                blueTeamScore = 0;
+                orangeTeamScore = 0;
+                currentBankScore = 0;
+                bankScoreBeforeSteal = 0;
+                currentMatchGameIndex = 1;
+                if (completedMatchGames && typeof completedMatchGames.clear === 'function') {
+                    completedMatchGames.clear();
+                }
+                hasAwardedThisRound = false;
+                if (typeof window.resetStrikes === 'function') window.resetStrikes();
+                if (typeof updateScoresDisplay === 'function') updateScoresDisplay();
+                if (typeof updateAwardButtonsState === 'function') updateAwardButtonsState();
+                if (typeof updateMatchGamesProgressBar === 'function') updateMatchGamesProgressBar();
+
+                if (typeof broadcastGameState === 'function') broadcastGameState();
+            }
+            window.returnToStartHome = returnToStartHome;
+
+            const btnRestartGameHome = document.getElementById('btnRestartGameHome');
+            if (btnRestartGameHome) {
+                btnRestartGameHome.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    returnToStartHome();
+                });
+            }
+
             if (btnBackIntro) {
                 btnBackIntro.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -1575,6 +1625,7 @@
                                     ${isUsed ? '🔒 ถูกเลือกแล้ว' : (isSelected ? '✓ เลือกชุดนี้แล้ว' : 'พร้อมเลือก')}
                                 </span>
                             </div>
+                            ${q.category ? `<div class="quiz-card-category-sub">🏷️ ${q.category}</div>` : ''}
                             <div class="quiz-card-title">${q.title}</div>
                         </button>
                     `;
@@ -1714,6 +1765,15 @@
                 if (!quiz || !quizResultModal) return;
 
                 if (quizResultNumber) quizResultNumber.textContent = `ชุดที่ ${foundIdx >= 0 ? foundIdx + 1 : ''}`;
+                const quizResultCategory = document.getElementById('quizResultCategory');
+                if (quizResultCategory) {
+                    if (quiz.category) {
+                        quizResultCategory.textContent = `🏷️ ${quiz.category}`;
+                        quizResultCategory.style.display = 'inline-flex';
+                    } else {
+                        quizResultCategory.style.display = 'none';
+                    }
+                }
                 if (quizResultTitle) quizResultTitle.textContent = quiz.title;
                 if (quizResultMeta) quizResultMeta.textContent = `📋 จำนวน ${(quiz.answers || []).length} คำตอบ`;
 
@@ -1818,6 +1878,7 @@
                 isStealPhase = false;
                 stealingSide = null;
                 pendingRoundResultInfo = null;
+                pendingRoundActionCallback = null;
                 initialTurnThisQuestion = null;
                 currentActiveTurn = null;
                 bankScoreBeforeSteal = 0;
@@ -1854,8 +1915,17 @@
                 renderCaptainAvatarNode(gameOrangeAvatar, capB, false);
 
                 // Setup question title
+                const gameQuestionCategory = document.getElementById('gameQuestionCategory');
+                if (gameQuestionCategory) {
+                    if (currentActiveQuiz.category) {
+                        gameQuestionCategory.textContent = `🏷️ ${currentActiveQuiz.category}`;
+                        gameQuestionCategory.style.display = 'inline-flex';
+                    } else {
+                        gameQuestionCategory.style.display = 'none';
+                    }
+                }
                 if (gameQuestionTitle) {
-                    gameQuestionTitle.textContent = `คำถาม: ${currentActiveQuiz.title}`;
+                    gameQuestionTitle.textContent = `${currentActiveQuiz.title}`;
                 }
 
                 // Render answer flip cards
@@ -1899,7 +1969,25 @@
             window.revealAnswer = function (idx, points) {
                 const slot = document.getElementById(`ansSlot_${idx}`);
                 if (!slot || slot.classList.contains('is-revealed')) return;
+
+                // ตรวจสอบทีมที่เป็นผู้ตอบคำถาม (กรณีช่วงปกติ หรือช่วงโยน/ขโมยคะแนน)
+                let answeringSide = isStealPhase ? (stealingSide || currentActiveTurn) : currentActiveTurn;
+                if (!answeringSide && initialTurnThisQuestion) {
+                    answeringSide = initialTurnThisQuestion;
+                }
+
                 slot.classList.add('is-revealed');
+                if (answeringSide === 'blue') {
+                    slot.classList.add('revealed-by-blue');
+                    slot.classList.remove('revealed-by-red', 'revealed-by-orange', 'revealed-no-team', 'is-revealed-gray');
+                } else if (answeringSide === 'orange' || answeringSide === 'red') {
+                    slot.classList.add('revealed-by-red');
+                    slot.classList.remove('revealed-by-blue', 'revealed-no-team', 'is-revealed-gray');
+                } else {
+                    // หากยังไม่มีการเลือกทีมแข่ง การคลิกที่ตัวเลือกให้ปรับกรอบให้เป็นสีเหลือง
+                    slot.classList.add('revealed-no-team');
+                    slot.classList.remove('revealed-by-blue', 'revealed-by-red', 'revealed-by-orange', 'is-revealed-gray');
+                }
                 
                 let pts = parseInt(points, 10);
                 if (isNaN(pts) || pts <= 0) {
@@ -1924,14 +2012,16 @@
                 updateAwardButtonsState();
                 if (sound) sound.playWin();
 
-                // เมื่อทีมที่ได้สิทธิ์ในการตอบ สามารถตอบได้ครบทุกตัวเลือก
-                // ให้การแข่งขันในครั้งที่แข่งให้จบการแข่งขัน และได้รับคะแนนส่วนนี้ไปเลย
+                // เมื่อทีมที่ได้สิทธิ์ในการตอบ สามารถตอบได้ครบทุกตัวเลือก (ตอบตัวเลือกสุดท้ายได้)
+                // ให้ระบบหยุดรอเพื่อแจ้งผู้เข้าชมก่อน และมีปุ่มให้ดำเนินการต่อไป
                 if (!hasAwardedThisRound) {
                     const allAnswerSlots = Array.from(document.querySelectorAll('.answer-card-slot'));
                     const unrevealedSlots = allAnswerSlots.filter(s => !s.classList.contains('is-revealed'));
                     if (allAnswerSlots.length > 0 && unrevealedSlots.length === 0) {
-                        handleAllAnswersRevealedSuccess();
-                        return;
+                        if (answeringSide) {
+                            handleAllAnswersRevealedSuccess();
+                            return;
+                        }
                     }
                 }
 
@@ -1969,17 +2059,17 @@
                 updateFinishMatchButtonState();
 
                 if (stealPhaseActionBar) stealPhaseActionBar.style.display = 'none';
-                if (roundSummaryActionBar) roundSummaryActionBar.style.display = 'none';
                 pendingRoundResultInfo = null;
 
                 if (sound) sound.playWin();
-
                 closeAllGameModals();
 
                 // ตรวจสอบว่าเป็นการแข่งขันเกมสุดท้ายหรือไม่ (ครั้งที่ 3 ขึ้นไป)
                 const isFinalGame = (currentMatchGameIndex >= 3);
 
-                setTimeout(() => {
+                // ตั้ง callback สำหรับปุ่มกดเพื่อดำเนินการต่อไป (ก่อนเปิด Lightbox สรุปผล)
+                pendingRoundActionCallback = () => {
+                    if (roundSummaryActionBar) roundSummaryActionBar.style.display = 'none';
                     if (isFinalGame) {
                         // หากเป็นเกมสุดท้ายให้สรุปผลการแข่งขัน (Match Result Lightbox)
                         showMatchResultModal({
@@ -2001,7 +2091,24 @@
                     if (typeof broadcastGameState === 'function') {
                         broadcastGameState();
                     }
-                }, 400);
+                };
+
+                // ให้ระบบหยุดรอเพื่อแจ้งผู้เข้าชมก่อน โดยแสดงแถบข้อความและปุ่มกดเพื่อดำเนินการต่อไป
+                if (roundSummaryActionBar) {
+                    if (roundSummaryIcon) roundSummaryIcon.textContent = '🎉';
+                    if (roundSummaryTxt) {
+                        roundSummaryTxt.innerHTML = `🎉 <strong>${winnerTeam ? winnerTeam.name : 'ทีมแข่งขัน'}</strong> ตอบถูกตัวเลือกสุดท้ายครบทุกข้อ! ได้รับคะแนนสะสม <strong>${pointsWon}</strong> คะแนน`;
+                    }
+                    if (btnTriggerRoundSummary) {
+                        btnTriggerRoundSummary.innerHTML = `<span>ดำเนินการต่อไป ❯</span>`;
+                        btnTriggerRoundSummary.title = 'คลิกเพื่อดำเนินการสรุปผลการแข่งขันรอบนี้';
+                    }
+                    roundSummaryActionBar.style.display = 'flex';
+                }
+
+                if (typeof broadcastGameState === 'function') {
+                    broadcastGameState();
+                }
             }
 
             function updateScoresDisplay() {
@@ -2025,6 +2132,7 @@
                         slot.classList.add('is-revealed');
                         if (isGray) {
                             slot.classList.add('is-revealed-gray');
+                            slot.classList.remove('revealed-by-blue', 'revealed-by-red', 'revealed-by-orange');
                         }
                         if (sound) sound.playTick();
                         if (i === unrevealed.length - 1) {
@@ -2164,35 +2272,31 @@
 
                     // ขั้นที่ 3: ให้แสดงเฉลยคำตอบที่เหลือบนกระดานแข่งขันก่อน (สีเทา .is-revealed-gray)
                     autoRevealRemainingCards(() => {
-                        // ขั้นที่ 4: เมื่อเฉลยครบทุกข้อแล้ว หน่วงเวลา 900ms ให้ผู้เล่นและผู้ชมได้อ่านคำตอบบนกระดานทั้งหมด
-                        setTimeout(() => {
-                            // ขั้นที่ 5: โอนคะแนนสะสมก่อนโยนคำถาม ไปหาทีมที่เป็นผู้เริ่มตอบ
-                            if (winnerSide === 'blue') {
-                                blueTeamScore += pointsWon;
-                            } else {
-                                orangeTeamScore += pointsWon;
-                            }
-                            currentBankScore = 0;
-                            bankScoreBeforeSteal = 0;
-                            hasAwardedThisRound = true;
-                            completedMatchGames.add(currentMatchGameIndex);
-                            updateScoresDisplay();
-                            updateAwardButtonsState();
-                            updateMatchGamesProgressBar();
+                        // ขั้นที่ 4: โอนคะแนนสะสมก่อนโยนคำถาม ไปหาทีมที่เป็นผู้เริ่มตอบ
+                        if (winnerSide === 'blue') {
+                            blueTeamScore += pointsWon;
+                        } else {
+                            orangeTeamScore += pointsWon;
+                        }
+                        currentBankScore = 0;
+                        bankScoreBeforeSteal = 0;
+                        hasAwardedThisRound = true;
+                        completedMatchGames.add(currentMatchGameIndex);
+                        updateScoresDisplay();
+                        updateAwardButtonsState();
+                        updateMatchGamesProgressBar();
 
-                            if (btnFinishMatch) btnFinishMatch.disabled = false;
-                            updateFinishMatchButtonState();
+                        if (btnFinishMatch) btnFinishMatch.disabled = false;
+                        updateFinishMatchButtonState();
 
-                            if (sound && typeof sound.playWin === 'function') {
-                                sound.playWin();
-                            }
+                        if (sound && typeof sound.playWin === 'function') {
+                            sound.playWin();
+                        }
 
-                            if (roundSummaryTxt) {
-                                roundSummaryTxt.innerHTML = `🛡️ ขโมยไม่สำเร็จ! <strong>${winnerTeam ? winnerTeam.name : 'ทีมที่เริ่ม'}</strong> ได้รับคะแนนสะสม (+${pointsWon} คะแนน) — จบการแข่งขันครั้งนี้`;
-                            }
-
-                            // ขั้นที่ 6: แสดง Lightbox โอนคะแนน/สรุปผลการแข่งขันรอบนี้
-                            const isFinalGame = (currentMatchGameIndex >= 3);
+                        // ขั้นที่ 5: ให้ระบบแสดงเฉลยบนกระดานก่อนเพื่อให้พิธีกรอธิบาย และแสดงปุ่มกดเพื่อดำเนินการสรุปผลต่อไป
+                        const isFinalGame = (currentMatchGameIndex >= 3);
+                        pendingRoundActionCallback = () => {
+                            if (roundSummaryActionBar) roundSummaryActionBar.style.display = 'none';
                             if (isFinalGame) {
                                 showMatchResultModal({
                                     roundTitle: `${currentSelectedRound} (สะสมคะแนนครบ 3 ครั้ง)`,
@@ -2211,12 +2315,26 @@
                                     pointsWon: pointsWon
                                 });
                             }
-
-                            isStealProcessing = false;
                             if (typeof broadcastGameState === 'function') {
                                 broadcastGameState();
                             }
-                        }, 900);
+                        };
+
+                        if (roundSummaryActionBar) {
+                            if (roundSummaryIcon) roundSummaryIcon.textContent = '🛡️';
+                            if (roundSummaryTxt) {
+                                roundSummaryTxt.innerHTML = `🛡️ <strong>ขโมยไม่สำเร็จ!</strong> แสดงเฉลยคำตอบทั้งหมดแล้ว (สามารถอธิบายคำตอบก่อนได้ แล้วกดปุ่มเพื่อดำเนินการต่อ)`;
+                            }
+                            if (btnTriggerRoundSummary) {
+                                btnTriggerRoundSummary.innerHTML = isFinalGame ? '🏆 สรุปผลการแข่งขันรอบนี้ ❯' : '📊 ดูผลคะแนน / ดำเนินการต่อ ❯';
+                            }
+                            roundSummaryActionBar.style.display = 'flex';
+                        }
+
+                        isStealProcessing = false;
+                        if (typeof broadcastGameState === 'function') {
+                            broadcastGameState();
+                        }
                     }, true);
                 };
 
@@ -2452,11 +2570,18 @@
             if (btnTriggerRoundSummary) {
                 btnTriggerRoundSummary.addEventListener('click', () => {
                     if (roundSummaryActionBar) roundSummaryActionBar.style.display = 'none';
-                    if (pendingRoundResultInfo) {
+                    if (typeof pendingRoundActionCallback === 'function') {
+                        const cb = pendingRoundActionCallback;
+                        pendingRoundActionCallback = null;
+                        cb();
+                    } else if (pendingRoundResultInfo) {
                         showSingleGameResultLightbox(pendingRoundResultInfo);
                         pendingRoundResultInfo = null;
                     } else {
                         showSingleGameResultLightbox();
+                    }
+                    if (typeof broadcastGameState === 'function') {
+                        broadcastGameState();
                     }
                 });
             }
@@ -2499,12 +2624,24 @@
                         updateAwardButtonsState();
                         return;
                     }
+                    const activeSide = isStealPhase ? (stealingSide || currentActiveTurn) : currentActiveTurn;
                     slots.forEach((slot, i) => {
                         setTimeout(() => {
                             slot.classList.add('is-revealed');
+                            if (activeSide === 'blue') {
+                                slot.classList.add('revealed-by-blue');
+                                slot.classList.remove('revealed-by-red', 'revealed-by-orange', 'revealed-no-team', 'is-revealed-gray');
+                            } else if (activeSide === 'orange' || activeSide === 'red') {
+                                slot.classList.add('revealed-by-red');
+                                slot.classList.remove('revealed-by-blue', 'revealed-no-team', 'is-revealed-gray');
+                            } else {
+                                slot.classList.add('revealed-no-team');
+                                slot.classList.remove('revealed-by-blue', 'revealed-by-red', 'revealed-by-orange', 'is-revealed-gray');
+                            }
                             if (sound) sound.playTick();
                             if (i === slots.length - 1) {
                                 updateAwardButtonsState();
+                                if (typeof broadcastGameState === 'function') broadcastGameState();
                             }
                         }, i * 140);
                     });
@@ -2651,6 +2788,9 @@
             let currentActiveTurn = 'blue';
             window.setActiveCompetingTurn = function (side) {
                 currentActiveTurn = side;
+                if (!initialTurnThisQuestion) {
+                    initialTurnThisQuestion = side;
+                }
                 const turnRadioBlue = document.getElementById('turnRadioBlue');
                 const turnRadioOrange = document.getElementById('turnRadioOrange');
                 const cardBlue = document.getElementById('gameTeamCardBlue');
@@ -2671,6 +2811,32 @@
                         cardBlue.classList.add('turn-inactive');
                         cardBlue.classList.remove('turn-active');
                     }
+                }
+
+                // สีกรอบของตัวเลือกที่เคยเปิดไว้ก่อนเลือกทีมแข่ง (กรอบสีเหลือง) จะเปลี่ยนเป็นสีของทีมที่เลือกทันที
+                const yellowSlots = document.querySelectorAll('.answer-card-slot.revealed-no-team, .answer-card-slot.revealed-by-yellow');
+                yellowSlots.forEach(slot => {
+                    slot.classList.remove('revealed-no-team', 'revealed-by-yellow');
+                    if (side === 'blue') {
+                        slot.classList.add('revealed-by-blue');
+                        slot.classList.remove('revealed-by-red', 'revealed-by-orange');
+                    } else {
+                        slot.classList.add('revealed-by-red');
+                        slot.classList.remove('revealed-by-blue');
+                    }
+                });
+
+                // หากเปิดครบทุกตัวเลือกแล้ว และเพิ่งเลือกทีม ให้ทำการสรุปผลพร้อมหยุดรอแจ้งผู้เข้าชม
+                if (!hasAwardedThisRound) {
+                    const allAnswerSlots = Array.from(document.querySelectorAll('.answer-card-slot'));
+                    const unrevealedSlots = allAnswerSlots.filter(s => !s.classList.contains('is-revealed'));
+                    if (allAnswerSlots.length > 0 && unrevealedSlots.length === 0) {
+                        handleAllAnswersRevealedSuccess();
+                    }
+                }
+
+                if (typeof broadcastGameState === 'function') {
+                    broadcastGameState();
                 }
             };
 
@@ -2723,7 +2889,14 @@
             // Finish Match / Next Game in Match (แข่ง 3 ครั้งในแต่ละรอบ สะสมคะแนน)
             if (btnFinishMatch) {
                 btnFinishMatch.addEventListener('click', () => {
-                    // หากมีผลการแข่งขันที่รอให้กดปุ่มสรุปผลรอบนี้ ให้เปิด lightbox สรุปผลก่อน
+                    // หากมี callback หรือผลการแข่งขันที่รอให้กดปุ่มสรุปผลรอบนี้ ให้เปิด lightbox สรุปผลก่อน
+                    if (typeof pendingRoundActionCallback === 'function') {
+                        if (roundSummaryActionBar) roundSummaryActionBar.style.display = 'none';
+                        const cb = pendingRoundActionCallback;
+                        pendingRoundActionCallback = null;
+                        cb();
+                        return;
+                    }
                     if (pendingRoundResultInfo) {
                         if (roundSummaryActionBar) roundSummaryActionBar.style.display = 'none';
                         showSingleGameResultLightbox(pendingRoundResultInfo);
@@ -2900,6 +3073,7 @@
                         const slot = document.getElementById(`ansSlot_${idx}`);
                         const isRevealed = slot ? slot.classList.contains('is-revealed') : false;
                         const isGray = slot ? slot.classList.contains('is-revealed-gray') : false;
+                        const teamSide = slot ? (slot.classList.contains('revealed-by-red') ? 'orange' : (slot.classList.contains('revealed-by-blue') ? 'blue' : null)) : null;
                         const pts = parseInt(ans.points, 10) || 0;
                         totalQuizPoints += pts;
                         if (isRevealed) revealedAnswersCount++;
@@ -2911,7 +3085,8 @@
                             text: ans.text,
                             points: pts,
                             isRevealed: isRevealed,
-                            isGray: isGray
+                            isGray: isGray,
+                            teamSide: teamSide
                         });
                     });
                 }
@@ -2949,7 +3124,7 @@
                     isStealPhase: isStealPhase,
                     stealingSide: stealingSide,
                     hasAwardedThisRound: hasAwardedThisRound,
-                    pendingRoundResult: pendingRoundResultInfo !== null,
+                    pendingRoundResult: (pendingRoundResultInfo !== null || pendingRoundActionCallback !== null),
                     isGameStarted: (stage !== 'home' && stage !== 'intro'),
                     soundMuted: sound ? sound.isMuted() : false,
                     isFullscreen: !!document.fullscreenElement,
@@ -3104,6 +3279,10 @@
                         break;
 
                     // Arena Actions
+                    case 'RETURN_TO_HOME':
+                    case 'RESTART_GAME_HOME':
+                        returnToStartHome();
+                        break;
                     case 'OPEN_ARENA':
                     case 'START_COMPETITION':
                     case 'CLICK_START_COMPETITION':
@@ -3248,6 +3427,11 @@
                     case 'TRIGGER_ROUND_SUMMARY':
                         if (btnTriggerRoundSummary && roundSummaryActionBar && roundSummaryActionBar.style.display !== 'none') {
                             btnTriggerRoundSummary.click();
+                        } else if (typeof pendingRoundActionCallback === 'function') {
+                            if (roundSummaryActionBar) roundSummaryActionBar.style.display = 'none';
+                            const cb = pendingRoundActionCallback;
+                            pendingRoundActionCallback = null;
+                            cb();
                         } else {
                             showSingleGameResultLightbox(pendingRoundResultInfo);
                         }

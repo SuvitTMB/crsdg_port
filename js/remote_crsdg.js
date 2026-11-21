@@ -426,13 +426,24 @@
             questionTotalPointsBadge.textContent = `คะแนนเต็ม ${totalPts} คะแนน`;
         }
 
+        const questionCategoryPill = document.getElementById('questionCategoryPill');
         if (currentQuestionTitle) {
             if (isGameMode && state.currentQuiz && state.currentQuiz.title) {
                 currentQuestionTitle.textContent = state.currentQuiz.title;
+                if (questionCategoryPill) {
+                    if (state.currentQuiz.category) {
+                        questionCategoryPill.textContent = `🏷️ ${state.currentQuiz.category}`;
+                        questionCategoryPill.style.display = 'inline-block';
+                    } else {
+                        questionCategoryPill.style.display = 'none';
+                    }
+                }
             } else if (state.stage === 'quiz_select') {
                 currentQuestionTitle.textContent = 'กรุณาเลือกชุดคำถามบนจอหลัก หรือใช้แท็บ "เลือกคำถาม" ด้านบนเพื่อเริ่มแข่ง';
+                if (questionCategoryPill) questionCategoryPill.style.display = 'none';
             } else {
                 currentQuestionTitle.textContent = 'กรุณาสุ่มเลือกทีมและเลือกชุดคำถามบนจอหลักเพื่อเริ่มการแข่งขัน';
+                if (questionCategoryPill) questionCategoryPill.style.display = 'none';
             }
         }
 
@@ -521,6 +532,14 @@
                     statusClass = 'status-gray';
                     statusText = 'เฉลยสีเทา (+0)';
                     itemExtraClass = 'is-revealed is-revealed-gray';
+                } else if (ans.teamSide === 'orange' || ans.teamSide === 'red') {
+                    statusClass = 'status-red';
+                    statusText = `✓ ทีมแดง (+${ans.points})`;
+                    itemExtraClass = 'is-revealed revealed-by-red';
+                } else if (ans.teamSide === 'blue') {
+                    statusClass = 'status-blue';
+                    statusText = `✓ ทีมน้ำเงิน (+${ans.points})`;
+                    itemExtraClass = 'is-revealed revealed-by-blue';
                 } else {
                     statusClass = 'status-revealed';
                     statusText = `✓ เปิดแล้ว (+${ans.points})`;
@@ -920,6 +939,7 @@
                             ${isUsed ? '🔒 ถูกเลือกแล้ว' : (isSelected ? '✓ เลือกชุดนี้แล้ว' : 'พร้อมแข่งขัน')}
                         </span>
                     </div>
+                    ${q.category ? `<div style="font-size:0.75rem; color:#38bdf8; font-weight:500; margin-bottom:2px;">🏷️ ${q.category}</div>` : ''}
                     <div class="quiz-item-title">${q.title}</div>
                     <div style="font-size:0.75rem; color:rgba(255,255,255,0.6); margin-top:2px;">
                         📋 ${(q.answers || []).length} คำตอบ • คะแนนเต็ม ${q.score || 100} คะแนน

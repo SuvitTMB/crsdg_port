@@ -24,6 +24,7 @@ const STORAGE_KEYS = {
 const DEFAULT_QUIZZES = [
     {
         id: 'quiz_1',
+        category: 'ของขวัญยอดนิยม',
         title: 'ของขวัญปีใหม่ยอดนิยมที่พนักงาน CRS DG อยากได้มากที่สุด',
         score: 100,
         maxAnswers: 4,
@@ -36,6 +37,7 @@ const DEFAULT_QUIZZES = [
     },
     {
         id: 'quiz_2',
+        category: 'ปาร์ตี้ส่งท้ายปี',
         title: 'กิจกรรมยอดฮิตในงานปาร์ตี้เลี้ยงส่งท้ายปีเก่าต้อนรับปีใหม่',
         score: 100,
         maxAnswers: 4,
@@ -48,6 +50,7 @@ const DEFAULT_QUIZZES = [
     },
     {
         id: 'quiz_3',
+        category: 'คำอวยพรวันปีใหม่',
         title: 'คำอวยพรวันปีใหม่ยอดฮิตที่ได้ยินบ่อยที่สุด',
         score: 100,
         maxAnswers: 4,
@@ -60,6 +63,7 @@ const DEFAULT_QUIZZES = [
     },
     {
         id: 'quiz_4',
+        category: 'ท่องเที่ยววันหยุด',
         title: 'สถานที่ท่องเที่ยวช่วงวันหยุดยาวปีใหม่ที่คนไทยนิยมไปมากที่สุด',
         score: 100,
         maxAnswers: 4,
@@ -1873,6 +1877,7 @@ class StateManager {
         if (!Array.isArray(cloudQuizzes) || cloudQuizzes.length === 0) return;
         const valid = cloudQuizzes.map(q => ({
             id: String(q.id || '').trim(),
+            category: String(q.category || q.subTitle || q.preTitle || '').trim(),
             title: String(q.title || '').trim(),
             score: parseInt(q.score, 10) || 100,
             maxAnswers: parseInt(q.maxAnswers, 10) || 4,
@@ -2029,6 +2034,7 @@ class StateManager {
         const newId = 'quiz_' + Date.now();
         const newQuiz = {
             id: newId,
+            category: String(quizData.category || quizData.subTitle || quizData.preTitle || '').trim(),
             title: String(quizData.title || 'คำถามใหม่').trim(),
             score: parseInt(quizData.score, 10) || 100,
             maxAnswers: parseInt(quizData.maxAnswers, 10) || 4,
@@ -2046,6 +2052,7 @@ class StateManager {
 
         quizzes[idx] = {
             ...quizzes[idx],
+            category: updatedData.category !== undefined ? String(updatedData.category).trim() : (quizzes[idx].category || ''),
             title: updatedData.title !== undefined ? String(updatedData.title).trim() : quizzes[idx].title,
             score: updatedData.score !== undefined ? parseInt(updatedData.score, 10) : quizzes[idx].score,
             maxAnswers: updatedData.maxAnswers !== undefined ? parseInt(updatedData.maxAnswers, 10) : quizzes[idx].maxAnswers,

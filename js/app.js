@@ -34,19 +34,33 @@
   };
 
   // ========================================================
-  // SYSTEM ALERT LIGHTBOX MODAL (REPLACES BROWSER ALERT)
+  // SYSTEM ALERT & CONFIRM LIGHTBOX MODAL (REPLACES BROWSER ALERT & CONFIRM)
   // ========================================================
   let userAlertCallback = null;
+  let userConfirmCallback = null;
+  let userCancelCallback = null;
+
   function showUserAlert(message, title = 'แจ้งเตือนระบบ', icon = '⚠️', onClose = null) {
     userAlertCallback = typeof onClose === 'function' ? onClose : null;
+    userConfirmCallback = null;
+    userCancelCallback = null;
+
     const modal = document.getElementById('userAlertModal');
     const titleEl = document.getElementById('userAlertTitle');
     const msgEl = document.getElementById('userAlertMessage');
     const badgeEl = document.getElementById('userAlertBadge');
+    const btnCancel = document.getElementById('btnCancelUserAlert');
+    const btnConfirm = document.getElementById('btnConfirmUserAlert');
 
     if (titleEl) titleEl.textContent = title;
     if (msgEl) msgEl.textContent = message || '';
     if (badgeEl) badgeEl.textContent = icon;
+
+    if (btnCancel) btnCancel.style.display = 'none';
+    if (btnConfirm) {
+      btnConfirm.textContent = 'ตกลง';
+      btnConfirm.className = 'alert-modal-btn alert-modal-btn-confirm';
+    }
 
     if (modal) {
       modal.classList.add('is-active');
@@ -54,37 +68,102 @@
     }
   }
 
-  function closeUserAlertModal() {
+  function showUserConfirm(message, title = 'ยืนยันการทำรายการ', icon = '❓', onConfirm = null, onCancel = null, confirmText = 'ยืนยัน', cancelText = 'ยกเลิก', isDanger = false) {
+    userConfirmCallback = typeof onConfirm === 'function' ? onConfirm : null;
+    userCancelCallback = typeof onCancel === 'function' ? onCancel : null;
+    userAlertCallback = null;
+
+    const modal = document.getElementById('userAlertModal');
+    const titleEl = document.getElementById('userAlertTitle');
+    const msgEl = document.getElementById('userAlertMessage');
+    const badgeEl = document.getElementById('userAlertBadge');
+    const btnCancel = document.getElementById('btnCancelUserAlert');
+    const btnConfirm = document.getElementById('btnConfirmUserAlert');
+
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message || '';
+    if (badgeEl) badgeEl.textContent = icon;
+
+    if (btnCancel) {
+      btnCancel.style.display = 'block';
+      btnCancel.textContent = cancelText;
+    }
+    if (btnConfirm) {
+      btnConfirm.textContent = confirmText;
+      btnConfirm.className = isDanger
+        ? 'alert-modal-btn alert-modal-btn-confirm alert-modal-btn-danger'
+        : 'alert-modal-btn alert-modal-btn-confirm';
+    }
+
+    if (modal) {
+      modal.classList.add('is-active');
+      modal.style.display = 'flex';
+    }
+  }
+
+  function closeUserAlertModal(isConfirmed = false) {
     const modal = document.getElementById('userAlertModal');
     if (modal) {
       modal.classList.remove('is-active');
       modal.style.display = 'none';
     }
+
+    if (isConfirmed && userConfirmCallback) {
+      const cb = userConfirmCallback;
+      userConfirmCallback = null;
+      userCancelCallback = null;
+      userAlertCallback = null;
+      try { cb(); } catch (e) { console.warn(e); }
+      return;
+    }
+
+    if (!isConfirmed && userCancelCallback) {
+      const cb = userCancelCallback;
+      userConfirmCallback = null;
+      userCancelCallback = null;
+      userAlertCallback = null;
+      try { cb(); } catch (e) { console.warn(e); }
+      return;
+    }
+
     if (userAlertCallback) {
       const cb = userAlertCallback;
+      userConfirmCallback = null;
+      userCancelCallback = null;
       userAlertCallback = null;
       try { cb(); } catch (e) { console.warn(e); }
     }
   }
 
   window.showUserAlert = showUserAlert;
-  window.closeUserAlert = closeUserAlertModal;
+  window.showUserConfirm = showUserConfirm;
+  window.closeUserAlert = () => closeUserAlertModal(false);
   window.alert = function (msg) {
     showUserAlert(String(msg || ''));
   };
+  window.confirm = function (msg) {
+    showUserAlert(String(msg || ''), 'แจ้งเตือน', 'ℹ️');
+    return false;
+  };
 
   const btnConfirmUserAlert = document.getElementById('btnConfirmUserAlert');
-  if (btnConfirmUserAlert) btnConfirmUserAlert.addEventListener('click', closeUserAlertModal);
+  if (btnConfirmUserAlert) {
+    btnConfirmUserAlert.addEventListener('click', () => closeUserAlertModal(true));
+  }
+  const btnCancelUserAlert = document.getElementById('btnCancelUserAlert');
+  if (btnCancelUserAlert) {
+    btnCancelUserAlert.addEventListener('click', () => closeUserAlertModal(false));
+  }
   const userAlertModalEl = document.getElementById('userAlertModal');
   if (userAlertModalEl) {
     userAlertModalEl.addEventListener('click', function(e) {
-      if (e.target === this) closeUserAlertModal();
+      if (e.target === this) closeUserAlertModal(false);
     });
   }
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       const m = document.getElementById('userAlertModal');
-      if (m && m.classList.contains('is-active')) closeUserAlertModal();
+      if (m && m.classList.contains('is-active')) closeUserAlertModal(false);
     }
   });
 
@@ -576,18 +655,29 @@
   }
 
   function handleLogout() {
-    const isConfirmed = confirm('คุณต้องการออกจากระบบ (Logout) ใช่หรือไม่?');
-    if (!isConfirmed) return;
-
-    localStorage.removeItem('crsdg_active_user_emp_id');
-    currentEmployee = null;
-    activeTab = 'home';
-    if (empIdInput) empIdInput.value = '';
-    hideFeedback();
-    document.body.classList.remove('portal-mode-white');
-    const mobileDeviceFrame = document.querySelector('.mobile-device-frame');
-    if (mobileDeviceFrame) mobileDeviceFrame.classList.remove('portal-mode-white');
-    showView('registration');
+    showUserConfirm(
+      'คุณต้องการออกจากระบบ (Logout) ใช่หรือไม่?',
+      'ยืนยันการออกจากระบบ',
+      '🚪',
+      () => {
+        localStorage.removeItem('crsdg_active_user_emp_id');
+        currentEmployee = null;
+        activeTab = 'home';
+        if (empIdInput) empIdInput.value = '';
+        hideFeedback();
+        document.body.classList.remove('portal-mode-white');
+        const mobileDeviceFrame = document.querySelector('.mobile-device-frame');
+        if (mobileDeviceFrame) {
+          mobileDeviceFrame.classList.remove('portal-mode-white');
+          mobileDeviceFrame.classList.remove('tab-home-active');
+        }
+        showView('registration');
+      },
+      null,
+      'ออกจากระบบ',
+      'ยกเลิก',
+      true
+    );
   }
 
   // ========================================================
@@ -1629,12 +1719,14 @@
 
     if (!inputVal) {
       showFeedback('กรุณากรอกรหัสพนักงาน', true);
+      showUserAlert('กรุณากรอกรหัสพนักงานก่อนทำการลงทะเบียน', 'แจ้งเตือน', '⚠️');
       empIdInput.focus();
       return;
     }
 
     if (!window.stateManager) {
       showFeedback('ไม่พบระบบฐานข้อมูล กรุณารีเฟรชหน้าเว็บใหม่อีกครั้ง', true);
+      showUserAlert('ไม่พบระบบฐานข้อมูล กรุณารีเฟรชหน้าเว็บใหม่อีกครั้ง', 'ข้อผิดพลาดระบบ', '❌');
       return;
     }
 
@@ -1647,6 +1739,7 @@
 
     if (!matched) {
       showFeedback(`❌ ไม่พบรหัสพนักงาน "${inputVal}" ในระบบ (crsdg_member) กรุณาตรวจสอบรหัสพนักงานอีกครั้ง`, true);
+      showUserAlert(`ไม่พบรหัสพนักงาน "${inputVal}" ในระบบ\nกรุณาตรวจสอบรหัสพนักงานและลองใหม่อีกครั้ง`, 'ไม่พบข้อมูลพนักงาน', '⚠️');
       return;
     }
 
@@ -2082,6 +2175,7 @@
       renderLuckyDrawResult(currentEmployee);
     }
     triggerConfetti();
+    showUserAlert('ยืนยันการรับรางวัลเรียบร้อยแล้ว ขอแสดงความยินดีด้วยครับ! 🎉', 'รับรางวัลสำเร็จ', '🎁');
   }
 
   function triggerConfetti() {
@@ -2245,6 +2339,7 @@
     const oldVote = (emp.chosenTeam || (sm && typeof sm.getMemberChosenTeam === 'function' ? sm.getMemberChosenTeam(empId) : '') || '').trim();
 
     if (oldVote && oldVote.toLowerCase() === String(teamName).trim().toLowerCase()) {
+      showUserAlert(`คุณได้ลงคะแนนโหวตให้ทีม "${teamName}" เรียบร้อยแล้ว`, 'ข้อมูลการโหวต', 'ℹ️');
       return;
     }
 
@@ -2266,6 +2361,7 @@
     renderGameTab(currentEmployee);
 
     triggerConfetti();
+    showUserAlert(`บันทึกคะแนนโหวตให้ทีม "${teamName}" สำเร็จเรียบร้อยแล้ว 🎉`, 'โหวตสำเร็จ!', '🎉');
   };
 
 

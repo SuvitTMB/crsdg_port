@@ -134,6 +134,38 @@
                 }
             });
         }
+
+        // 4. ปุ่มประกาศผลพอร์ตการลงทุน AI (Announce Result Modal & Close AI Investments)
+        const btnAnnounceResult = document.getElementById('btnAnnounceResult');
+        if (btnAnnounceResult) {
+            btnAnnounceResult.addEventListener('click', () => {
+                openAnnounceResultModal();
+            });
+        }
+
+        // 5. ปุ่มปิดหน้าต่าง Lightbox ประกาศผล
+        const btnCloseAnnounceModal = document.getElementById('btnCloseAnnounceModal');
+        if (btnCloseAnnounceModal) {
+            btnCloseAnnounceModal.addEventListener('click', () => {
+                closeAnnounceResultModal();
+            });
+        }
+
+        // 6. คลิกพื้นหลัง Lightbox หรือกดปุ่ม Escape เพื่อปิด
+        const announceResultModal = document.getElementById('announceResultModal');
+        if (announceResultModal) {
+            announceResultModal.addEventListener('click', (e) => {
+                if (e.target === announceResultModal) {
+                    closeAnnounceResultModal();
+                }
+            });
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeAnnounceResultModal();
+            }
+        });
     }
 
     // Main Render Pipeline
@@ -647,6 +679,579 @@
 
         // Return calculated investment amount for comparison
         return teamTotalAmount;
+    }
+
+    // ========================================================
+    // 5. ANNOUNCE RESULT LIGHTBOX MODAL CONTROLLER (ขนาด 90% x 90%)
+    // จัดอันดับพอร์ตการลงทุน AI เรียงจากมากไปน้อย กราฟแท่งแยกสี Group และกราฟเส้นประสีเขียว Smooth
+    // ========================================================
+
+    const GROUP_PALETTE = [
+        '#38bdf8', // ฟ้าสว่าง (Sky)
+        '#a855f7', // ม่วงสว่าง (Purple)
+        '#f43f5e', // กุหลาบชมพู (Rose)
+        '#f97316', // ส้มสดใส (Orange)
+        '#eab308', // ทองอำพัน (Amber)
+        '#14b8a6', // เขียวน้ำทะเล (Teal)
+        '#ec4899', // ชมพูบานเย็น (Pink)
+        '#6366f1', // น้ำเงินคราม (Indigo)
+        '#84cc16', // เขียวมะนาว (Lime)
+        '#06b6d4', // ฟ้าครามไซแอน (Cyan)
+        '#d946ef', // ม่วงฟิวเชีย (Fuchsia)
+        '#64748b', // เทาเงินสเลท (Slate)
+        '#e11d48', // แดงชาด (Crimson)
+        '#0284c7'  // น้ำเงินเข้ม (Deep Sky)
+    ];
+
+    /**
+     * คำนวณเส้นโค้ง Catmull-Rom Spline ให้เป็นคำสั่ง SVG Path (Cubic Bezier)
+     * เพื่อให้กราฟเส้นประสีเขียวโค้งมนสวยงาม (Smooth Spline)
+     */
+    function getCatmullRomSpline(points) {
+        if (!points || points.length === 0) return '';
+        if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+        if (points.length === 2) return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+
+        let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+        for (let i = 0; i < points.length - 1; i++) {
+            const p0 = points[Math.max(0, i - 1)];
+            const p1 = points[i];
+            const p2 = points[i + 1];
+            const p3 = points[Math.min(points.length - 1, i + 2)];
+
+            const cp1x = p1.x + (p2.x - p0.x) / 6;
+            const cp1y = p1.y + (p2.y - p0.y) / 6;
+            const cp2x = p2.x - (p3.x - p1.x) / 6;
+            const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+            d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+        }
+        return d;
+    }
+
+    /**
+     * คำนวณและรวบรวมข้อมูลพอร์ตการลงทุนของทุกทีมในระบบ
+     * และเรียงลำดับจากทีมที่มียอดเงินลงทุนสูงสุดไปน้อยสุด
+     */
+    function getAggregatedTeamsData() {
+        const players = (state && typeof state.getPlayers === 'function') ? state.getPlayers() : (allPlayersList || []);
+        const allUserInv = (state && typeof state.getAllUserInvestments === 'function') ? state.getAllUserInvestments() : {};
+        const allMembers = (state && typeof state.getMembers === 'function') ? state.getMembers() : [];
+
+        // ทำดัชนี Map สังกัด Group ของพนักงาน
+        const memberDeptMap = new Map();
+        allMembers.forEach(m => {
+            const grp = (m.Group || m.department || m.Department || 'ไม่ระบุสังกัด').trim();
+            const id1 = String(m.EmployeeID || '').trim().toLowerCase();
+            const id2 = String(m.id || '').trim().toLowerCase();
+            if (id1) memberDeptMap.set(id1, grp);
+            if (id2) memberDeptMap.set(id2, grp);
+        });
+
+        // ดึงรายชื่อทีม
+        let list = (players && players.length > 0) ? players : (allPlayersList || []);
+        if (!list || list.length === 0) {
+            const teamNames = (state && typeof state.getTeamNames === 'function') ? state.getTeamNames() : [];
+            list = teamNames.map((t, idx) => ({
+                id: t.id || ('team_' + idx),
+                teamName: t.name,
+                orderNo: idx + 1,
+                teamPhoto: '',
+                description: '',
+                voteAmount: 0,
+                voterCount: 0,
+                voteStatus: 'closed'
+            }));
+        }
+
+        // คำนวณยอดเงิน ยอดผู้ลงทุน และยอดจำแนกตาม Group สำหรับแต่ละทีม
+        const teamsData = list.map((team, idx) => {
+            const orderNo = team.orderNo || (idx + 1);
+            const teamName = team.teamName || team.name || `ทีมที่ ${orderNo}`;
+            const teamPhoto = team.teamPhoto || team.photo || '';
+            let totalAmount = 0;
+            const votersSet = new Set();
+            const groupFunds = {}; // { [groupName]: amount }
+
+            Object.entries(allUserInv).forEach(([empId, uMap]) => {
+                if (!uMap || typeof uMap !== 'object') return;
+                const cleanId = String(empId).trim().toLowerCase();
+                const grp = memberDeptMap.get(cleanId) || 'ไม่ระบุสังกัด';
+
+                const amt = parseFloat(uMap[team.id]) || 0;
+                if (amt > 0) {
+                    totalAmount += amt;
+                    votersSet.add(cleanId);
+                    groupFunds[grp] = (groupFunds[grp] || 0) + amt;
+                }
+            });
+
+            // ค่าสำรองกรณีไม่ได้ลงข้อมูล user investments โดยตรง
+            if (totalAmount === 0 && team.voteAmount > 0) {
+                totalAmount = parseFloat(team.voteAmount) || 0;
+            }
+            const votersCount = votersSet.size > 0 ? votersSet.size : (parseInt(team.voterCount, 10) || 0);
+
+            // แปลง groupFunds เป็น Array เรียงจากยอดเงินมากไปน้อย
+            const groupList = Object.entries(groupFunds)
+                .map(([name, amount]) => ({ name, amount }))
+                .sort((a, b) => b.amount - a.amount);
+
+            return {
+                id: team.id,
+                orderNo,
+                teamName,
+                teamPhoto,
+                totalAmount,
+                votersCount,
+                groupFunds,
+                groupList
+            };
+        });
+
+        // เรียงลำดับจากทีมที่มียอดเงินลงทุนสูงสุดไปน้อยสุด (เรียงลำดับทีมที่มีการลงทุนสูงสุดไปน้อยสุด)
+        teamsData.sort((a, b) => {
+            if (b.totalAmount !== a.totalAmount) {
+                return b.totalAmount - a.totalAmount;
+            }
+            return b.votersCount - a.votersCount;
+        });
+
+        return teamsData;
+    }
+
+    /**
+     * สร้าง Map สีประจำแต่ละ Group จากข้อมูลที่เกิดขึ้นจริง
+     */
+    function buildGroupColorMap(teamsData) {
+        const groupSet = new Set();
+        teamsData.forEach(t => {
+            t.groupList.forEach(g => {
+                if (g.amount > 0) groupSet.add(g.name);
+            });
+        });
+
+        const groupList = Array.from(groupSet);
+        const colorMap = {};
+        groupList.forEach((grp, idx) => {
+            colorMap[grp] = GROUP_PALETTE[idx % GROUP_PALETTE.length];
+        });
+        return colorMap;
+    }
+
+    /**
+     * ปิดระบบการลงทุนพอร์ต AI ทั้งหมด (ตามคำสั่ง: "และให้ระบบสั่งให้ปิดระบบการลงทุนพอร์ต ai ทั้งหมดด้วย")
+     */
+    function closeAllAiInvestments() {
+        if (!state) return;
+
+        // 1. ปิดสถานะการโหวต/ลงทุนหลักของระบบ
+        if (typeof state.setVoteOpen === 'function') {
+            state.setVoteOpen(false);
+        } else {
+            localStorage.setItem('crsdg_vote_open', 'false');
+        }
+
+        // 2. ปิดสถานะรับการลงทุนของทุกทีมในระบบเป็น 'closed'
+        const players = (typeof state.getPlayers === 'function') ? state.getPlayers() : (allPlayersList || []);
+        if (Array.isArray(players) && players.length > 0) {
+            players.forEach(p => {
+                p.voteStatus = 'closed';
+                p.updatedAt = new Date().toISOString();
+            });
+            if (typeof state.savePlayers === 'function') {
+                state.savePlayers(players);
+            }
+        }
+
+        // 3. ซิงค์สถานะปิดระบบไปยัง Firebase Cloud Firestore เพื่อล็อกเครื่องผู้ใช้งานทุกคน
+        if (typeof FirebaseSync !== 'undefined') {
+            try {
+                if (typeof FirebaseSync.saveVoteSettings === 'function') {
+                    FirebaseSync.saveVoteSettings({ vote_open: false, current_step: 'ANNOUNCED' });
+                }
+                if (typeof FirebaseSync.savePlayersToCloud === 'function' && Array.isArray(players)) {
+                    FirebaseSync.savePlayersToCloud(players);
+                }
+            } catch (e) {
+                console.warn('[Showport] FirebaseSync closeAllAiInvestments error:', e);
+            }
+        }
+
+        // 4. กระจายสัญญาณ BroadcastChannel ไปยังทุกแท็บ ทุกหน้าจอ (รวมถึง index.html)
+        try {
+            if (typeof BroadcastChannel !== 'undefined') {
+                const ch1 = new BroadcastChannel('crsdg_game_channel');
+                ch1.postMessage({ type: 'VOTE_STATUS_UPDATED', isOpen: false, open: false });
+                ch1.postMessage({ type: 'AI_PORT_CLOSED_ALL' });
+                ch1.postMessage({ type: 'PLAYERS_UPDATED', players });
+
+                const ch2 = new BroadcastChannel('crsdg_channel');
+                ch2.postMessage({ type: 'VOTE_STATUS_UPDATED', isOpen: false, open: false });
+            }
+        } catch (e) {}
+
+        // รีเฟรชหน้าจอแสดงผล
+        renderDashboard();
+    }
+
+    /**
+     * แยกข้อความชื่อทีมออกเป็น 2 บรรทัดสำหรับแสดงใต้แท่งกราฟ
+     * เช่น "TTB 1 (แบบบ้านๆ)" -> บรรทัดที่ 1: "TTB 1", บรรทัดที่ 2: "(แบบบ้านๆ)"
+     */
+    function getTeamName2Lines(team) {
+        const fullName = String(team.teamName || team.name || `ทีมที่ ${team.orderNo || ''}`).trim();
+
+        // 1. กรณีมีวงเล็บ เช่น "TTB 1 (แบบบ้านๆ)" หรือ "TTB 2 (home)"
+        const parenIdx = fullName.indexOf('(');
+        if (parenIdx > 0) {
+            return [fullName.slice(0, parenIdx).trim(), fullName.slice(parenIdx).trim()];
+        }
+
+        // 2. กรณีมีเว้นวรรค
+        const words = fullName.split(/\s+/);
+        if (words.length >= 2) {
+            const mid = Math.ceil(words.length / 2);
+            return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+        }
+
+        // 3. กรณีเป็นคำยาวคำเดียวเกิน 9 ตัวอักษร
+        if (fullName.length > 9) {
+            return [fullName.slice(0, 8), fullName.slice(8, 18)];
+        }
+
+        return [fullName, ''];
+    }
+
+    /**
+     * วาดกราฟแท่งแบบแยกสี Group + กราฟเส้นประสีเขียว Smooth แบบ Dual-Axis ใน SVG
+     * ปรับความกว้าง (ความยาว) ให้กว้างขึ้น และแสดงชื่อทีม 2 บรรทัด
+     * ใช้ font-weight: 500 สำหรับตัวหนา
+     */
+    function renderAnnounceResultChart(teamsData, groupColorMap) {
+        const container = document.getElementById('announceChartContainer');
+        if (!container) return;
+
+        if (!teamsData || teamsData.length === 0) {
+            container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:1.05rem;font-weight:500;">ไม่พบข้อมูลทีมในระบบ</div>';
+            return;
+        }
+
+        // ปรับสัดส่วน ViewBox และ Padding ของกราฟให้แสดงผลตัวอักษรขนาดใหญ่ได้อย่างชัดเจน
+        const W = 1200;
+        const H = 480;
+        const padL = 105;
+        const padR = 105;
+        const padT = 52;
+        const padB = 105;
+        const plotW = W - padL - padR;
+        const plotH = H - padT - padB;
+
+        const maxAmt = Math.max(...teamsData.map(t => t.totalAmount), 10000);
+        // เพิ่ม headroom 15% เพื่อให้ข้อความตัวเลขบนแท่งกราฟไม่ล้นขอบบน
+        const niceMaxAmt = Math.ceil((maxAmt * 1.15) / 100000) * 100000 || (maxAmt * 1.15);
+
+        const maxVoters = Math.max(...teamsData.map(t => t.votersCount), 2);
+        // เพิ่ม headroom 25% เพื่อให้ป้ายจำนวนคนบนเส้นประไม่ชนเพดาน
+        const niceMaxVoters = Math.max(5, Math.ceil(maxVoters * 1.25));
+
+        const N = teamsData.length;
+        const slotW = plotW / N;
+        const barW = Math.min(Math.max(slotW * 0.46, 45), 78);
+
+        // 1. เส้นสเกลและป้ายแกนซ้าย-ขวา (Gridlines & Axis Labels: ปรับขนาด Font ให้ใหญ่ชัดเจน 18-21px, Kanit)
+        let gridSvg = '';
+        const gridLevels = 5;
+        for (let i = 0; i <= gridLevels; i++) {
+            const ratio = i / gridLevels;
+            const y = padT + plotH - (ratio * plotH);
+            const amtVal = ratio * niceMaxAmt;
+            const voterVal = Math.round(ratio * niceMaxVoters);
+
+            gridSvg += `
+                <line x1="${padL}" y1="${y}" x2="${padL + plotW}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-dasharray="${i === 0 ? '0' : '4,4'}" />
+                <text x="${padL - 14}" y="${y + 6}" text-anchor="end" fill="#94a3b8" font-size="18" font-weight="400" font-family="'Kanit', sans-serif">${fmtCompactMoney(amtVal)}</text>
+                <text x="${padL + plotW + 14}" y="${y + 6}" text-anchor="start" fill="#34d399" font-size="18" font-weight="400" font-family="'Kanit', sans-serif">${voterVal} คน</text>
+            `;
+        }
+
+        // หัวตารางแกนซ้ายและแกนขวา (ขยาย font ให้ใหญ่ชัดเจน 20px)
+        gridSvg += `
+            <text x="${padL}" y="${padT - 18}" text-anchor="start" fill="#fbbf24" font-size="20" font-weight="500" font-family="'Kanit', sans-serif">💰 ยอดเงินลงทุน (บาท)</text>
+            <text x="${padL + plotW}" y="${padT - 18}" text-anchor="end" fill="#34d399" font-size="20" font-weight="500" font-family="'Kanit', sans-serif">👥 พนักงานที่ลงทุน (คน)</text>
+        `;
+
+        // 2. กราฟแท่งแยกสี Group และจุดพิกัดเส้นประ
+        let barsSvg = '';
+        const splinePoints = [];
+
+        teamsData.forEach((team, idx) => {
+            const cx = padL + (idx + 0.5) * slotW;
+            const barX = cx - (barW / 2);
+            const rank = idx + 1;
+            const rankIcon = rank === 1 ? '🥇 #1' : (rank === 2 ? '🥈 #2' : (rank === 3 ? '🥉 #3' : `#${rank}`));
+            const rankColor = rank === 1 ? '#f59e0b' : (rank === 2 ? '#94a3b8' : (rank === 3 ? '#b45309' : '#475569'));
+
+            // พิกัดสำหรับเส้นกราฟจำนวนพนักงานที่ลงทุน (แกนขวา)
+            const voterRatio = Math.min(team.votersCount / niceMaxVoters, 1);
+            const py = padT + plotH - (voterRatio * plotH);
+            splinePoints.push({ x: cx, y: py, voters: team.votersCount, teamName: team.teamName });
+
+            // สร้างแท่งกราฟซ้อน (Stacked Group Segments)
+            let currY = padT + plotH;
+            let segmentsSvg = '';
+
+            if (!team.groupList || team.groupList.length === 0 || team.totalAmount === 0) {
+                // กรณีไม่มีข้อมูลเงินลงทุน
+                segmentsSvg += `<rect x="${barX}" y="${currY - 5}" width="${barW}" height="5" rx="2" fill="rgba(255,255,255,0.15)" />`;
+            } else {
+                team.groupList.forEach((grp, sIdx) => {
+                    if (grp.amount <= 0) return;
+                    const segH = (grp.amount / niceMaxAmt) * plotH;
+                    const segY = currY - segH;
+                    const color = groupColorMap[grp.name] || '#38bdf8';
+                    const isTop = (sIdx === team.groupList.length - 1);
+                    const rx = isTop ? 'rx="6" ry="6"' : '';
+
+                    segmentsSvg += `
+                        <rect x="${barX}" y="${segY}" width="${barW}" height="${Math.max(segH, 1)}" fill="${color}" ${rx} opacity="0.95" style="transition: opacity 0.2s;">
+                            <title>${escHtml(team.teamName)} | ${escHtml(grp.name)}: ${fmtNum(grp.amount)} บาท</title>
+                        </rect>
+                    `;
+                    currY = segY;
+                });
+            }
+
+            // แสดงยอดรวมเงินลงทุนบนแท่งกราฟ (เอา ฿ ออก, ขยาย font ให้ใหญ่ 20px พร้อมกล่องพื้นหลังชัดเจน)
+            const labelY = Math.min(currY - 14, padT + plotH - 14);
+            const [line1, line2] = getTeamName2Lines(team);
+            const amtStr = fmtCompactMoney(team.totalAmount);
+            const pillW = Math.max(74, amtStr.length * 15 + 24);
+
+            barsSvg += `
+                <g class="team-bar-group">
+                    ${segmentsSvg}
+                    <rect x="${cx - (pillW / 2)}" y="${labelY - 24}" width="${pillW}" height="30" rx="7" fill="rgba(15, 23, 42, 0.88)" stroke="rgba(251, 191, 36, 0.45)" stroke-width="1.2" />
+                    <text x="${cx}" y="${labelY - 3}" text-anchor="middle" fill="#fde047" font-size="20" font-weight="500" font-family="'Kanit', sans-serif">
+                        ${amtStr}
+                    </text>
+                    <!-- แถบแสดงอันดับบนแกน X (ขยายขนาด 64x26px, font 15px) -->
+                    <rect x="${cx - 32}" y="${padT + plotH + 10}" width="64" height="26" rx="6" fill="${rankColor}" opacity="0.95" />
+                    <text x="${cx}" y="${padT + plotH + 28}" text-anchor="middle" fill="#000000" font-size="15" font-weight="500" font-family="'Kanit', sans-serif">
+                        ${rankIcon}
+                    </text>
+                    <!-- ชื่อทีม 2 บรรทัด (ขยาย font ให้ใหญ่ชัดเจน 18px / 16px, font Kanit) -->
+                    <text x="${cx}" y="${padT + plotH + 60}" text-anchor="middle" fill="#f8fafc" font-size="18" font-weight="500" font-family="'Kanit', sans-serif" title="${escHtml(team.teamName)}">
+                        ${escHtml(line1)}
+                    </text>
+                    ${line2 ? `
+                        <text x="${cx}" y="${padT + plotH + 84}" text-anchor="middle" fill="#94a3b8" font-size="16" font-weight="500" font-family="'Kanit', sans-serif" title="${escHtml(team.teamName)}">
+                            ${escHtml(line2)}
+                        </text>
+                    ` : ''}
+                </g>
+            `;
+        });
+
+        // 3. เส้นประสีเขียวแบบ Smooth (Catmull-Rom Spline Curve: ขยายความหนาเส้น 4px)
+        const splineD = getCatmullRomSpline(splinePoints);
+        const curveSvg = `
+            <path d="${splineD}" fill="none" stroke="#10b981" stroke-width="4" stroke-dasharray="9,6" stroke-linecap="round" stroke-linejoin="round" filter="url(#glowGreen)" />
+        `;
+
+        // 4. จุดกลมและป้ายแสดงจำนวนพนักงานที่ลงทุน (ขยาย font ให้ใหญ่ชัดเจน 18px, font Kanit)
+        let dotsSvg = '';
+        splinePoints.forEach(p => {
+            dotsSvg += `
+                <g class="spline-dot-group">
+                    <circle cx="${p.x}" cy="${p.y}" r="9" fill="rgba(16, 185, 129, 0.25)" />
+                    <circle cx="${p.x}" cy="${p.y}" r="6" fill="#10b981" stroke="#ffffff" stroke-width="2.5" />
+                    <rect x="${p.x - 45}" y="${p.y - 44}" width="90" height="34" rx="8" fill="#064e3b" stroke="#10b981" stroke-width="1.6" filter="drop-shadow(0 3px 8px rgba(0,0,0,0.6))" />
+                    <text x="${p.x}" y="${p.y - 21}" text-anchor="middle" fill="#6ee7b7" font-size="18" font-weight="500" font-family="'Kanit', sans-serif">
+                        👥 ${p.voters} คน
+                    </text>
+                </g>
+            `;
+        });
+
+        // ประกอบร่าง SVG (W = 1200, H = 480, font-family Kanit ทั้งหมด)
+        container.innerHTML = `
+            <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="font-family: 'Kanit', sans-serif;">
+                <defs>
+                    <filter id="glowGreen" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+                ${gridSvg}
+                ${barsSvg}
+                ${curveSvg}
+                ${dotsSvg}
+            </svg>
+        `;
+    }
+
+    /**
+     * แสดงกล่องข้อความ Group ให้อยู่ทางด้านซ้ายของกราฟ
+     * แสดงรายการเรียงจากมากไปน้อย พร้อมแถบสีและยอดเงิน
+     */
+    function renderAnnounceGroupSideBox(teamsData, groupColorMap) {
+        const countPill = document.getElementById('announceGroupCountPill');
+        const itemsList = document.getElementById('announceGroupItemsList');
+        if (!itemsList) return;
+
+        // คำนวณยอดเงินรวมแยกตาม Group และยอดรวมทั้งหมด
+        const groupTotals = {};
+        let grandTotalInvested = 0;
+        teamsData.forEach(t => {
+            t.groupList.forEach(g => {
+                groupTotals[g.name] = (groupTotals[g.name] || 0) + g.amount;
+                grandTotalInvested += g.amount;
+            });
+        });
+
+        const sortedGroups = Object.entries(groupTotals)
+            .filter(([_, amt]) => amt > 0)
+            .sort((a, b) => b[1] - a[1]);
+
+        if (countPill) {
+            countPill.textContent = `${sortedGroups.length} กลุ่ม`;
+        }
+
+        if (sortedGroups.length === 0) {
+            itemsList.innerHTML = '<div style="color:#64748b;font-size:0.75rem;padding:8px 0;">(ยังไม่พบข้อมูล Group)</div>';
+            return;
+        }
+
+        itemsList.innerHTML = sortedGroups.map(([name, amt]) => {
+            const color = groupColorMap[name] || '#38bdf8';
+            const pct = grandTotalInvested > 0 ? ((amt / grandTotalInvested) * 100).toFixed(1) : '0.0';
+            const barW = Math.min(100, Math.max(4, parseFloat(pct)));
+
+            return `
+                <div class="announce-group-item-card" title="${escHtml(name)}: ยอดลงทุน ${fmtNum(amt)} บาท (${pct}%)">
+                    <div class="announce-group-item-top">
+                        <div class="announce-group-item-name-wrap">
+                            <span class="announce-group-item-dot" style="background: ${color};"></span>
+                            <span class="announce-group-item-name">${escHtml(name)}</span>
+                        </div>
+                        <span class="announce-group-item-amt">${fmtCompactMoney(amt)}</span>
+                    </div>
+                    <div class="announce-group-item-bottom">
+                        <div class="announce-group-bar-track">
+                            <div class="announce-group-bar-fill" style="width: ${barW}%; background: ${color};"></div>
+                        </div>
+                        <span class="announce-group-item-pct">${pct}%</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    /**
+     * เปิดหน้าต่าง Lightbox ประกาศผลพอร์ตการลงทุน AI (ขนาดกว้าง 90% สูง 90%)
+     * พร้อมสรุปผล 5 กล่องด้านบน, กล่อง Group ด้านซ้าย, และกราฟด้านขวา
+     * สั่งปิดระบบการลงทุน AI ทั้งหมดทันที
+     */
+    function openAnnounceResultModal() {
+        const modal = document.getElementById('announceResultModal');
+        if (!modal) return;
+
+        // 1. สั่งปิดระบบการลงทุนพอร์ต AI ทั้งหมด (Master Vote & ทุกทีม = closed)
+        closeAllAiInvestments();
+
+        // 2. คำนวณสรุปผล 5 กล่องด้านบน:
+        //    จำนวนนักลงทุน, กล่องจำนวนผู้ลงทุน (ไม่นับซ้ำ), จำนวนเงินทุนทั้งหมด, จำนวนเงินที่ลงทุน, สัดส่วนการลงทุน
+        const members = (state && typeof state.getMembers === 'function') ? state.getMembers() : [];
+        const registered = members.filter(m => m.registered === true);
+        const totalEligible = registered.length > 0 ? registered.length : (members.length || 1);
+
+        const budgetPerPerson = (state && typeof state.getVoteBudget === 'function') ? state.getVoteBudget() : 1000000;
+        const totalInitialBudget = totalEligible * budgetPerPerson;
+
+        const allUserInv = (state && typeof state.getAllUserInvestments === 'function') ? state.getAllUserInvestments() : {};
+        let activeInvestorsCount = 0;
+        let totalMoneyInvested = 0;
+
+        Object.entries(allUserInv).forEach(([empId, userMap]) => {
+            if (!userMap || typeof userMap !== 'object') return;
+            let userTotal = 0;
+            Object.values(userMap).forEach(amt => {
+                const val = parseFloat(amt) || 0;
+                if (val > 0) {
+                    userTotal += val;
+                    totalMoneyInvested += val;
+                }
+            });
+            if (userTotal > 0) activeInvestorsCount++;
+        });
+
+        // กรณีสำรองถ้าไม่มีข้อมูลใน allUserInv โดยตรง
+        if (totalMoneyInvested === 0) {
+            const players = (state && typeof state.getPlayers === 'function') ? state.getPlayers() : (allPlayersList || []);
+            players.forEach(p => {
+                totalMoneyInvested += (parseFloat(p.voteAmount) || 0);
+            });
+        }
+
+        const investedMoneyPct = totalInitialBudget > 0 ? ((totalMoneyInvested / totalInitialBudget) * 100).toFixed(1) : '0.0';
+
+        // อัปเดตตัวเลขในกล่องสรุป 5 กล่องด้านบน (font-weight: 500)
+        const elTotalEligible = document.getElementById('announceKpiTotalEligible');
+        if (elTotalEligible) elTotalEligible.textContent = fmtNum(totalEligible);
+
+        const elActiveVoters = document.getElementById('announceKpiActiveVoters');
+        if (elActiveVoters) elActiveVoters.textContent = fmtNum(activeInvestorsCount);
+
+        const elTotalBudget = document.getElementById('announceKpiTotalBudget');
+        if (elTotalBudget) elTotalBudget.textContent = fmtNum(totalInitialBudget);
+
+        const elTotalInvested = document.getElementById('announceKpiTotalInvested');
+        if (elTotalInvested) elTotalInvested.textContent = fmtNum(totalMoneyInvested);
+
+        const elInvestedPct = document.getElementById('announceKpiInvestedPct');
+        if (elInvestedPct) elInvestedPct.textContent = `${investedMoneyPct}%`;
+
+        // 3. ดึงข้อมูลทีมและจัดอันดับจากมากที่สุดไปน้อยสุด
+        const teamsData = getAggregatedTeamsData();
+        const groupColorMap = buildGroupColorMap(teamsData);
+
+        // 4. แสดงกล่องข้อความ Group ทางด้านซ้ายของกราฟ
+        renderAnnounceGroupSideBox(teamsData, groupColorMap);
+
+        // 5. แสดงกราฟพอร์ตการลงทุนทางด้านขวา (ชื่อทีม 2 บรรทัด และความกว้างขยายยาวขึ้น)
+        renderAnnounceResultChart(teamsData, groupColorMap);
+
+        // 6. เล่นเสียงเฉลิมฉลอง (Victory Fanfare)
+        const sound = window.sound || window.soundEffects || (typeof SoundEffects !== 'undefined' ? new SoundEffects() : null);
+        if (sound && typeof sound.playWin === 'function') {
+            sound.playWin();
+        }
+
+        // 7. แสดง Modal Lightbox
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => {
+            modal.classList.add('show');
+        });
+
+        // 8. แสดง Toast แจ้งเตือน
+        showToast('🔒 ปิดระบบการลงทุนพอร์ต AI ทั้งหมด และประกาศผลเรียบร้อยแล้ว!', 'success');
+    }
+
+    /**
+     * ปิดหน้าต่าง Lightbox ประกาศผล
+     */
+    function closeAnnounceResultModal() {
+        const modal = document.getElementById('announceResultModal');
+        if (!modal) return;
+
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
     }
 
     // Auto-run on DOM ready

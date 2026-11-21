@@ -144,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelQuizModalBtn = document.getElementById('cancelQuizModalBtn');
     const quizForm = document.getElementById('quizForm');
     const quizIdInput = document.getElementById('quizIdInput');
+    const quizCategoryInput = document.getElementById('quizCategoryInput');
     const quizTitleInput = document.getElementById('quizTitleInput');
     const quizScoreInput = document.getElementById('quizScoreInput');
     const quizMaxAnswersInput = document.getElementById('quizMaxAnswersInput');
@@ -469,6 +470,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="quiz-card-header">
                             <div>
                                 <span class="quiz-number-tag">ข้อที่ ${idx + 1}</span>
+                                ${q.category ? `
+                                    <div class="quiz-pre-title">
+                                        <span class="quiz-category-pill">📌 ${q.category}</span>
+                                    </div>
+                                ` : ''}
                                 <h3 class="quiz-card-title">${q.title}</h3>
                             </div>
                         </div>
@@ -555,6 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!quizModal || !quizForm) return;
         quizForm.reset();
         quizIdInput.value = '';
+        if (quizCategoryInput) quizCategoryInput.value = '';
         if (quizModalTitle) quizModalTitle.innerHTML = 'เพิ่มข้อคำถามใหม่ (<code class="table-name-badge">crsdg_quiz</code>)';
         if (quizAnswersRowsContainer) {
             quizAnswersRowsContainer.innerHTML = '';
@@ -595,6 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!quiz || !quizModal) return;
 
         quizIdInput.value = quiz.id;
+        if (quizCategoryInput) quizCategoryInput.value = quiz.category || '';
         quizTitleInput.value = quiz.title;
         quizMaxAnswersInput.value = quiz.maxAnswers || 4;
         if (quizModalTitle) quizModalTitle.innerHTML = 'แก้ไขข้อคำถาม (<code class="table-name-badge">crsdg_quiz</code>)';
@@ -619,6 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
         quizForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const id = quizIdInput.value;
+            const category = quizCategoryInput ? quizCategoryInput.value.trim() : '';
             const title = quizTitleInput.value.trim();
             const score = recalculateQuizTotalScore() || parseInt(quizScoreInput.value, 10) || 0;
             const maxAnswers = parseInt(quizMaxAnswersInput.value, 10) || 4;
@@ -645,9 +654,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let res;
             if (id) {
-                res = state.updateQuiz(id, { title, score, maxAnswers, answers });
+                res = state.updateQuiz(id, { category, title, score, maxAnswers, answers });
             } else {
-                res = state.addQuiz({ title, score, maxAnswers, answers });
+                res = state.addQuiz({ category, title, score, maxAnswers, answers });
             }
 
             if (res.success) {
