@@ -1744,6 +1744,7 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
     overflow: hidden;
     text-overflow: ellipsis;
     min-height: 2.8em;
+    margin-top: -15px;
 }
 
 .quiz-card-meta {
@@ -4526,6 +4527,7 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
     .quiz-result-modal-card {
         max-width: 720px;
     }
+
     .match-result-modal-card {
         max-width: 760px;
     }
@@ -4564,6 +4566,7 @@ body:has(#matchArenaOverlay.active) .bottom-hint,
     .quiz-result-modal-card {
         max-width: 720px;
     }
+
     .match-result-modal-card {
         max-width: 760px;
     }

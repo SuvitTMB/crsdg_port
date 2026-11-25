@@ -85,6 +85,57 @@ body.remote-body {
     line-height: 1.25;
 }
 
+.remote-brand-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-restart-game-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, rgba(220, 38, 38, 0.28) 100%);
+    border: 1px solid rgba(248, 113, 113, 0.45);
+    color: #fca5a5;
+    font-size: 0.76rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+    user-select: none;
+}
+
+.btn-restart-game-brand:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.35) 0%, rgba(220, 38, 38, 0.5) 100%);
+    border-color: #ef4444;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45);
+}
+
+.btn-restart-game-brand:active {
+    transform: translateY(0);
+}
+
+.btn-restart-game-brand .restart-icon {
+    font-size: 0.85rem;
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.btn-restart-game-brand:hover .restart-icon {
+    transform: rotate(-180deg);
+}
+
+.btn-restart-game-brand .restart-label {
+    letter-spacing: 0.2px;
+}
+
 .remote-brand-sub {
     font-size: 0.74rem;
     color: rgba(255, 255, 255, 0.65);

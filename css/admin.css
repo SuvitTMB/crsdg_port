@@ -1422,6 +1422,12 @@ b {
     color: #fcd34d;
 }
 
+.chip-col-d {
+    background: rgba(168, 85, 247, 0.18);
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    color: #c084fc;
+}
+
 .import-options-bar {
     display: flex;
     justify-content: space-between;
@@ -2137,6 +2143,12 @@ b {
     background: rgba(245, 158, 11, 0.12);
     color: #fcd34d;
     border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.chip-col-d {
+    background: rgba(168, 85, 247, 0.12);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
 .excel-modal-dropzone {
