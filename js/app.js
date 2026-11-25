@@ -156,7 +156,7 @@
   }
   const userAlertModalEl = document.getElementById('userAlertModal');
   if (userAlertModalEl) {
-    userAlertModalEl.addEventListener('click', function(e) {
+    userAlertModalEl.addEventListener('click', function (e) {
       if (e.target === this) closeUserAlertModal(false);
     });
   }
@@ -334,11 +334,6 @@
   function initApp() {
     updateRegisteredCountBadge();
 
-    // ซิงค์ตารางแบบประเมินผล crsdg_evaluations จาก Firebase Firestore
-    if (window.FirebaseSync && typeof window.FirebaseSync.fetchEvaluationsFromCloud === 'function') {
-      window.FirebaseSync.fetchEvaluationsFromCloud().catch(() => {});
-    }
-
     // Subscribe to Firebase Cloud Sync Realtime Notifications
     if (window.FirebaseSync && typeof window.FirebaseSync.subscribe === 'function') {
       window.FirebaseSync.subscribe((event, data) => {
@@ -407,20 +402,12 @@
           return;
         }
 
-        // เมื่อมีการแจ้งเตือน Reset เงินโหวต (INVESTMENTS_RESET) หรือการอัปเดตเงินลงทุนข้ามเครื่อง (INVESTMENTS_UPDATED)
+        // เมื่อมีการแจ้งเตือน Reset เงินโหวต (INVESTMENTS_RESET)
         if (msg.type === 'INVESTMENTS_RESET' || (msg.type === 'INVESTMENTS_UPDATED' && msg.reset)) {
           if (activeTab === 'vote' && currentEmployee) {
+            window.draftUserInvestments = null;
             renderVoteTab(currentEmployee);
             return;
-          }
-        } else if (msg.type === 'INVESTMENTS_UPDATED') {
-          // หากเปิดใช้งาน 2 เครื่องด้วยรหัสพนักงานเดียวกัน และมีการปรับพอร์ตจากอีกเครื่อง ให้ซิงค์พอร์ตทันที
-          if (activeTab === 'vote' && currentEmployee) {
-            const isUserInteracting = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
-            if (!isUserInteracting) {
-              renderVoteTab(currentEmployee);
-              return;
-            }
           }
         }
 
@@ -428,13 +415,15 @@
         const msgType = String(msg.type || '');
         let isRelevant = false;
 
-        if (msgType.includes('MEMBER') || msgType.includes('RESET') || msgType.includes('SYSTEM')) {
+        if (msgType.includes('RESET') || msgType.includes('SYSTEM')) {
           isRelevant = true;
         } else if (activeTab === 'home' && (msgType.includes('WINNER') || msgType.includes('PRIZE') || msgType.includes('DRAW'))) {
           isRelevant = true;
-        } else if (activeTab === 'vote' && (msgType.includes('INVESTMENT') || msgType.includes('VOTE') || msgType.includes('TEAM') || msgType.includes('BUDGET') || msgType.includes('PLAYER'))) {
+        } else if (activeTab === 'vote' && (msgType.includes('VOTE') || msgType.includes('BUDGET') || msgType.includes('RESET') || msgType.includes('PLAYER') || msgType.includes('TEAM'))) {
+          // หากกำลังส่งข้อมูลการลงทุน ให้ข้ามการ re-render แท็บ vote เพื่อไม่ให้ไปขัดจังหวะการบันทึก
+          if (window._isSubmittingInvestments) return;
           isRelevant = true;
-        } else if (activeTab === 'team' && (msgType.includes('PLAYER') || msgType.includes('TEAM'))) {
+        } else if (activeTab === 'team' && (msgType.includes('MEMBER') || msgType.includes('PLAYER') || msgType.includes('TEAM'))) {
           isRelevant = true;
         } else if (activeTab === 'game' && (msgType.includes('GAME') || msgType.includes('SCORE') || msgType.includes('ROUND'))) {
           isRelevant = true;
@@ -454,16 +443,10 @@
       });
     }
 
-    // Check if employee already logged in
-    const cachedEmpId = localStorage.getItem('crsdg_active_user_emp_id');
-    if (cachedEmpId && window.stateManager) {
-      const members = window.stateManager.getMembers();
-      const matched = members.find(m => String(m.EmployeeID || m.id).trim().toLowerCase() === String(cachedEmpId).trim().toLowerCase());
-      if (matched) {
-        currentEmployee = matched;
-        checkPhotoAndNavigate(matched);
-      }
-    }
+    // ยกเลิกการจำค่า login ของผู้ใช้งาน (ล้างค่าเดิมและบังคับให้เข้าสู่ระบบใหม่ทุกครั้งที่เปิดหน้า)
+    try {
+      localStorage.removeItem('crsdg_active_user_emp_id');
+    } catch (e) {}
 
     bindRegistrationEvents();
     bindCropperEvents();
@@ -494,7 +477,7 @@
     const mobileDeviceFrame = document.querySelector('.mobile-device-frame');
     if (viewName === 'home') {
       if (appFixedTopBar) appFixedTopBar.style.display = 'flex';
-      if (appFixedBottomBar) appFixedBottomBar.style.display = 'grid';
+      if (appFixedBottomBar) appFixedBottomBar.style.setProperty('display', 'flex', 'important');
       if (appScrollContainer) appScrollContainer.classList.add('has-fixed-bars');
       document.body.classList.add('portal-mode-white');
       if (mobileDeviceFrame) mobileDeviceFrame.classList.add('portal-mode-white');
@@ -502,7 +485,7 @@
       switchHomeTab(activeTab || 'home');
     } else {
       if (appFixedTopBar) appFixedTopBar.style.display = 'none';
-      if (appFixedBottomBar) appFixedBottomBar.style.display = 'none';
+      if (appFixedBottomBar) appFixedBottomBar.style.setProperty('display', 'none', 'important');
       if (appScrollContainer) appScrollContainer.classList.remove('has-fixed-bars');
       document.body.classList.remove('portal-mode-white');
       if (mobileDeviceFrame) {
@@ -548,16 +531,11 @@
   window.applyFeatureVisibility = applyFeatureVisibility;
 
   // ========================================================
-  // 3. HOME PORTAL TAB SWITCHING (5 Tabs)
+  // 3. HOME PORTAL TAB SWITCHING (4 Tabs: home, team, vote, profile)
   // ========================================================
   function switchHomeTab(tabName) {
     if (tabName === 'game') {
-      const isGameBtnOpen = (window.stateManager && typeof window.stateManager.isGameButtonOpen === 'function')
-        ? window.stateManager.isGameButtonOpen()
-        : (localStorage.getItem('crsdg_game_btn_open') !== 'false');
-      if (!isGameBtnOpen) {
-        tabName = 'home';
-      }
+      tabName = 'home';
     }
     activeTab = tabName;
 
@@ -588,7 +566,6 @@
       home: tabPaneHome,
       team: tabPaneTeam,
       vote: tabPaneVote,
-      game: tabPaneGame,
       profile: tabPaneProfile
     };
 
@@ -618,9 +595,6 @@
         break;
       case 'vote':
         renderVoteTab(currentEmployee);
-        break;
-      case 'game':
-        renderGameTab(currentEmployee);
         break;
       case 'profile':
         renderProfileTab(currentEmployee);
@@ -945,8 +919,90 @@
   };
 
   // ========================================================
-  // 7. TAB 3: โหวต AI & การลงทุนทีมแข่งขัน (AI VOTE & INVESTMENT)
+  // 7. TAB 3: พอร์ตลงทุน (AI INVESTMENT PORTFOLIO - SUBMIT MODEL)
   // ========================================================
+  window.draftUserInvestments = null;
+  window.savedUserInvestmentsBaseline = null;
+  window.draftUserEmpId = null;
+  window._revertInvestButtonTimer = null;
+
+  /**
+   * ตรวจสอบว่าค่าเงินลงทุนใน Draft มีการเปลี่ยนแปลงจากค่าที่บันทึกไว้ล่าสุดหรือไม่
+   */
+  function hasInvestmentsChanged(draft, baseline, players) {
+    const d = draft || {};
+    const b = baseline || {};
+    if (Array.isArray(players) && players.length > 0) {
+      for (const p of players) {
+        const pId = p.id;
+        const vD = Math.round(parseFloat(d[pId]) || 0);
+        const vB = Math.round(parseFloat(b[pId]) || 0);
+        if (vD !== vB) return true;
+      }
+      return false;
+    }
+    const allKeys = new Set([...Object.keys(d), ...Object.keys(b)]);
+    for (const k of allKeys) {
+      const vD = Math.round(parseFloat(d[k]) || 0);
+      const vB = Math.round(parseFloat(b[k]) || 0);
+      if (vD !== vB) return true;
+    }
+    return false;
+  }
+
+  /**
+   * อัปเดตสถานะปุ่มและข้อความแจ้งเตือนด้านบนตามสถานะ:
+   * 1. 'unchanged'  -> สีพื้นเทา, ข้อความ "ไม่มีการปรับพอร์ต", ข้อความด้านบนสีเทา "คุณยังไม่ได้ปรับแต่งพอร์ตลงทุน", disabled
+   * 2. 'modified'   -> สีพื้นแดง, ข้อความ "บันทึกการแก้ไข", ข้อความด้านบนสีแดง "มีการปรับพอร์ตลงทุนให้กดบันทึกรายการ", enabled
+   * 3. 'submitting' -> สีพื้นเทา, ข้อความ "กำลังบันทึกข้อมูล...", ข้อความด้านบนสีเทา, disabled ป้องกันการกดซ้ำทันทีเมื่อคลิก
+   * 4. 'saved'      -> สีพื้นเขียว, ข้อความ "บันทึกรายการแล้ว", ข้อความด้านบนสีเขียว "บันทึกข้อมูลการจัดสรรเงินลงทุนเรียบร้อยแล้ว", disabled
+   */
+  function updateInvestSubmitButtonUI(stateMode) {
+    const btn = document.getElementById('btnSubmitInvestments');
+    const hint = document.getElementById('submitStatusHint');
+    if (!btn) return;
+
+    btn.classList.remove('is-unchanged', 'is-modified', 'is-saved', 'is-submitting');
+
+    if (stateMode === 'saved') {
+      // สถานะ 3: สีเขียว - บันทึกรายการแล้ว
+      btn.classList.add('is-saved');
+      btn.disabled = true;
+      btn.innerHTML = 'บันทึกรายการแล้ว';
+      if (hint) {
+        hint.innerHTML = 'บันทึกข้อมูลการจัดสรรเงินลงทุนเรียบร้อยแล้ว';
+        hint.style.color = '#10b981';
+      }
+    } else if (stateMode === 'submitting') {
+      // สถานะขณะคลิกบันทึก: สีพื้นเป็นสีเทา disabled ป้องกันการกดซ้ำทันที
+      btn.classList.add('is-submitting');
+      btn.disabled = true;
+      btn.innerHTML = '⏳ กำลังบันทึกข้อมูล...';
+      if (hint) {
+        hint.innerHTML = 'ระบบกำลังบันทึกข้อมูลการจัดสรรเงินลงทุน...';
+        hint.style.color = '#64748b';
+      }
+    } else if (stateMode === 'modified') {
+      // สถานะ 2: สีแดง - บันทึกการแก้ไข (หรือ คลิกเพื่อบันทึกการแก้ไข)
+      btn.classList.add('is-modified');
+      btn.disabled = false;
+      btn.innerHTML = 'บันทึกการแก้ไข';
+      if (hint) {
+        hint.innerHTML = 'มีการปรับพอร์ตลงทุนให้กดบันทึกรายการ';
+        hint.style.color = '#ef4444';
+      }
+    } else {
+      // สถานะ 1: สีเทา - ไม่มีการปรับพอร์ต
+      btn.classList.add('is-unchanged');
+      btn.disabled = true;
+      btn.innerHTML = 'ไม่มีการปรับพอร์ต';
+      if (hint) {
+        hint.innerHTML = 'คุณยังไม่ได้ปรับแต่งพอร์ตลงทุน';
+        hint.style.color = '#64748b';
+      }
+    }
+  }
+
   function renderVoteTab(employee) {
     if (!votingTeamsList) return;
     const empId = employee ? String(employee.EmployeeID || employee.id).trim().toLowerCase() : '';
@@ -955,10 +1011,23 @@
     const sm = window.stateManager;
     const maxBudget = sm ? sm.getVoteBudget() : 1000000;
     const isVoteOpen = sm ? sm.isVoteOpen() : true;
-    const userInvestments = sm ? sm.getUserInvestments(empId) : {};
-    const totalInvested = sm ? sm.getUserTotalInvested(empId) : 0;
+
+    // Initialize or maintain draft & baseline investment state (Manual Submit workflow)
+    if (!window.savedUserInvestmentsBaseline || window.draftUserEmpId !== empId) {
+      const saved = sm ? sm.getUserInvestments(empId) : {};
+      window.savedUserInvestmentsBaseline = { ...saved };
+      window.draftUserInvestments = { ...saved };
+      window.draftUserEmpId = empId;
+    }
+
+    const userInvestments = window.draftUserInvestments || {};
+    let totalInvested = 0;
+    Object.values(userInvestments).forEach(v => {
+      totalInvested += (parseFloat(v) || 0);
+    });
+    totalInvested = Math.round(totalInvested);
     const remainingBudget = Math.max(0, maxBudget - totalInvested);
-    const investedPct = Math.min(100, Math.round((totalInvested / maxBudget) * 100));
+    const investedPct = maxBudget > 0 ? Math.min(100, Math.round((totalInvested / maxBudget) * 100)) : 0;
 
     // 1. Render Portfolio Overview Banner
     const portfolioContainer = document.getElementById('aiVotePortfolioContainer');
@@ -980,7 +1049,7 @@
             </div>
             <div class="portfolio-status-pill ${isVoteOpen ? 'status-open' : 'status-closed'}" style="display:none;">
               <span class="live-pulse-dot" style="background:${isVoteOpen ? '#10b981' : '#ef4444'};"></span>
-              <span>${isVoteOpen ? '🟢 เปิดให้ลงทุน1' : '🔒 ปิดรับการลงทุน'}</span>
+              <span>${isVoteOpen ? '🟢 เปิดให้ลงทุน' : '🔒 ปิดรับการลงทุน'}</span>
             </div>
           </div>
 
@@ -1039,7 +1108,7 @@
     // Sort teams by orderNo
     players.sort((a, b) => (parseInt(a.orderNo, 10) || 0) - (parseInt(b.orderNo, 10) || 0));
 
-    votingTeamsList.innerHTML = players.map(p => {
+    const teamsHtml = players.map(p => {
       const pId = p.id;
       const order = p.orderNo || 1;
       const name = p.teamName || p.name || `ทีมที่ ${order}`;
@@ -1051,89 +1120,112 @@
       const myInvested = Math.round(parseFloat(userInvestments[pId]) || 0);
       const hasMyInvestment = myInvested > 0;
       const isTeamOpen = (p.voteStatus !== 'closed') && isVoteOpen;
-      // ปรับให้สไลด์คำนวณเป็นจำนวนเต็มของเงินที่ได้รับ (maxBudget) คงที่ไม่เปลี่ยนเป็น % เพื่อไม่ให้สไลด์ไปมาตลอดเวลา
       const fullBudget = Math.round(maxBudget);
       const sliderPct = fullBudget > 0 ? Math.min(100, Math.max(0, (myInvested / fullBudget) * 100)) : 0;
 
       return `
-        <div class="invest-team-card ${hasMyInvestment ? 'has-investment' : ''} ${!isTeamOpen ? 'is-team-locked' : ''}" id="investCard_${pId}">
-          <!-- Team Header (คลิกแถวชื่อทีมเพื่อดู Lightbox แสดงข้อมูลทีม รูปรวม และสมาชิก) -->
-          <div class="invest-team-header" onclick="window.openTeamDetailLightbox('${pId}')" title="คลิกดูข้อมูลทีม รูปรวม และสมาชิก">
-            <div class="invest-team-avatar">
-              ${photo ? `<img src="${photo}" alt="${name}">` : `<span>🛡️</span>`}
-            </div>
-            <div class="invest-team-meta">
-              <div class="invest-team-badge-row">
-                <span class="invest-order-pill">ทีมที่ ${order}</span>
-                <button type="button" class="btn-team-info-pill" onclick="event.stopPropagation(); window.openTeamDetailLightbox('${pId}')" title="คลิกดูข้อมูลและรายละเอียดโครงการ">
-                  🔍 ข้อมูลทีม ❯
-                </button>
+        <div class="invest-team-card compact-team-card ${hasMyInvestment ? 'has-investment' : ''} ${!isTeamOpen ? 'is-team-locked' : ''}" id="investCard_${pId}">
+          <!-- Compact Row 1: Team info & Allocation & Action -->
+          <div class="compact-team-row1">
+            <div class="compact-team-left">
+              <div class="compact-team-avatar" onclick="window.openTeamDetailLightbox('${pId}')" title="คลิกที่รูปเพื่อดูข้อมูลทีม รูปรวม และสมาชิก" style="cursor: pointer;">
+                ${photo ? `<img src="${photo}" alt="${name}">` : `<span>EP.${order}</span>`}
               </div>
-              <div class="invest-team-name">${name}</div>
+              <div class="compact-team-name-col">
+                <div class="compact-order-badge">ทีมที่ ${order}</div>
+                <div class="compact-team-name" title="${name}">${name}</div>
+              </div>
+            </div>
+
+            <div class="compact-team-right">
+              <div class="invest-allocation-badge compact-alloc-pill ${myInvested === 0 ? 'is-zero' : ''}" id="myAllocBadge_${pId}">
+                ${myInvested.toLocaleString()} บาท
+              </div>
             </div>
           </div>
 
-          <!-- User's Allocation Section (เอากล่องผู้ลงทุนทั้งหมดออก, ปรับการกรอกข้อมูลเป็นแถบสไลด์ และเอากล่องจำนวนเงินออก) -->
-          <div class="invest-user-allocation-box">
-            <div class="invest-allocation-header">
-              <span class="invest-allocation-title">
-                <span>💼 เงินที่คุณลงทุนในทีมนี้:</span>
-              </span>
-              <span class="invest-allocation-badge ${myInvested === 0 ? 'is-zero' : ''}" id="myAllocBadge_${pId}">
-                ${myInvested.toLocaleString()} บาท
-              </span>
-            </div>
-
+          <!-- Compact Row 2: Control Bar (Range Slider or Slim Locked Notice) -->
+          <div class="compact-team-row2">
             ${isTeamOpen ? `
-              <!-- Range Slider Control: สเกลจำนวนเต็มคงที่ตามเงินงบประมาณที่ได้รับ ไม่คำนวณย่อขยายเป็น % -->
-              <div class="invest-slider-container">
-                <div class="invest-slider-labels">
-                  <span>0 บาท</span>
-                  <span class="slider-curr-value" id="sliderValDisplay_${pId}">${myInvested.toLocaleString()} บาท</span>
-                  <span>${fullBudget.toLocaleString()} บาท</span>
-                </div>
-                <input type="range" class="invest-range-slider" id="rangeSlider_${pId}"
+              <div class="compact-slider-container">
+                <input type="range" class="invest-range-slider compact-range-slider" id="rangeSlider_${pId}"
                   min="0" max="${fullBudget}" step="10000" value="${myInvested}"
-                  style="background: linear-gradient(to right, #38bdf8 0%, #38bdf8 ${sliderPct}%, #e2e8f0 ${sliderPct}%, #e2e8f0 100%);"
+                  style="background: linear-gradient(to right, #ea580c 0%, #ea580c ${sliderPct}%, #fed7aa ${sliderPct}%, #fed7aa 100%);"
                   oninput="window.onSliderLiveInput('${pId}', this.value)"
                   onchange="window.onSliderCommitChange('${pId}', this.value)">
+                <div class="compact-slider-meta">
+                  <span class="compact-slider-min">0 บาท</span>
+                  <span class="compact-slider-val"><strong id="sliderValDisplay_${pId}">${myInvested.toLocaleString()} บาท</strong></span>
+                  <span class="compact-slider-max">เต็ม ${fullBudget.toLocaleString()} บ.</span>
+                </div>
               </div>
             ` : `
-              <div class="invest-closed-notice">
-                ${!isVoteOpen ? '🔒 ปิดรับการลงทุนทั้งระบบแล้ว' : '🔒 ยังไม่เปิดให้ลงทุนในทีมนี้'} ${myInvested > 0 ? `(คุณได้ลงทุนในทีมนี้ <strong>${myInvested.toLocaleString()} บาท</strong>)` : ''}
+              <div class="invest-closed-notice compact-closed-notice">
+                🔒 ยังไม่เปิดให้ลงทุนในทีมนี้ ${myInvested > 0 ? `<br>(คุณได้จัดสรร <font color="#f68b1f">${myInvested.toLocaleString()}</font> บาท)` : ''}
               </div>
             `}
           </div>
         </div>
       `;
     }).join('');
+
+    const isChanged = hasInvestmentsChanged(window.draftUserInvestments, window.savedUserInvestmentsBaseline, players);
+    const currentMode = isChanged ? 'modified' : 'unchanged';
+
+    const bottomSubmitHtml = isVoteOpen ? `
+      <div class="invest-submit-action-bar invest-submit-bottom-container">
+        <div class="submit-status-hint" id="submitStatusHint" style="margin-bottom: 12px; font-size: 0.82rem; font-weight: 500; color: ${currentMode === 'modified' ? '#ef4444' : '#64748b'};">
+          ${currentMode === 'modified' ? 'มีการปรับพอร์ตลงทุนให้กดบันทึกรายการ' : 'คุณยังไม่ได้ปรับแต่งพอร์ตลงทุน'}
+        </div>
+        <button type="button" class="btn-submit-investments is-${currentMode}" id="btnSubmitInvestments" onclick="window.submitAllInvestments()" ${currentMode === 'unchanged' ? 'disabled' : ''} style="height: 52px; font-size: 0.90rem; font-weight: 500;">
+          ${currentMode === 'modified' ? 'บันทึกการแก้ไข' : 'ไม่มีการปรับพอร์ต'}
+        </button>
+      </div>
+    ` : '';
+
+    votingTeamsList.innerHTML = teamsHtml + bottomSubmitHtml;
   }
 
-  // Interactive Investment Handlers for Registered Employees
-  let sliderCommitDebounceTimers = {};
+  // Interactive Investment Handlers (Draft State - No Continuous Realtime Calls)
   window.onSliderLiveInput = function (teamId, val) {
     if (!currentEmployee || !window.stateManager) return;
-    const empId = currentEmployee.EmployeeID || currentEmployee.id;
     const sm = window.stateManager;
     const maxBudget = sm.getVoteBudget();
-    const currentInv = sm.getUserInvestments(empId);
-    const myInvested = Math.round(parseFloat(currentInv[teamId]) || 0);
-    const totalInvested = sm.getUserTotalInvested(empId);
-    const remainingBudget = Math.max(0, maxBudget - totalInvested);
-    const maxAllowed = myInvested + remainingBudget;
+    if (!window.draftUserInvestments) {
+      const empId = currentEmployee.EmployeeID || currentEmployee.id;
+      window.draftUserInvestments = { ...(sm.getUserInvestments(empId) || {}) };
+    }
 
+    // Calculate other teams' total in draft
+    let otherTotal = 0;
+    Object.keys(window.draftUserInvestments).forEach(tId => {
+      if (tId !== teamId) {
+        otherTotal += (parseFloat(window.draftUserInvestments[tId]) || 0);
+      }
+    });
+
+    const maxAllowed = Math.max(0, maxBudget - otherTotal);
     let num = Math.round(Math.max(0, parseFloat(val) || 0));
-    // Clamp smoothly to available budget without altering the slider max scale
+
+    // Clamp value to remaining available budget
     if (num > maxAllowed) {
       num = maxAllowed;
       const sliderEl = document.getElementById(`rangeSlider_${teamId}`);
       if (sliderEl) sliderEl.value = num;
     }
 
+    // Save to draft in-memory
+    if (num > 0) {
+      window.draftUserInvestments[teamId] = num;
+    } else {
+      delete window.draftUserInvestments[teamId];
+    }
+
+    // Update slider UI
     const slider = document.getElementById(`rangeSlider_${teamId}`);
     if (slider) {
       const pct = maxBudget > 0 ? Math.min(100, Math.max(0, (num / maxBudget) * 100)) : 0;
-      slider.style.background = `linear-gradient(to right, #38bdf8 0%, #38bdf8 ${pct}%, #e2e8f0 ${pct}%, #e2e8f0 100%)`;
+      slider.style.background = `linear-gradient(to right, #ea580c 0%, #ea580c ${pct}%, #fed7aa ${pct}%, #fed7aa 100%)`;
     }
     const valEl = document.getElementById(`sliderValDisplay_${teamId}`);
     if (valEl) valEl.textContent = num.toLocaleString() + ' บาท';
@@ -1144,9 +1236,15 @@
       else badgeEl.classList.remove('is-zero');
     }
 
-    // Live update top banner stats
-    const otherInvested = totalInvested - myInvested;
-    const liveTotal = otherInvested + num;
+    // Toggle has-investment styling on card
+    const cardEl = document.getElementById(`investCard_${teamId}`);
+    if (cardEl) {
+      if (num > 0) cardEl.classList.add('has-investment');
+      else cardEl.classList.remove('has-investment');
+    }
+
+    // Live update banner stats in DOM
+    const liveTotal = otherTotal + num;
     const liveRemaining = Math.max(0, maxBudget - liveTotal);
     const livePct = maxBudget > 0 ? Math.round((liveTotal / maxBudget) * 100) : 0;
 
@@ -1163,56 +1261,110 @@
     const pctText = document.getElementById('userInvestedPctText');
     if (pctText) pctText.textContent = `${livePct}% (${liveTotal.toLocaleString()} / ${maxBudget.toLocaleString()} บ.)`;
 
-    // Debounce commit (350ms) to support high concurrency and eliminate network overhead
-    if (sliderCommitDebounceTimers[teamId]) {
-      clearTimeout(sliderCommitDebounceTimers[teamId]);
+    // Dynamic 3-state check against saved baseline:
+    // หากมีการแก้ไขพอร์ต -> สีแดง "บันทึกการแก้ไข" และข้อความ "มีการปรับพอร์ตลงทุนให้กดบันทึกรายการ"
+    // หากค่ากลับมาเท่าเดิม -> สีเทา "ไม่มีการปรับพอร์ต" และข้อความ "คุณยังไม่ได้ปรับแต่งพอร์ตลงทุน"
+    const allTeams = (sm && typeof sm.getPlayers === 'function') ? sm.getPlayers() : [];
+    const isNowChanged = hasInvestmentsChanged(window.draftUserInvestments, window.savedUserInvestmentsBaseline, allTeams);
+
+    if (isNowChanged) {
+      if (window._revertInvestButtonTimer) {
+        clearTimeout(window._revertInvestButtonTimer);
+        window._revertInvestButtonTimer = null;
+      }
+      updateInvestSubmitButtonUI('modified');
+    } else {
+      updateInvestSubmitButtonUI('unchanged');
     }
-    sliderCommitDebounceTimers[teamId] = setTimeout(() => {
-      delete sliderCommitDebounceTimers[teamId];
-      window.setTeamInvestmentExact(teamId, num);
-    }, 350);
   };
 
   window.onSliderCommitChange = function (teamId, val) {
-    if (sliderCommitDebounceTimers[teamId]) {
-      clearTimeout(sliderCommitDebounceTimers[teamId]);
-      delete sliderCommitDebounceTimers[teamId];
+    window.onSliderLiveInput(teamId, val);
+  };
+
+  // Manual Submit Function - Only persists when clicked
+  window._isSubmittingInvestments = false;
+
+  window.submitAllInvestments = async function () {
+    // ป้องกันการคลิกซ้ำขณะกำลังประมวลผล (Disabled & Block duplicate calls)
+    if (window._isSubmittingInvestments) return;
+
+    if (!currentEmployee || !window.stateManager) return;
+    const empId = currentEmployee.EmployeeID || currentEmployee.id;
+    const sm = window.stateManager;
+    if (!sm.isVoteOpen()) {
+      showUserAlert('ขณะนี้ระบบปิดรับการลงทุนแล้ว ไม่สามารถแก้ไขได้', 'ปิดรับการลงทุน', '🔒');
+      return;
     }
-    window.setTeamInvestmentExact(teamId, val);
+
+    // 1. ทำการ disabled ปุ่มให้มีสีพื้นเป็นสีเทา ป้องกันการกดซ้ำทันทีเมื่อคลิก
+    window._isSubmittingInvestments = true;
+    updateInvestSubmitButtonUI('submitting');
+
+    const draft = { ...(window.draftUserInvestments || {}) };
+    const prevBaseline = window.savedUserInvestmentsBaseline ? { ...window.savedUserInvestmentsBaseline } : null;
+
+    // 2. อัปเดต baseline ทันที (Optimistic Save) เพื่อให้สถานะในเครื่องจำค่าใหม่ทันที ไม่เกิดการกระตุกหรือดีเลย์
+    window.savedUserInvestmentsBaseline = { ...draft };
+
+    let res = null;
+    try {
+      res = (typeof sm.submitUserInvestments === 'function')
+        ? await sm.submitUserInvestments(empId, draft)
+        : await sm.setUserInvestment(empId, Object.keys(draft)[0], draft[Object.keys(draft)[0]]);
+    } catch (err) {
+      console.error('[Investment] Submit error:', err);
+      res = { success: false, message: (err && err.message) || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' };
+    }
+
+    if (!res || !res.success) {
+      // คืนค่า baseline เดิมหากบันทึกไม่สำเร็จ (เช่น งบประมาณเกิน)
+      if (prevBaseline) window.savedUserInvestmentsBaseline = prevBaseline;
+      window._isSubmittingInvestments = false;
+      updateInvestSubmitButtonUI('modified');
+      showUserAlert((res && res.message) || 'ไม่สามารถบันทึกข้อมูลการลงทุนได้', 'แจ้งเตือน', '⚠️');
+      return;
+    }
+
+    window._isSubmittingInvestments = false;
+
+    // 3. เปลี่ยนปุ่มเป็นสีเขียว ข้อความ บันทึกรายการแล้ว ทันที
+    updateInvestSubmitButtonUI('saved');
+
+    // 4. แสดง Lightbox แจ้งผลทันที
+    showUserAlert('บันทึกข้อมูลการจัดสรรเงินลงทุนเรียบร้อยแล้ว!', 'บันทึกสำเร็จ', '✅');
+
+    if (window.soundManager && typeof window.soundManager.playSuccess === 'function') {
+      window.soundManager.playSuccess();
+    }
+
+    // 5. ใน 5 วินาทีให้กลับไปเป็นปุ่ม ไม่มีการปรับพอร์ต จำค่าใหม่ด้วย
+    if (window._revertInvestButtonTimer) {
+      clearTimeout(window._revertInvestButtonTimer);
+    }
+    window._revertInvestButtonTimer = setTimeout(() => {
+      const curPlayers = (sm && typeof sm.getPlayers === 'function') ? sm.getPlayers() : [];
+      const stillClean = !hasInvestmentsChanged(window.draftUserInvestments, window.savedUserInvestmentsBaseline, curPlayers);
+      if (stillClean) {
+        updateInvestSubmitButtonUI('unchanged');
+      }
+    }, 5000);
   };
 
   window.adjustTeamInvestment = function (teamId, delta) {
     if (!currentEmployee || !window.stateManager) return;
     const empId = currentEmployee.EmployeeID || currentEmployee.id;
     const sm = window.stateManager;
-    const currentInv = sm.getUserInvestments(empId);
-    const curAmt = parseFloat(currentInv[teamId]) || 0;
-    const newAmt = Math.max(0, curAmt + delta);
-
-    const res = sm.setUserInvestment(empId, teamId, newAmt);
-    if (!res.success) {
-      showUserAlert(res.message || 'ไม่สามารถปรับเปลี่ยนเงินลงทุนได้', 'แจ้งเตือนการลงทุน', '⚠️');
-      return;
+    if (!window.draftUserInvestments) {
+      window.draftUserInvestments = { ...(sm.getUserInvestments(empId) || {}) };
     }
-
-    // เมื่อมีการปรับการลงทุนไม่ต้องแสดงพลุ
-    renderVoteTab(currentEmployee);
+    const curAmt = parseFloat(window.draftUserInvestments[teamId]) || 0;
+    const newAmt = Math.max(0, curAmt + delta);
+    window.onSliderLiveInput(teamId, newAmt);
   };
 
   window.setTeamInvestmentExact = function (teamId, targetValue) {
-    if (!currentEmployee || !window.stateManager) return;
-    const empId = currentEmployee.EmployeeID || currentEmployee.id;
-    const sm = window.stateManager;
-    const val = Math.max(0, parseFloat(targetValue) || 0);
-
-    const res = sm.setUserInvestment(empId, teamId, val);
-    if (!res.success) {
-      showUserAlert(res.message || 'ไม่สามารถปรับเปลี่ยนเงินลงทุนได้', 'แจ้งเตือนการลงทุน', '⚠️');
-      renderVoteTab(currentEmployee);
-      return;
-    }
-
-    renderVoteTab(currentEmployee);
+    window.onSliderLiveInput(teamId, targetValue);
   };
 
   window.investAllRemaining = function (teamId) {
@@ -1220,35 +1372,23 @@
     const empId = currentEmployee.EmployeeID || currentEmployee.id;
     const sm = window.stateManager;
     const maxBudget = sm.getVoteBudget();
-    const currentInv = sm.getUserInvestments(empId);
-    const curAmt = parseFloat(currentInv[teamId]) || 0;
-    const totalInvested = sm.getUserTotalInvested(empId);
-    const remaining = Math.max(0, maxBudget - totalInvested);
-
+    if (!window.draftUserInvestments) {
+      window.draftUserInvestments = { ...(sm.getUserInvestments(empId) || {}) };
+    }
+    let otherTotal = 0;
+    Object.keys(window.draftUserInvestments).forEach(tId => {
+      if (tId !== teamId) otherTotal += (parseFloat(window.draftUserInvestments[tId]) || 0);
+    });
+    const remaining = Math.max(0, maxBudget - otherTotal);
     if (remaining <= 0) {
       showUserAlert('คุณใช้งบประมาณเต็มจำนวน ' + maxBudget.toLocaleString() + ' บาทแล้ว', 'งบประมาณเต็มแล้ว', '💡');
       return;
     }
-
-    const newTarget = curAmt + remaining;
-    const res = sm.setUserInvestment(empId, teamId, newTarget);
-    if (!res.success) {
-      showUserAlert(res.message || 'ไม่สามารถปรับเปลี่ยนเงินลงทุนได้', 'แจ้งเตือนการลงทุน', '⚠️');
-      return;
-    }
-
-    // เมื่อมีการปรับการลงทุนไม่ต้องแสดงพลุ
-    renderVoteTab(currentEmployee);
+    window.onSliderLiveInput(teamId, remaining);
   };
 
   window.withdrawTeamInvestment = function (teamId) {
-    if (!currentEmployee || !window.stateManager) return;
-    const empId = currentEmployee.EmployeeID || currentEmployee.id;
-    const sm = window.stateManager;
-    const res = sm.setUserInvestment(empId, teamId, 0);
-    if (res.success) {
-      renderVoteTab(currentEmployee);
-    }
+    window.onSliderLiveInput(teamId, 0);
   };
 
   // Lightbox: Team Details Modal (ข้อมูลทีม รูปรวม และสมาชิกในทีม)
@@ -1425,7 +1565,7 @@
     // - ถ้าเป็น event เดียวกัน (timestamp เดียวกัน)
     // - หรือถ้าเคยเปิดแจ้งเตือนทีมเดียวกันนี้ไปแล้วไม่เกิน 30 วินาที
     if ((eventTs && eventTs === lastAnnouncedEventTs) ||
-        (lastAnnouncedOpenedTeamId === teamId && (now - lastAnnouncedTimestamp < 30000))) {
+      (lastAnnouncedOpenedTeamId === teamId && (now - lastAnnouncedTimestamp < 30000))) {
       return;
     }
 
@@ -1713,7 +1853,7 @@
     if (formGroupEmpId) formGroupEmpId.classList.remove('has-error');
   }
 
-  function handleRegistrationSubmit() {
+  async function handleRegistrationSubmit() {
     if (!empIdInput) return;
     const inputVal = empIdInput.value.trim();
 
@@ -1730,20 +1870,39 @@
       return;
     }
 
+    if (btnSubmit) btnSubmit.classList.add('is-loading');
+
+    const cleanQuery = inputVal.toLowerCase();
+    const cleanNoZero = cleanQuery.replace(/^0+/, '');
+
     const members = window.stateManager.getMembers();
-    const queryId = inputVal.toLowerCase();
-    const matched = members.find(m => {
+    let matched = members.find(m => {
       const idVal = String(m.EmployeeID || m.id || '').trim().toLowerCase();
-      return idVal === queryId;
+      const idNoZero = idVal.replace(/^0+/, '');
+      return idVal === cleanQuery || (cleanNoZero && idNoZero === cleanNoZero);
     });
 
-    if (!matched) {
-      showFeedback(`❌ ไม่พบรหัสพนักงาน "${inputVal}" ในระบบ (crsdg_member) กรุณาตรวจสอบรหัสพนักงานอีกครั้ง`, true);
-      showUserAlert(`ไม่พบรหัสพนักงาน "${inputVal}" ในระบบ\nกรุณาตรวจสอบรหัสพนักงานและลองใหม่อีกครั้ง`, 'ไม่พบข้อมูลพนักงาน', '⚠️');
-      return;
+    // Fallback: หากยังไม่พบในหน่วยความจำเครื่อง (เช่น อยู่ระหว่างดึงข้อมูลเริ่มต้นจาก Cloud) ให้สืบค้นตรงจาก Firestore
+    if (!matched && window.FirebaseSync && typeof window.FirebaseSync.fetchSingleMemberFromCloud === 'function') {
+      try {
+        const cloudMember = await window.FirebaseSync.fetchSingleMemberFromCloud(inputVal.trim());
+        if (cloudMember && cloudMember.EmployeeID) {
+          matched = cloudMember;
+          if (window.stateManager && typeof window.stateManager.applyCloudMembers === 'function') {
+            window.stateManager.applyCloudMembers([cloudMember]);
+          }
+        }
+      } catch (err) {
+        console.warn('[Index] Fallback fetchSingleMemberFromCloud notice:', err);
+      }
     }
 
-    if (btnSubmit) btnSubmit.classList.add('is-loading');
+    if (!matched) {
+      if (btnSubmit) btnSubmit.classList.remove('is-loading');
+      showFeedback(`❌ ไม่พบรหัสพนักงาน "${inputVal}" ในระบบ (crsdg_member) กรุณาตรวจสอบรหัสพนักงานอีกครั้ง`, true);
+      showUserAlert(`ไม่พบรหัสพนักงาน "${inputVal}" ในระบบ\nกรุณาตรวจสอบรหัสพนักงานและลองใหม่อีกครั้ง หรือติดต่อเจ้าหน้าที่จุดลงทะเบียน`, 'ไม่พบข้อมูลพนักงาน', '⚠️');
+      return;
+    }
 
     const empId = String(matched.EmployeeID || matched.id).trim();
     const regTimestamp = new Date().toISOString();
@@ -1760,7 +1919,7 @@
       registered: true,
       registeredAt: regTimestamp
     };
-    localStorage.setItem('crsdg_active_user_emp_id', empId);
+    // ไม่บันทึกค่า login ลง localStorage (ยกเลิกการจำค่า login ของผู้ใช้งาน)
 
     setTimeout(() => {
       if (btnSubmit) btnSubmit.classList.remove('is-loading');
@@ -1782,6 +1941,24 @@
     // Direct transition to home portal immediately without checking photo
     showView('home');
     triggerConfetti();
+
+    // ดึงข้อมูลพอร์ตลงทุนของผู้ใช้งานรายนี้จาก Cloud Firestore (crsdg_investments/{empId}) ล่วงหน้า เพื่อให้พร้อมใช้งานทันทีเมื่อเข้าแท็บนักลงทุน AI
+    if (window.FirebaseSync && typeof window.FirebaseSync.fetchSingleUserInvestmentFromCloud === 'function') {
+      window.FirebaseSync.fetchSingleUserInvestmentFromCloud(empId).then(inv => {
+        if (inv && Object.keys(inv).length > 0) {
+          const normEmpId = String(empId).trim().toLowerCase();
+          if (window.stateManager && typeof window.stateManager.applyCloudUserInvestments === 'function') {
+            window.stateManager.applyCloudUserInvestments({ [normEmpId]: inv });
+          }
+          window.savedUserInvestmentsBaseline = { ...inv };
+          window.draftUserInvestments = { ...inv };
+          window.draftUserEmpId = empId;
+          if (activeTab === 'vote') {
+            renderVoteTab(currentEmployee);
+          }
+        }
+      }).catch(e => console.warn('[Index] Preload investment notice:', e));
+    }
 
     // Background asynchronous check for employee photo in Firebase Storage
     if (!employee.photo && window.FirebaseStorageManager && typeof window.FirebaseStorageManager.getMemberPhotoUrl === 'function') {
@@ -2426,17 +2603,24 @@
       return eId && eId !== 'guest' && eId === empId;
     }) : false;
 
-    // Check submission status:
-    // Only true if the record actually exists in the evaluations list, or explicitly submitted in this browser session
-    let hasSubmitted = false;
-    if (empId) {
-      if (hasSubmittedInList) {
-        hasSubmitted = true;
-      } else {
-        // If not in cloud/state evaluations, clear stale local flag
-        localStorage.removeItem('crsdg_eval_submitted_' + empId);
-        hasSubmitted = false;
-      }
+    // Check submission status: local flag or state
+    const localSubmitted = empId ? (localStorage.getItem('crsdg_eval_submitted_' + empId) === 'true') : false;
+    let hasSubmitted = hasSubmittedInList || localSubmitted;
+
+    // Check cloud asynchronously if not yet found locally
+    if (!hasSubmitted && empId && window.FirebaseSync && typeof window.FirebaseSync.checkUserEvaluationSubmitted === 'function') {
+      window.FirebaseSync.checkUserEvaluationSubmitted(empId).then(isSub => {
+        if (isSub) {
+          localStorage.setItem('crsdg_eval_submitted_' + empId, 'true');
+          const fb = document.getElementById('evalFormBody');
+          const sv = document.getElementById('evalSuccessView');
+          if (fb && sv) {
+            fb.style.setProperty('display', 'none', 'important');
+            sv.style.setProperty('display', 'flex', 'important');
+            sv.classList.add('is-visible', 'is-active');
+          }
+        }
+      }).catch(() => {});
     }
 
     // Populate Respondent Header Card
@@ -2579,6 +2763,23 @@
   window.handleEvalFormSubmit = function (e) {
     if (e && e.preventDefault) e.preventDefault();
 
+    if (window._isSubmittingEval) return;
+    window._isSubmittingEval = true;
+
+    const submitBtn = document.querySelector('.btn-submit-eval-primary');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.classList.add('is-loading');
+    }
+
+    const resetEvalSubmitState = () => {
+      window._isSubmittingEval = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('is-loading');
+      }
+    };
+
     let emp = currentEmployee;
     if (!emp && window.stateManager) {
       const cachedEmpId = localStorage.getItem('crsdg_active_user_emp_id');
@@ -2595,6 +2796,7 @@
     const hiddenScore = document.getElementById('evalScoreOverall');
     const scoreVal = hiddenScore && hiddenScore.value ? parseInt(hiddenScore.value, 10) : 0;
     if (!scoreVal || scoreVal < 1) {
+      resetEvalSubmitState();
       showUserAlert('กรุณาแตะเพื่อให้คะแนนดาวความพึงพอใจในภาพรวมของกิจกรรม (ข้อ 1)', 'ประเมินความพึงพอใจ', '⭐');
       const starContainer = document.getElementById('evalStarContainer');
       if (starContainer) starContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2619,6 +2821,7 @@
     };
 
     if (!ratings.pitch || !ratings.game || !ratings.food || !ratings.app) {
+      resetEvalSubmitState();
       showUserAlert('กรุณาเลือกประเมินความพึงพอใจในกิจกรรมย่อยให้ครบทั้ง 4 ด้าน (ข้อ 2)', 'ประเมินความพึงพอใจ', '📝');
       const subGroup = document.querySelector('.eval-sub-questions-list');
       if (subGroup) subGroup.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2653,6 +2856,8 @@
         localStorage.setItem('crsdg_evaluations_list', JSON.stringify(allEvals));
       }
 
+      localStorage.setItem('crsdg_eval_submitted_' + empId, 'true');
+
       // ส่งข้อมูลขึ้น Firebase Firestore ตาราง crsdg_evaluations โดยตรงทันที
       if (window.FirebaseSync && typeof window.FirebaseSync.saveEvaluation === 'function') {
         window.FirebaseSync.saveEvaluation(evalRecord).then(success => {
@@ -2667,6 +2872,8 @@
       }
     } catch (err) {
       console.warn('Failed to persist eval record:', err);
+    } finally {
+      resetEvalSubmitState();
     }
 
     const successBadgeEl = document.getElementById('successRespondentBadge');

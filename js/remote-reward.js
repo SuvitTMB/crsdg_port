@@ -15,6 +15,7 @@
     let currentPrizeIndex = 0;
     let isSpinning = false;
     let isMuted = false;
+    let lastSentCmdTs = 0;
 
     // DOM Elements
     const connStatusTextEl = document.getElementById('connStatusText');
@@ -94,6 +95,42 @@
             execCountTagEl.textContent = `${prizes.length} ท่าน`;
         }
 
+        const existingCards = executiveGridPickerEl.querySelectorAll('.exec-card-item');
+        // If cards already rendered and count matches, update classes/status in-place (ZERO FLICKER)
+        if (existingCards.length === prizes.length) {
+            existingCards.forEach((card, idx) => {
+                const p = prizes[idx];
+                if (!p) return;
+                const isSelected = (currentPrize && currentPrize.id === p.id) || (idx === currentPrizeIndex);
+                const isDrawn = (p.drawn > 0) || wonPrizeIds.has(p.id);
+
+                if (isSelected) {
+                    card.classList.add('active');
+                } else {
+                    card.classList.remove('active');
+                }
+
+                if (isDrawn) {
+                    card.classList.add('drawn');
+                } else {
+                    card.classList.remove('drawn');
+                }
+
+                const statusEl = card.querySelector('.exec-card-status');
+                if (statusEl) {
+                    if (isDrawn) {
+                        statusEl.className = 'exec-card-status drawn';
+                        statusEl.textContent = '✓ สุ่มแล้ว';
+                    } else {
+                        statusEl.className = 'exec-card-status waiting';
+                        statusEl.textContent = 'รอลุ้น';
+                    }
+                }
+            });
+            return;
+        }
+
+        // Full render only on initial load or if prize count changes
         executiveGridPickerEl.innerHTML = prizes.map((p, idx) => {
             const isSelected = (currentPrize && currentPrize.id === p.id) || (idx === currentPrizeIndex);
             const isDrawn = (p.drawn > 0) || wonPrizeIds.has(p.id);
@@ -120,6 +157,7 @@
     }
 
     function selectPrizeIndex(idx) {
+        if (isSpinning) return;
         if (idx < 0 || idx >= prizes.length) return;
         currentPrizeIndex = idx;
         const p = prizes[currentPrizeIndex];
@@ -134,6 +172,12 @@
 
     function populatePrizeDropdown() {
         if (!remotePrizeSelectEl) return;
+        if (remotePrizeSelectEl.options && remotePrizeSelectEl.options.length === prizes.length) {
+            if (prizes[currentPrizeIndex]) {
+                remotePrizeSelectEl.value = prizes[currentPrizeIndex].id;
+            }
+            return;
+        }
         remotePrizeSelectEl.innerHTML = prizes.map((p, idx) => {
             const sponsor = p.sponsorName || 'ผู้บริหาร';
             return `<option value="${p.id}" ${idx === currentPrizeIndex ? 'selected' : ''}>
@@ -204,23 +248,26 @@
             remoteDrawnBadgeEl.textContent = `สุ่มแล้ว ${drawnCount}/${totalQty}`;
         }
 
-        if (remotePrizeSelectEl) {
+        if (remotePrizeSelectEl && remotePrizeSelectEl.value !== prize.id) {
             remotePrizeSelectEl.value = prize.id;
         }
 
-        // Sponsor image with loop-proof onerror
+        // Sponsor image with loop-proof onerror and reload-prevention
         const sponsorName = prize.sponsorName || '';
         const avatarSrc = resolveSponsorAvatar(sponsorName, prize.sponsorPhoto);
         if (remoteSponsorImgEl) {
-            remoteSponsorImgEl.onerror = () => {
-                remoteSponsorImgEl.onerror = null;
-                remoteSponsorImgEl.src = 'images/person.png';
+            if (remoteSponsorImgEl.getAttribute('data-src') !== avatarSrc) {
+                remoteSponsorImgEl.setAttribute('data-src', avatarSrc);
                 remoteSponsorImgEl.onerror = () => {
                     remoteSponsorImgEl.onerror = null;
-                    remoteSponsorImgEl.style.display = 'none';
+                    remoteSponsorImgEl.src = 'images/person.png';
+                    remoteSponsorImgEl.onerror = () => {
+                        remoteSponsorImgEl.onerror = null;
+                        remoteSponsorImgEl.style.display = 'none';
+                    };
                 };
-            };
-            remoteSponsorImgEl.src = avatarSrc;
+                remoteSponsorImgEl.src = avatarSrc;
+            }
         }
 
         // Check if prize has winner in winners list
@@ -309,9 +356,14 @@
             }
         }
 
+        const now = Date.now();
+        if (isUserAction) {
+            lastSentCmdTs = now;
+        }
+
         const payload = {
             ...cmd,
-            timestamp: Date.now()
+            timestamp: now
         };
 
         if (rewardChannel) {
@@ -526,15 +578,20 @@
     // CHANNEL & STORAGE & CLOUD LISTENERS
     // ========================================================
     function setupChannelListeners() {
-        let lastProcessedStageTs = 0;
+        let lastProcessedStageTs = Date.now() - 3000;
 
         const handleSyncMessage = (data) => {
             if (!data || !data.type) return;
 
+            // Stale check: ignore messages produced before our last direct user command
+            if (data.timestamp && lastSentCmdTs > 0 && data.timestamp < lastSentCmdTs) {
+                return;
+            }
+
             // Timestamp deduplication
             if (data.timestamp) {
                 if (data.timestamp <= lastProcessedStageTs) return;
-                lastProcessedStageTs = data.timestamp;
+                lastProcessedStageTs = Math.max(lastProcessedStageTs, data.timestamp);
             }
 
             if (data.type === 'STAGE_SYNC') {
@@ -589,8 +646,11 @@
                     const parsed = JSON.parse(e.newValue);
                     handleSyncMessage(parsed);
                 } catch (err) {}
-            } else if (e.key === 'crsdg_winners' || e.key === 'crsdg_prizes' || e.key === 'crsdg_member') {
+            } else if (e.key === 'crsdg_member') {
+                updateEligibleCount();
+            } else if (e.key === 'crsdg_winners' || e.key === 'crsdg_prizes') {
                 prizes = state.getPrizes();
+                populatePrizeDropdown();
                 renderExecutiveGrid();
                 updatePrizeDisplay();
                 updateEligibleCount();
@@ -603,7 +663,9 @@
                 if (!event) return;
                 if (event.type === 'VOTE_SETTINGS_UPDATED' && event.data && event.data.stage_reward_state) {
                     handleSyncMessage(event.data.stage_reward_state);
-                } else if (event.type === 'PRIZES_UPDATED' || event.type === 'WINNERS_UPDATED' || event.type === 'MEMBERS_UPDATED') {
+                } else if (event.type === 'MEMBERS_UPDATED') {
+                    updateEligibleCount();
+                } else if (event.type === 'PRIZES_UPDATED' || event.type === 'WINNERS_UPDATED') {
                     prizes = state.getPrizes();
                     populatePrizeDropdown();
                     renderExecutiveGrid();

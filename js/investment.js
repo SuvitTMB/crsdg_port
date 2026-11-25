@@ -2130,36 +2130,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Manual Refresh Button
+    // Manual Refresh Button (ดึงข้อมูลล่าสุดจาก Cloud เมื่อกดรีเฟรช - ยกเลิกระบบ Realtime เพื่อลดความหน่วง)
     const btnRefresh = document.getElementById('btnRefresh');
     if (btnRefresh) {
-        btnRefresh.addEventListener('click', () => {
+        btnRefresh.addEventListener('click', async () => {
+            btnRefresh.classList.add('rotating');
+            if (typeof FirebaseSync !== 'undefined') {
+                try {
+                    if (typeof FirebaseSync.fetchVoteSettingsFromCloud === 'function') await FirebaseSync.fetchVoteSettingsFromCloud();
+                    if (typeof FirebaseSync.fetchUserInvestmentsFromCloud === 'function') await FirebaseSync.fetchUserInvestmentsFromCloud();
+                    if (typeof FirebaseSync.fetchPlayersFromCloud === 'function') await FirebaseSync.fetchPlayersFromCloud();
+                    if (typeof FirebaseSync.fetchMembersFromCloud === 'function') await FirebaseSync.fetchMembersFromCloud();
+                } catch (e) {
+                    console.warn(e);
+                }
+            }
             renderDashboard();
+            setTimeout(() => btnRefresh.classList.remove('rotating'), 600);
             if (sound) sound.playClick();
         });
     }
 
-    // Real-time State Subscriptions
-    if (state && typeof state.subscribe === 'function') {
-        state.subscribe(() => {
-            renderDashboard();
-        });
-    }
-
-    if (typeof FirebaseSync !== 'undefined' && typeof FirebaseSync.subscribe === 'function') {
-        FirebaseSync.subscribe(() => {
-            renderDashboard();
-        });
-    }
-
-    // Auto Polling / Storage Event for live projector sync
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'crsdg_all_user_investments' || e.key === 'crsdg_player' || e.key === 'crsdg_member' || e.key === 'crsdg_vote_open') {
-            renderDashboard();
-        }
-    });
-
-    setInterval(renderDashboard, 3000);
+    // หมายเหตุ: ยกเลิก code realtime State/Firebase subscriptions และ polling interval ถาวรเพื่อป้องกันการนำมาใช้งานตามคำสั่ง
+    // การแสดงผลจะอัปเดตเมื่อโหลดหน้าหรือกดปุ่มรีเฟรชเท่านั้น
 
     // Initial render
     renderDashboard();

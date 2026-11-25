@@ -27,6 +27,22 @@
 (function (window) {
     'use strict';
 
+    // กรอง log แจ้งเตือน harmless multi-tab lease sub-millisecond future timestamp warning ของ Firestore SDK 8.10.1 ไม่ให้รกหน้า DevTools
+    if (typeof window !== 'undefined' && !window.__firestoreLogFilterInstalled) {
+        window.__firestoreLogFilterInstalled = true;
+        const filterKeyword = 'Detected an update time that is in the future';
+        const origWarn = console.warn;
+        const origErr = console.error;
+        console.warn = function (...args) {
+            if (args.length > 0 && typeof args[0] === 'string' && args[0].includes(filterKeyword)) return;
+            origWarn.apply(console, args);
+        };
+        console.error = function (...args) {
+            if (args.length > 0 && typeof args[0] === 'string' && args[0].includes(filterKeyword)) return;
+            origErr.apply(console, args);
+        };
+    }
+
     const PROJECT_ID = "faifah-ttb";
     const FIRESTORE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
     const FIRESTORE_COMMIT_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents:commit`;
@@ -303,7 +319,7 @@
         const photo = (f.photo && f.photo.stringValue) ? f.photo.stringValue : '';
         const prize = (f.prize && f.prize.stringValue) ? f.prize.stringValue : null;
         const memberVal = (f.Member && f.Member.stringValue) ? f.Member.stringValue : ((f.member && f.member.stringValue) ? f.member.stringValue : '');
-        const memberStatus = (String(memberVal).trim().toLowerCase() === 'member' || (memberVal && String(memberVal).trim() !== '-' && String(memberVal).trim() !== '0')) ? 'Member' : '';
+        const memberStatus = (String(memberVal).trim().toLowerCase() === 'member' || String(memberVal).trim().toLowerCase() === 'mamber' || (memberVal && String(memberVal).trim() !== '-' && String(memberVal).trim() !== '0')) ? 'Member' : '';
 
         return {
             id: id,
@@ -385,7 +401,7 @@
                 const empName = String(m.EmpName || m.name || '').trim();
                 const group = String(m.Group || m.group || m.department || 'Team A').trim();
                 const rawMem = (m.Member !== undefined && m.Member !== null) ? String(m.Member).trim() : ((m.member !== undefined && m.member !== null) ? String(m.member).trim() : '');
-                const memberStatus = (rawMem.toLowerCase() === 'member' || (rawMem && rawMem !== '-' && rawMem !== '0')) ? 'Member' : '';
+                const memberStatus = (rawMem.toLowerCase() === 'member' || rawMem.toLowerCase() === 'mamber' || (rawMem && rawMem !== '-' && rawMem !== '0')) ? 'Member' : '';
 
                 if (empId && empName) {
                     writes.push({
@@ -440,7 +456,7 @@
         const isReg = (memberData.registered === true || memberData.isRegistered === true);
         const chosen = (memberData.chosenTeam && String(memberData.chosenTeam).trim()) ? String(memberData.chosenTeam).trim() : null;
         const rawMem = (memberData.Member !== undefined && memberData.Member !== null) ? String(memberData.Member).trim() : ((memberData.member !== undefined && memberData.member !== null) ? String(memberData.member).trim() : '');
-        const memberStatus = (rawMem.toLowerCase() === 'member' || (rawMem && rawMem !== '-' && rawMem !== '0')) ? 'Member' : '';
+        const memberStatus = (rawMem.toLowerCase() === 'member' || rawMem.toLowerCase() === 'mamber' || (rawMem && rawMem !== '-' && rawMem !== '0')) ? 'Member' : '';
 
         if (db) {
             try {
@@ -1087,25 +1103,46 @@
             investments: userInvestments || {},
             updatedAt: new Date().toISOString()
         };
-        try {
-            // บันทึกไปยังตาราง crsdg_investments/{cleanId} ซึ่งเปิด permission เรียบร้อยแล้ว (200 OK)
-            if (db) {
-                // แทนที่ข้อมูลเอกสารโดยไม่ใช้ { merge: true } เพื่อให้การปรับลดหรือถอนเงินลงทุนเป็น 0 ถูกต้อง 100%
-                await db.collection(COLS.INVESTMENTS).doc(cleanId).set(payload);
+
+        // 1. Try Firebase Web SDK first (with 4s timeout safety)
+        if (db) {
+            try {
+                const writePromise = db.collection(COLS.INVESTMENTS).doc(cleanId).set(payload);
+                const timeoutPromise = new Promise(resolve => setTimeout(() => resolve('timeout'), 4000));
+                const raceRes = await Promise.race([writePromise, timeoutPromise]);
+                if (raceRes === 'timeout') {
+                    console.log('[FirebaseSync] SDK saveUserInvestmentToCloud queued in background');
+                }
                 return true;
-            } else {
-                const encId = encodeURIComponent(cleanId);
-                const fields = objToFirestoreFields(payload);
-                const url = `${FIRESTORE_BASE_URL}/${COLS.INVESTMENTS}/${encId}`;
-                const res = await fetch(url, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fields })
-                });
-                return res.ok;
+            } catch (sdkErr) {
+                console.warn('[FirebaseSync] SDK saveUserInvestmentToCloud fallback to REST:', sdkErr.message);
             }
+        }
+
+        // 2. Fallback to Direct Firestore REST API PATCH (reliable under heavy mobile concurrency)
+        try {
+            const encId = encodeURIComponent(cleanId);
+            const fields = objToFirestoreFields(payload);
+            const url = `${FIRESTORE_BASE_URL}/${COLS.INVESTMENTS}/${encId}`;
+            const headers = { 'Content-Type': 'application/json' };
+            if (auth && auth.currentUser) {
+                try {
+                    const token = await auth.currentUser.getIdToken();
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                } catch (e) {}
+            }
+            const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+            const timer = controller ? setTimeout(() => controller.abort(), 5000) : null;
+            const res = await fetch(url, {
+                method: 'PATCH',
+                headers: headers,
+                body: JSON.stringify({ fields }),
+                signal: controller ? controller.signal : undefined
+            });
+            if (timer) clearTimeout(timer);
+            return res.ok;
         } catch (err) {
-            console.warn('[FirebaseSync] saveUserInvestmentToCloud warning:', err.message);
+            console.warn('[FirebaseSync] saveUserInvestmentToCloud REST notice:', err.message);
             return false;
         }
     }
@@ -1145,13 +1182,92 @@
                 });
             }
             if (window.state && typeof window.state.applyCloudUserInvestments === 'function') {
-                window.state.applyCloudUserInvestments(userInvMap);
+                window.state.applyCloudUserInvestments(userInvMap, true);
             }
             return userInvMap;
         } catch (err) {
             console.warn('[FirebaseSync] fetchUserInvestmentsFromCloud warning:', err.message);
             return null;
         }
+    }
+
+    /**
+     * Real-time Listener สำหรับติดตามการบันทึกเงินลงทุนใน crsdg_investments แบบ Real-time
+     * เมื่อมีผู้ใช้งานกดบันทึกเงินลงทุน จะส่งสัญญาณและอัปเดต state ทันที
+     */
+    function listenToUserInvestments(callback) {
+        if (!db && typeof firebase !== 'undefined' && firebase.firestore) {
+            try { db = firebase.firestore(); } catch (e) {}
+        }
+        if (db && typeof db.collection === 'function') {
+            try {
+                let cachedMap = null;
+                return db.collection(COLS.INVESTMENTS).onSnapshot(snapshot => {
+                    if (cachedMap === null) {
+                        // First snapshot: โหลดข้อมูลตั้งต้นทั้งหมด
+                        cachedMap = {};
+                        snapshot.forEach(doc => {
+                            const d = doc.data();
+                            if (!d) return;
+                            const empId = String(d.empId || doc.id).trim().toLowerCase();
+                            let inv = d.investments;
+                            if (typeof inv === 'string') {
+                                try { inv = JSON.parse(inv); } catch (e) { inv = {}; }
+                            }
+                            if (empId && typeof inv === 'object') {
+                                cachedMap[empId] = inv || {};
+                            }
+                        });
+                    } else {
+                        // Subsequent snapshots: ประมวลผลเฉพาะเอกสารที่มีการเปลี่ยนแปลง (Delta O(1)) รองรับ 300 คนพร้อมกันสบายๆ
+                        const changes = typeof snapshot.docChanges === 'function' ? snapshot.docChanges() : [];
+                        if (changes.length > 0) {
+                            changes.forEach(change => {
+                                const doc = change.doc;
+                                const d = doc.data();
+                                const empId = String((d && d.empId) || doc.id).trim().toLowerCase();
+                                if (change.type === 'removed') {
+                                    delete cachedMap[empId];
+                                } else if (d) {
+                                    let inv = d.investments;
+                                    if (typeof inv === 'string') {
+                                        try { inv = JSON.parse(inv); } catch (e) { inv = {}; }
+                                    }
+                                    if (empId && typeof inv === 'object') {
+                                        cachedMap[empId] = inv || {};
+                                    }
+                                }
+                            });
+                        } else {
+                            snapshot.forEach(doc => {
+                                const d = doc.data();
+                                if (!d) return;
+                                const empId = String(d.empId || doc.id).trim().toLowerCase();
+                                let inv = d.investments;
+                                if (typeof inv === 'string') {
+                                    try { inv = JSON.parse(inv); } catch (e) { inv = {}; }
+                                }
+                                if (empId && typeof inv === 'object') {
+                                    cachedMap[empId] = inv || {};
+                                }
+                            });
+                        }
+                    }
+                    if (window.state && typeof window.state.applyCloudUserInvestments === 'function') {
+                        window.state.applyCloudUserInvestments(cachedMap, true);
+                    }
+                    if (typeof callback === 'function') {
+                        callback(cachedMap);
+                    }
+                    notify('INVESTMENTS_UPDATED', cachedMap);
+                }, err => {
+                    console.warn('[FirebaseSync] crsdg_investments onSnapshot notice:', err.message);
+                });
+            } catch (err) {
+                console.warn('[FirebaseSync] listenToUserInvestments error:', err);
+            }
+        }
+        return null;
     }
 
     async function clearAllUserInvestmentsFromCloud() {
@@ -1360,6 +1476,15 @@
     // ALL TABLES PARALLEL SYNC
     // ========================================================
 
+    function isAttendeeClientApp() {
+        if (typeof window === 'undefined') return false;
+        const path = (window.location.pathname || '').toLowerCase();
+        if (path.includes('admin') || path.includes('showport')) {
+            return false;
+        }
+        return true;
+    }
+
     let activeFetchAllPromise = null;
 
     async function fetchAllDataFromCloud() {
@@ -1368,21 +1493,27 @@
         }
 
         activeFetchAllPromise = (async () => {
-            console.log('[FirebaseSync] ☁️ Fetching ALL database tables from Cloud Firestore in parallel...');
+            const isClient = isAttendeeClientApp();
+            console.log(`[FirebaseSync] ☁️ Fetching database tables from Cloud Firestore in parallel (mode: ${isClient ? 'attendee client' : 'admin/screen'})...`);
             try {
+                // สำหรับหน้าจอผู้ร่วมกิจกรรม (index.html) จะไม่ดึงข้อมูลการลงทุนทั้งหมด 300 คน และไม่ดึงแบบประเมินทั้งหมด 300 คน
+                // เพื่อประหยัด Firestore reads และเพิ่มความเร็วในการโหลดให้พร้อมรองรับผู้ใช้งาน 300 คนพร้อมกัน
+                const fetchInvPromise = isClient ? Promise.resolve({}) : fetchUserInvestmentsFromCloud();
+                const fetchEvalPromise = isClient ? Promise.resolve([]) : fetchEvaluationsFromCloud();
+
                 const [members, teamNames, teams, players, quizzes, evaluations, voteSettings, userInvestments, prizes, winners] = await Promise.all([
                     fetchMembersFromCloud(),
                     fetchTeamNamesFromCloud(),
                     fetchTeamsFromCloud(),
                     fetchPlayersFromCloud(),
                     fetchQuizzesFromCloud(),
-                    fetchEvaluationsFromCloud(),
+                    fetchEvalPromise,
                     fetchVoteSettingsFromCloud(),
-                    fetchUserInvestmentsFromCloud(),
+                    fetchInvPromise,
                     fetchPrizesFromCloud(),
                     fetchWinnersFromCloud()
                 ]);
-                console.log('[FirebaseSync] ✅ All database tables synced from Firebase Cloud Firestore successfully.');
+                console.log('[FirebaseSync] ✅ Database tables synced from Firebase Cloud Firestore successfully.');
                 const result = { members, teamNames, teams, players, quizzes, evaluations, voteSettings, userInvestments, prizes, winners };
                 if (typeof window !== 'undefined' && window.state && typeof window.state.applyCloudData === 'function') {
                     window.state.applyCloudData(result);
@@ -1400,6 +1531,105 @@
     }
 
     // ========================================================
+    // TARGETED SINGLE-DOCUMENT LOOKUPS (OPTIMIZED FOR 300 CONCURRENT USERS)
+    // ========================================================
+
+    async function fetchSingleUserInvestmentFromCloud(empId) {
+        if (!empId) return {};
+        const cleanId = String(empId).trim().toLowerCase();
+        try {
+            if (db) {
+                const doc = await db.collection(COLS.INVESTMENTS).doc(cleanId).get();
+                if (doc.exists) {
+                    const d = doc.data();
+                    let inv = d ? d.investments : {};
+                    if (typeof inv === 'string') {
+                        try { inv = JSON.parse(inv); } catch (e) { inv = {}; }
+                    }
+                    return inv || {};
+                }
+            } else {
+                const encId = encodeURIComponent(cleanId);
+                const url = `${FIRESTORE_BASE_URL}/${COLS.INVESTMENTS}/${encId}`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    const doc = await res.json();
+                    const d = firestoreDocToObj(doc);
+                    let inv = d ? d.investments : {};
+                    if (typeof inv === 'string') {
+                        try { inv = JSON.parse(inv); } catch (e) { inv = {}; }
+                    }
+                    return inv || {};
+                }
+            }
+        } catch (err) {
+            console.warn('[FirebaseSync] fetchSingleUserInvestmentFromCloud notice:', err.message);
+        }
+        return {};
+    }
+
+    async function fetchSingleMemberFromCloud(empId) {
+        if (!empId) return null;
+        const cleanId = String(empId).trim();
+        const cleanNoZero = cleanId.replace(/^0+/, '');
+        try {
+            if (db) {
+                // 1. ลองค้นหาตรงด้วย Document ID
+                let doc = await db.collection(COLS.MEMBERS).doc(cleanId).get();
+                if (doc && doc.exists) {
+                    return parseFirestoreMemberDoc(doc);
+                }
+                // 2. ลองค้นหาผ่านฟิลด์ EmployeeID
+                let snap = await db.collection(COLS.MEMBERS).where('EmployeeID', '==', cleanId).limit(1).get();
+                if (snap && !snap.empty) {
+                    return parseFirestoreMemberDoc(snap.docs[0]);
+                }
+                // 3. ลองค้นหาแบบตัดเลขศูนย์นำหน้า (Leading Zeros)
+                if (cleanNoZero && cleanNoZero !== cleanId) {
+                    snap = await db.collection(COLS.MEMBERS).where('EmployeeID', '==', cleanNoZero).limit(1).get();
+                    if (snap && !snap.empty) {
+                        return parseFirestoreMemberDoc(snap.docs[0]);
+                    }
+                    doc = await db.collection(COLS.MEMBERS).doc(cleanNoZero).get();
+                    if (doc && doc.exists) {
+                        return parseFirestoreMemberDoc(doc);
+                    }
+                }
+            } else {
+                const encId = encodeURIComponent(cleanId);
+                const url = `${FIRESTORE_BASE_URL}/${COLS.MEMBERS}/${encId}`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    const rawDoc = await res.json();
+                    return parseFirestoreMemberDoc(rawDoc);
+                }
+            }
+        } catch (err) {
+            console.warn('[FirebaseSync] fetchSingleMemberFromCloud error:', err.message);
+        }
+        return null;
+    }
+
+    async function checkUserEvaluationSubmitted(empId) {
+        if (!empId) return false;
+        const cleanId = String(empId).trim().toLowerCase();
+        const local = localStorage.getItem('crsdg_eval_submitted_' + cleanId);
+        if (local === 'true') return true;
+        try {
+            if (db) {
+                const snap = await db.collection(COLS.EVALUATIONS).where('empId', '==', cleanId).limit(1).get();
+                if (snap && !snap.empty) {
+                    localStorage.setItem('crsdg_eval_submitted_' + cleanId, 'true');
+                    return true;
+                }
+            }
+        } catch (err) {
+            console.warn('[FirebaseSync] checkUserEvaluationSubmitted notice:', err.message);
+        }
+        return false;
+    }
+
+    // ========================================================
     // SECONDARY ENGINE: WEB SDK REALTIME LISTENERS
     // ========================================================
 
@@ -1407,6 +1637,9 @@
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
 
         try {
+            if (typeof firebase.firestore.setLogLevel === 'function') {
+                firebase.firestore.setLogLevel('error');
+            }
             if (!firebase.apps || !firebase.apps.length) {
                 firebase.initializeApp(FIREBASE_CONFIG);
             }
@@ -1418,50 +1651,69 @@
             }
             db = firebase.firestore();
 
+            // เปิด Offline Persistence (IndexedDB Cache) เพื่อลดการยิงเน็ตซ้ำและรองรับกรณีสัญญาณโทรศัพท์หน่วง
+            try {
+                db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+            } catch (e) {}
+
+            const isClient = isAttendeeClientApp();
+
             // Realtime listener for crsdg_member
+            // สำหรับหน้าจอผู้ร่วมกิจกรรม: หน่วงเวลา (Debounce) 3 วินาทีเพื่อป้องกันไม่ให้เครื่องกระตุกเมื่อพนักงาน 300 คนลงทะเบียนพร้อมกัน
+            let memberDebounceTimer = null;
             db.collection(COLS.MEMBERS).onSnapshot(snapshot => {
                 if (isBatchWriting) return;
-                const members = [];
-                snapshot.forEach(doc => {
-                    const d = doc.data();
-                    if (!d) return;
-                    const empId = String(d.EmployeeID || doc.id || '').trim();
-                    const empName = String(d.EmpName || d.name || '').trim();
-                    if (!empId || !empName) return;
 
-                    const isReg = (d.registered === true || d.isRegistered === true) ? true : null;
-                    const chosen = (d.chosenTeam && String(d.chosenTeam).trim()) ? String(d.chosenTeam).trim() : null;
-                    const rawMem = d.Member || d.member || '';
-                    const memberStatus = (String(rawMem).trim().toLowerCase() === 'member' || (rawMem && String(rawMem).trim() !== '-' && String(rawMem).trim() !== '0')) ? 'Member' : '';
+                const processSnapshot = () => {
+                    const members = [];
+                    snapshot.forEach(doc => {
+                        const d = doc.data();
+                        if (!d) return;
+                        const empId = String(d.EmployeeID || doc.id || '').trim();
+                        const empName = String(d.EmpName || d.name || '').trim();
+                        if (!empId || !empName) return;
 
-                    members.push({
-                        id: empId,
-                        EmployeeID: empId,
-                        EmpName: empName,
-                        Group: String(d.Group || d.department || 'Team A').trim(),
-                        Member: memberStatus,
-                        member: memberStatus,
-                        name: empName,
-                        department: String(d.Group || d.department || 'Team A').trim(),
-                        photo: d.photo || '',
-                        registered: isReg,
-                        isRegistered: isReg,
-                        registeredAt: isReg ? (d.registeredAt || null) : null,
-                        chosenTeam: chosen,
-                        vote: (d.vote && String(d.vote).trim()) ? String(d.vote).trim() : null,
-                        prize: d.prize || null,
-                        wonPrize: d.wonPrize || null,
-                        prizeTitle: d.prizeTitle || null,
-                        hasWon: d.hasWon || null,
-                        ticketCode: d.ticketCode || ''
+                        const isReg = (d.registered === true || d.isRegistered === true) ? true : null;
+                        const chosen = (d.chosenTeam && String(d.chosenTeam).trim()) ? String(d.chosenTeam).trim() : null;
+                        const rawMem = d.Member || d.member || '';
+                        const memberStatus = (String(rawMem).trim().toLowerCase() === 'member' || String(rawMem).trim().toLowerCase() === 'mamber' || (rawMem && String(rawMem).trim() !== '-' && String(rawMem).trim() !== '0')) ? 'Member' : '';
+
+                        members.push({
+                            id: empId,
+                            EmployeeID: empId,
+                            EmpName: empName,
+                            Group: String(d.Group || d.department || 'Team A').trim(),
+                            Member: memberStatus,
+                            member: memberStatus,
+                            name: empName,
+                            department: String(d.Group || d.department || 'Team A').trim(),
+                            photo: d.photo || '',
+                            registered: isReg,
+                            isRegistered: isReg,
+                            registeredAt: isReg ? (d.registeredAt || null) : null,
+                            chosenTeam: chosen,
+                            vote: (d.vote && String(d.vote).trim()) ? String(d.vote).trim() : null,
+                            prize: d.prize || null,
+                            wonPrize: d.wonPrize || null,
+                            prizeTitle: d.prizeTitle || null,
+                            hasWon: d.hasWon || null,
+                            ticketCode: d.ticketCode || ''
+                        });
                     });
-                });
 
-                if (members.length > 0) {
-                    if (window.state && typeof window.state.applyCloudMembers === 'function') {
-                        window.state.applyCloudMembers(members);
+                    if (members.length > 0) {
+                        if (window.state && typeof window.state.applyCloudMembers === 'function') {
+                            window.state.applyCloudMembers(members);
+                        }
+                        notify('MEMBERS_UPDATED', members);
                     }
-                    notify('MEMBERS_UPDATED', members);
+                };
+
+                if (isClient) {
+                    if (memberDebounceTimer) clearTimeout(memberDebounceTimer);
+                    memberDebounceTimer = setTimeout(processSnapshot, 3000);
+                } else {
+                    processSnapshot();
                 }
             }, err => console.warn('[FirebaseSync] crsdg_member onSnapshot notice:', err.message));
 
@@ -1502,18 +1754,21 @@
                 }
                 notify('WINNERS_UPDATED', winners);
             }, err => console.warn('[FirebaseSync] crsdg_winners onSnapshot notice:', err.message));
-            // Realtime listener for crsdg_evaluations
-            db.collection(COLS.EVALUATIONS).onSnapshot(snapshot => {
-                const evals = [];
-                snapshot.forEach(doc => {
-                    const d = doc.data();
-                    if (d) evals.push({ id: doc.id, ...d });
-                });
-                if (window.state && typeof window.state.applyCloudEvaluations === 'function') {
-                    window.state.applyCloudEvaluations(evals);
-                }
-                notify('EVALUATIONS_UPDATED', evals);
-            }, err => console.warn('[FirebaseSync] crsdg_evaluations onSnapshot notice:', err.message));
+
+            // Realtime listener for crsdg_evaluations: รันเฉพาะหน้าจอ Admin / Stage Showcase เท่านั้น มือถือผู้ร่วมกิจกรรมไม่ต้องฟังสตรีมนี้
+            if (!isClient) {
+                db.collection(COLS.EVALUATIONS).onSnapshot(snapshot => {
+                    const evals = [];
+                    snapshot.forEach(doc => {
+                        const d = doc.data();
+                        if (d) evals.push({ id: doc.id, ...d });
+                    });
+                    if (window.state && typeof window.state.applyCloudEvaluations === 'function') {
+                        window.state.applyCloudEvaluations(evals);
+                    }
+                    notify('EVALUATIONS_UPDATED', evals);
+                }, err => console.warn('[FirebaseSync] crsdg_evaluations onSnapshot notice:', err.message));
+            }
 
             // Realtime listener for crsdg_vote (settings)
             db.collection(COLS.VOTE).doc('settings').onSnapshot(doc => {
@@ -1527,27 +1782,8 @@
                 }
             }, err => console.warn('[FirebaseSync] crsdg_vote settings onSnapshot notice:', err.message));
 
-            // Realtime listener for crsdg_investments (Individual employee investments)
-            db.collection(COLS.INVESTMENTS).onSnapshot(snapshot => {
-                const userInvMap = {};
-                snapshot.forEach(doc => {
-                    const d = doc.data();
-                    if (!d) return;
-                    const empId = String(d.empId || doc.id).trim().toLowerCase();
-                    let inv = d.investments;
-                    if (typeof inv === 'string') {
-                        try { inv = JSON.parse(inv); } catch (e) { inv = {}; }
-                    }
-                    if (empId && typeof inv === 'object') {
-                        userInvMap[empId] = inv || {};
-                    }
-                });
-
-                if (window.state && typeof window.state.applyCloudUserInvestments === 'function') {
-                    window.state.applyCloudUserInvestments(userInvMap);
-                }
-                notify('INVESTMENTS_UPDATED', userInvMap);
-            }, err => console.warn('[FirebaseSync] crsdg_investments onSnapshot notice:', err.message));
+            // หมายเหตุ: เอา code realtime onSnapshot ของ crsdg_investments ออกถาวรเพื่อป้องกันการนำมาใช้งานและลดปัญหาความหน่วงของระบบ
+            // การดึงข้อมูลพอร์ตลงทุนจะกระทำแบบ on-demand ผ่าน fetchUserInvestmentsFromCloud() และบันทึกผ่านการ Submit เท่านั้น
 
         } catch (err) {
             console.warn('[FirebaseSync] Web SDK initialization notice:', err);
@@ -1568,6 +1804,7 @@
         resetAllMemberWinnerStatusesInCloud: resetAllMemberWinnerStatusesInCloud,
         resetAllMemberVotesInCloud: resetAllMemberVotesInCloud,
         updateMemberRegistration: updateMemberRegistration,
+        fetchSingleMemberFromCloud: fetchSingleMemberFromCloud,
         // Teams 4v4
         fetchTeamNamesFromCloud: fetchTeamNamesFromCloud,
         saveTeamName: saveTeamName,
@@ -1593,12 +1830,15 @@
         saveEvaluation: saveEvaluation,
         deleteEvaluation: deleteEvaluation,
         clearAllEvaluationsFromCloud: clearAllEvaluationsFromCloud,
+        checkUserEvaluationSubmitted: checkUserEvaluationSubmitted,
         // Vote Settings
         fetchVoteSettingsFromCloud: fetchVoteSettingsFromCloud,
         saveVoteSettings: saveVoteSettings,
         // Investments
         saveUserInvestmentToCloud: saveUserInvestmentToCloud,
         fetchUserInvestmentsFromCloud: fetchUserInvestmentsFromCloud,
+        fetchSingleUserInvestmentFromCloud: fetchSingleUserInvestmentFromCloud,
+        listenToUserInvestments: listenToUserInvestments,
         clearAllUserInvestmentsFromCloud: clearAllUserInvestmentsFromCloud,
         // Prizes (AL_Reward)
         fetchPrizesFromCloud: fetchPrizesFromCloud,
@@ -1613,6 +1853,7 @@
         syncAllWinners: syncAllWinners,
         // Universal Parallel Sync
         fetchAllDataFromCloud: fetchAllDataFromCloud,
+        isAttendeeClientApp: isAttendeeClientApp,
         isOnline: () => isOnline
     };
 

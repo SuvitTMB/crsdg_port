@@ -195,15 +195,18 @@
         const avatarSrc = resolveSponsorAvatar(sponsorName, prize.sponsorPhoto);
 
         if (sponsorAvatarImgEl) {
-            sponsorAvatarImgEl.onerror = () => {
-                sponsorAvatarImgEl.onerror = null;
-                sponsorAvatarImgEl.style.display = 'none';
-                if (sponsorAvatarFallbackEl) {
-                    sponsorAvatarFallbackEl.textContent = sponsorName.replace(/^(พี่|คุณ)/, '').slice(0, 2) || 'ผบ';
-                    sponsorAvatarFallbackEl.style.display = 'flex';
-                }
-            };
-            sponsorAvatarImgEl.src = avatarSrc;
+            if (sponsorAvatarImgEl.getAttribute('data-src') !== avatarSrc) {
+                sponsorAvatarImgEl.setAttribute('data-src', avatarSrc);
+                sponsorAvatarImgEl.onerror = () => {
+                    sponsorAvatarImgEl.onerror = null;
+                    sponsorAvatarImgEl.style.display = 'none';
+                    if (sponsorAvatarFallbackEl) {
+                        sponsorAvatarFallbackEl.textContent = sponsorName.replace(/^(พี่|คุณ)/, '').slice(0, 2) || 'ผบ';
+                        sponsorAvatarFallbackEl.style.display = 'flex';
+                    }
+                };
+                sponsorAvatarImgEl.src = avatarSrc;
+            }
             sponsorAvatarImgEl.style.display = 'block';
             if (sponsorAvatarFallbackEl) sponsorAvatarFallbackEl.style.display = 'none';
         } else if (sponsorAvatarFallbackEl) {
@@ -262,6 +265,30 @@
         const prizes = state.getPrizes();
         const winners = state.getWinners();
         const wonPrizeIds = new Set(winners.map(w => w.prizeId));
+
+        const existingCards = prizeCarouselStripEl.querySelectorAll('.prize-card-item');
+        // In-place update to prevent flicker if cards already rendered
+        if (existingCards.length === prizes.length) {
+            existingCards.forEach((card, idx) => {
+                const p = prizes[idx];
+                if (!p) return;
+                const isSelected = currentPrize && currentPrize.id === p.id;
+                const isDrawn = (p.drawn > 0) || wonPrizeIds.has(p.id);
+
+                if (isSelected) card.classList.add('active');
+                else card.classList.remove('active');
+
+                if (isDrawn) card.classList.add('drawn');
+                else card.classList.remove('drawn');
+
+                const statusEl = card.querySelector('.prize-card-status-pill');
+                if (statusEl) {
+                    statusEl.className = `prize-card-status-pill ${isDrawn ? 'drawn' : 'waiting'}`;
+                    statusEl.textContent = isDrawn ? '✓ สุ่มแล้ว' : 'รอลุ้น';
+                }
+            });
+            return;
+        }
 
         prizeCarouselStripEl.innerHTML = prizes.map(p => {
             const isDrawn = (p.drawn > 0) || wonPrizeIds.has(p.id);
@@ -818,6 +845,8 @@
                     const parsed = JSON.parse(e.newValue);
                     handleRemoteMessage(parsed);
                 } catch (err) {}
+            } else if (e.key === 'crsdg_member') {
+                updateEligibleCount();
             } else if (e.key === 'crsdg_reward' || e.key === 'crsdg_prizes' || e.key === 'crsdg_winners') {
                 renderCarousel();
                 if (currentPrize) {
@@ -835,7 +864,9 @@
                 if (!event) return;
                 if (event.type === 'VOTE_SETTINGS_UPDATED' && event.data && event.data.remote_reward_cmd) {
                     handleRemoteMessage(event.data.remote_reward_cmd);
-                } else if (event.type === 'PRIZES_UPDATED' || event.type === 'WINNERS_UPDATED' || event.type === 'MEMBERS_UPDATED') {
+                } else if (event.type === 'MEMBERS_UPDATED') {
+                    updateEligibleCount();
+                } else if (event.type === 'PRIZES_UPDATED' || event.type === 'WINNERS_UPDATED') {
                     renderCarousel();
                     if (currentPrize) {
                         const prizes = state.getPrizes();

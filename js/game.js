@@ -1127,7 +1127,7 @@
                 if (matchArenaOverlay) matchArenaOverlay.classList.add('active');
                 if (bottomHint) bottomHint.style.display = 'none';
                 renderTeamCards();
-                if (typeof broadcastGameState === 'function') broadcastGameState();
+                if (typeof broadcastGameState === 'function') broadcastGameState(true);
             }
 
             // Function to close Arena and return to background.jpg
@@ -1137,7 +1137,7 @@
                 if (stageStartBox) stageStartBox.style.display = 'flex';
                 if (matchArenaOverlay) matchArenaOverlay.classList.remove('active');
                 if (bottomHint) bottomHint.style.display = 'block';
-                if (typeof broadcastGameState === 'function') broadcastGameState();
+                if (typeof broadcastGameState === 'function') broadcastGameState(true);
             }
 
             // Function to return to the very start of the game (หน้าแรกของจุดเริ่มต้นเกมทันที)
@@ -1176,7 +1176,7 @@
                 if (typeof updateAwardButtonsState === 'function') updateAwardButtonsState();
                 if (typeof updateMatchGamesProgressBar === 'function') updateMatchGamesProgressBar();
 
-                if (typeof broadcastGameState === 'function') broadcastGameState();
+                if (typeof broadcastGameState === 'function') broadcastGameState(true);
             }
             window.returnToStartHome = returnToStartHome;
 
@@ -1397,6 +1397,7 @@
                 if (quizSelectOverlay) quizSelectOverlay.classList.add('active');
 
                 renderQuizCards();
+                if (typeof broadcastGameState === 'function') broadcastGameState(true);
             }
 
             function backToTeamsSelection() {
@@ -1404,6 +1405,7 @@
                 if (quizSelectOverlay) quizSelectOverlay.classList.remove('active');
                 if (matchArenaOverlay) matchArenaOverlay.classList.add('active');
                 renderTeamCards();
+                if (typeof broadcastGameState === 'function') broadcastGameState(true);
             }
 
             if (btnGoToQuizSelect) {
@@ -1938,6 +1940,7 @@
                 closeTurnAnnouncement();
 
                 if (sound) sound.playClick();
+                if (typeof broadcastGameState === 'function') broadcastGameState(true);
             }
 
             function renderAnswerCards() {
@@ -3185,6 +3188,9 @@
                             const clean = JSON.parse(JSON.stringify(state));
                             delete clean.allQuizzes;
                             delete clean.allTeams;
+                            clean.isClosed = false;
+                            clean.timestamp = Date.now();
+                            clean.broadcastTime = Date.now();
 
                             if (window.FirebaseSync && typeof window.FirebaseSync.saveVoteSettings === 'function') {
                                 window.FirebaseSync.saveVoteSettings({
@@ -3242,29 +3248,18 @@
 
             // Airtight Processed Command Tracking & Deduplication (ป้องกันการทำงานวนซ้ำ 100%)
             const processedRemoteCmdIds = new Set();
-            // ละเว้นคำสั่งค้างเก่าในระบบที่ส่งมาก่อนหน้านี้ รับเฉพาะคำสั่งใหม่หรือภายใน 3 วินาทีก่อนโหลดหน้า
-            let lastProcessedRemoteCmdTs = Date.now() - 3000;
+            let isInitialCloudSnapshot = true;
 
             function handleRemoteCommand(msg) {
                 if (!msg || !msg.action) return;
 
-                // 1. ตรวจสอบ timestamp: ต้องใหม่กว่าคำสั่งล่าสุดที่เคยประมวลผลไปแล้ว
-                if (msg.timestamp) {
-                    if (msg.timestamp <= lastProcessedRemoteCmdTs) {
-                        return;
-                    }
-                }
-
-                // 2. ตรวจสอบ Command ID: ห้ามรันคำสั่งเดิมซ้ำเด็ดขาด ไม่ว่าจะผ่านไปกี่วินาที
+                // ตรวจสอบ Command ID: ห้ามรันคำสั่งเดิมซ้ำเด็ดขาด ไม่ว่าจะผ่านไปกี่วินาที
                 const cmdId = msg.id || (msg.action + '_' + (msg.timestamp || '') + '_' + JSON.stringify(msg.payload || {}));
                 if (processedRemoteCmdIds.has(cmdId)) {
                     return;
                 }
 
                 processedRemoteCmdIds.add(cmdId);
-                if (msg.timestamp) {
-                    lastProcessedRemoteCmdTs = Math.max(lastProcessedRemoteCmdTs, msg.timestamp);
-                }
                 if (processedRemoteCmdIds.size > 200) {
                     const first = processedRemoteCmdIds.values().next().value;
                     processedRemoteCmdIds.delete(first);
@@ -3528,6 +3523,13 @@
             // 3. Cloud Firestore Real-time Listener (Commands from remote_crsdg on iPad/phone)
             const handleCloudCommand = (cmd) => {
                 if (!cmd || !cmd.action) return;
+                // ใน snapshot แรกที่โหลดมา ถ้าเป็นคำสั่งเก่าที่เคยค้างอยู่ในฐานข้อมูล ไม่ต้องรันซ้ำ
+                if (isInitialCloudSnapshot) {
+                    isInitialCloudSnapshot = false;
+                    const initId = cmd.id || (cmd.action + '_' + (cmd.timestamp || '') + '_' + JSON.stringify(cmd.payload || {}));
+                    processedRemoteCmdIds.add(initId);
+                    return;
+                }
                 handleRemoteCommand(cmd);
             };
 
@@ -3567,7 +3569,35 @@
                 }, 800);
             }
 
-            // Initial Broadcast on Load & periodic heartbeat
-            setTimeout(() => broadcastGameState(true), 600);
-            setInterval(broadcastGameState, 2500);
+            // Initial Broadcast on Load & periodic heartbeat across network (Push game state to Firestore every 3s)
+            broadcastGameState(true);
+            setTimeout(() => broadcastGameState(true), 500);
+            setTimeout(() => broadcastGameState(true), 1500);
+            setTimeout(() => broadcastGameState(true), 3000);
+            setInterval(() => broadcastGameState(true), 3000);
+
+            // แจ้งเตือนรีโมตทันทีเมื่อหน้าจอ game.html ถูกปิด
+            function notifyGameScreenClosed() {
+                try {
+                    const closedMsg = {
+                        type: 'GAME_SCREEN_CLOSED',
+                        isClosed: true,
+                        stage: 'closed',
+                        timestamp: Date.now()
+                    };
+                    if (remoteGameChannel) {
+                        remoteGameChannel.postMessage(closedMsg);
+                    }
+                    try {
+                        localStorage.setItem('crsdg_game_state_sync', JSON.stringify(closedMsg));
+                    } catch (e) {}
+                    if (window.FirebaseSync && typeof window.FirebaseSync.saveVoteSettings === 'function') {
+                        window.FirebaseSync.saveVoteSettings({
+                            game_state_sync: closedMsg
+                        }).catch(() => {});
+                    }
+                } catch (e) {}
+            }
+            window.addEventListener('beforeunload', notifyGameScreenClosed);
+            window.addEventListener('pagehide', notifyGameScreenClosed);
         });

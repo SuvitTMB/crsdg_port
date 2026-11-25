@@ -349,6 +349,65 @@ class SoundEffects {
     playDing() {
         this.playSuccess();
     }
+
+    /**
+     * Synthesizes crowd cheering and applause effect using Web Audio API
+     */
+    playApplause(duration = 5.0) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+
+        try {
+            const now = this.ctx.currentTime;
+            const sampleRate = this.ctx.sampleRate;
+            const bufferSize = Math.floor(sampleRate * duration);
+            const buffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
+            const data = buffer.getChannelData(0);
+
+            // Generate noise with clapping burst impulses
+            for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+                // Burst modulation simulating hundreds of desynchronized hand claps
+                const burstMod = Math.pow(Math.random(), 4) * 2.2;
+                data[i] = white * (0.3 + burstMod);
+            }
+
+            const noiseNode = this.ctx.createBufferSource();
+            noiseNode.buffer = buffer;
+
+            // Bandpass filter to shape clapping timbre (center ~1200Hz)
+            const bandpass = this.ctx.createBiquadFilter();
+            bandpass.type = 'bandpass';
+            bandpass.frequency.setValueAtTime(1200, now);
+            bandpass.Q.setValueAtTime(1.2, now);
+
+            // Highpass filter to eliminate mud
+            const highpass = this.ctx.createBiquadFilter();
+            highpass.type = 'highpass';
+            highpass.frequency.setValueAtTime(450, now);
+
+            // Master envelope: swell up quickly, sustain, and fade out smoothly
+            const gainNode = this.ctx.createGain();
+            gainNode.gain.setValueAtTime(0.01, now);
+            gainNode.gain.linearRampToValueAtTime(0.48, now + 0.35); // Fast swell
+            gainNode.gain.setValueAtTime(0.48, now + duration - 1.2);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration); // Smooth fade
+
+            noiseNode.connect(bandpass);
+            bandpass.connect(highpass);
+            highpass.connect(gainNode);
+            gainNode.connect(this.ctx.destination);
+
+            noiseNode.start(now);
+            noiseNode.stop(now + duration);
+
+            // Also trigger triumph brass fanfare
+            this.playWin();
+        } catch (e) {
+            console.warn('[Audio] playApplause error:', e);
+        }
+    }
 }
 
 // Global audio instance

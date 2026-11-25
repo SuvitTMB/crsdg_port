@@ -80,51 +80,8 @@ const DEFAULT_MEMBERS = [];
 
 // เมนูทีมแข่งขัน (crsdg_player) เริ่มต้นว่างเปล่า (ไม่มีข้อมูล Demo ตามคำสั่งผู้ใช้)
 const DEFAULT_PLAYERS = [];
-
-const DEFAULT_TEAM_NAMES = [
-    {
-        id: 'team_it',
-        name: 'IT Dragons',
-        department: 'ฝ่าย IT & Cloud',
-        color: '#3b82f6'
-    },
-    {
-        id: 'team_mkt',
-        name: 'Marketing Fire',
-        department: 'ฝ่าย Marketing',
-        color: '#f97316'
-    },
-    {
-        id: 'team_fin',
-        name: 'Finance Hawks',
-        department: 'ฝ่าย Finance',
-        color: '#10b981'
-    },
-    {
-        id: 'team_sales',
-        name: 'Sales Thunder',
-        department: 'ฝ่าย Sales & BD',
-        color: '#eab308'
-    },
-    {
-        id: 'team_hr',
-        name: 'HR Superstars',
-        department: 'ฝ่าย HR & People',
-        color: '#a855f7'
-    },
-    {
-        id: 'team_rnd',
-        name: 'AI & Data Titans',
-        department: 'ฝ่าย AI & Data',
-        color: '#06b6d4'
-    }
-];
-
-const DEFAULT_TEAMS = DEFAULT_TEAM_NAMES.map(t => ({
-    ...t,
-    captainId: '',
-    memberIds: []
-}));
+const DEFAULT_TEAM_NAMES = [];
+const DEFAULT_TEAMS = [];
 
 // Helper to resolve sponsor avatar from real disk files with loop prevention
 function resolveSponsorAvatar(sponsorName, sponsorPhoto) {
@@ -449,6 +406,9 @@ class StateManager {
             };
         }
         this.listeners = new Set();
+        this._cachedUserInvestments = null;
+        this._saveUserInvTimer = null;
+        this._syncPlayersTimer = null;
         
         if (this.channel) {
             this.channel.onmessage = (event) => {
@@ -458,6 +418,9 @@ class StateManager {
 
         // Listen for storage changes across tabs
         window.addEventListener('storage', (e) => {
+            if (e.key === 'crsdg_all_user_investments') {
+                this._cachedUserInvestments = null;
+            }
             if (Object.values(STORAGE_KEYS).includes(e.key)) {
                 this.notifyListeners({ type: 'STORAGE_UPDATED', key: e.key });
             }
@@ -527,10 +490,10 @@ class StateManager {
                     }));
                     localStorage.setItem(STORAGE_KEYS.NAMETEAM, JSON.stringify(names));
                 } catch {
-                    localStorage.setItem(STORAGE_KEYS.NAMETEAM, JSON.stringify(DEFAULT_TEAM_NAMES));
+                    localStorage.setItem(STORAGE_KEYS.NAMETEAM, JSON.stringify([]));
                 }
             } else {
-                localStorage.setItem(STORAGE_KEYS.NAMETEAM, JSON.stringify(DEFAULT_TEAM_NAMES));
+                localStorage.setItem(STORAGE_KEYS.NAMETEAM, JSON.stringify([]));
             }
         }
 
@@ -547,36 +510,31 @@ class StateManager {
                     }));
                     localStorage.setItem(STORAGE_KEYS.TEAM, JSON.stringify(rosters));
                 } catch {
-                    localStorage.setItem(STORAGE_KEYS.TEAM, JSON.stringify(DEFAULT_TEAM_NAMES.map(t => ({
-                        teamId: t.id,
-                        captainId: '',
-                        memberIds: []
-                    }))));
+                    localStorage.setItem(STORAGE_KEYS.TEAM, JSON.stringify([]));
                 }
             } else {
-                localStorage.setItem(STORAGE_KEYS.TEAM, JSON.stringify(DEFAULT_TEAM_NAMES.map(t => ({
-                    teamId: t.id,
-                    captainId: '',
-                    memberIds: []
-                }))));
+                localStorage.setItem(STORAGE_KEYS.TEAM, JSON.stringify([]));
             }
         }
-        // ตาราง crsdg_player (ทีมแข่งขัน) - ลบข้อมูล Demo เก่าออกจากระบบทั้งหมด
-        if (!localStorage.getItem('crsdg_players_cleaned_demo_v4')) {
-            const raw = localStorage.getItem(STORAGE_KEYS.PLAYER);
-            if (raw) {
-                try {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) {
-                        const nonDemo = parsed.filter(p => p.id && !p.id.startsWith('team_player_1') && !p.id.startsWith('team_player_2') && !p.id.startsWith('team_player_3'));
-                        localStorage.setItem(STORAGE_KEYS.PLAYER, JSON.stringify(nonDemo));
-                    }
-                } catch (e) {}
-            } else {
-                localStorage.setItem(STORAGE_KEYS.PLAYER, JSON.stringify([]));
+        // ตาราง crsdg_player และ crsdg_nameteam (ทีมแข่งขัน) - ลบข้อมูล Demo เก่าออกจากระบบทั้งหมดอย่างถาวร
+        try {
+            const rawPl = localStorage.getItem(STORAGE_KEYS.PLAYER);
+            if (rawPl) {
+                const parsed = JSON.parse(rawPl);
+                if (Array.isArray(parsed)) {
+                    const nonDemo = parsed.filter(p => !this.isDemoCompetitionTeam(p));
+                    localStorage.setItem(STORAGE_KEYS.PLAYER, JSON.stringify(nonDemo));
+                }
             }
-            localStorage.setItem('crsdg_players_cleaned_demo_v4', 'true');
-        }
+            const rawNt = localStorage.getItem(STORAGE_KEYS.NAMETEAM);
+            if (rawNt) {
+                const parsed = JSON.parse(rawNt);
+                if (Array.isArray(parsed)) {
+                    const nonDemo = parsed.filter(t => !this.isDemoCompetitionTeam(t));
+                    localStorage.setItem(STORAGE_KEYS.NAMETEAM, JSON.stringify(nonDemo));
+                }
+            }
+        } catch (e) {}
 
         if (!localStorage.getItem(STORAGE_KEYS.CURRENT_PRIZE_ID)) {
             const prizes = this.getPrizes();
@@ -585,6 +543,52 @@ class StateManager {
             }
         }
         this.syncParticipantTeamRoles();
+    }
+
+    /**
+     * ตรวจสอบว่าทีมนี้เป็นข้อมูล Demo เก่าหรือไม่ เพื่อลบและสกัดกั้นออกอย่างถาวร
+     */
+    isDemoCompetitionTeam(p) {
+        if (!p) return true;
+        const id = String(p.id || '').trim().toLowerCase();
+        const name = String(p.teamName || p.name || '').trim().toLowerCase();
+        const desc = String(p.description || p.projectDesc || '').trim().toLowerCase();
+
+        // 1. ตรวจสอบ ID ที่มาจาก demo เก่า
+        if (id.startsWith('comp_team_179484') || 
+            id.startsWith('comp_team_179488') || 
+            id.startsWith('comp_team_179490') || 
+            id.startsWith('demo_') || 
+            id.startsWith('test_') || 
+            id.startsWith('team_player_')) {
+            return true;
+        }
+
+        // 2. ตรวจสอบชื่อทีมที่เป็นข้อมูล Demo เดิม
+        const demoNames = [
+            'ep.1 mr. agent',
+            'ep.2 product marketing : creative',
+            'ep.3 perf. 360',
+            'ep.4 kpi analysis & dashboard',
+            'ep.5 customer analytics : prototype',
+            'ep.6 ai-assistant for end-to-end campaign management : insights to action',
+            'it dragons',
+            'marketing fire',
+            'finance hawks',
+            'sales thunder',
+            'hr superstars',
+            'ai & data titans'
+        ];
+        if (demoNames.some(d => name === d || name.startsWith(d))) {
+            return true;
+        }
+
+        // 3. ตรวจสอบชื่อที่มีแพทเทิร์น demo เดิม เช่น ขึ้นต้นด้วย EP.1 ถึง EP.6 แบบไม่มีชื่อทีมจริง
+        if (/^ep\.\d+\s*(mr\.\s*agent|product\s*marketing|perf\.|kpi\s*analysis|customer\s*analytics|ai-assistant)/i.test(name)) {
+            return true;
+        }
+
+        return false;
     }
 
     // Keep participant metadata in sync with teams
@@ -627,10 +631,16 @@ class StateManager {
     getTeamNames() {
         try {
             const raw = localStorage.getItem(STORAGE_KEYS.NAMETEAM);
-            if (raw) return JSON.parse(raw);
-            return DEFAULT_TEAM_NAMES;
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    const demoTeamNames = ['it dragons', 'marketing fire', 'finance hawks', 'sales thunder', 'hr superstars', 'ai & data titans'];
+                    return parsed.filter(t => t && t.id && !t.id.startsWith('demo_') && !demoTeamNames.includes(String(t.name || '').trim().toLowerCase()));
+                }
+            }
+            return [];
         } catch {
-            return DEFAULT_TEAM_NAMES;
+            return [];
         }
     }
 
@@ -648,17 +658,9 @@ class StateManager {
         try {
             const raw = localStorage.getItem(STORAGE_KEYS.TEAM);
             if (raw) return JSON.parse(raw);
-            return this.getTeamNames().map(t => ({
-                teamId: t.id,
-                captainId: '',
-                memberIds: []
-            }));
+            return [];
         } catch {
-            return this.getTeamNames().map(t => ({
-                teamId: t.id,
-                captainId: '',
-                memberIds: []
-            }));
+            return [];
         }
     }
 
@@ -1006,7 +1008,7 @@ class StateManager {
                 // Purge old dummy fallback 'Team A' if present
                 const cleanGroup = (rawGrp.toLowerCase() === 'team a') ? '' : rawGrp;
                 const rawMem = (m.Member !== undefined && m.Member !== null) ? m.Member : (m.member !== undefined && m.member !== null ? m.member : '');
-                const memberStatus = (String(rawMem).trim().toLowerCase() === 'member' || (rawMem && String(rawMem).trim() !== '-' && String(rawMem).trim() !== '0' && String(rawMem).trim().toLowerCase() !== 'false')) ? 'Member' : '';
+                const memberStatus = (String(rawMem).trim().toLowerCase() === 'member' || String(rawMem).trim().toLowerCase() === 'mamber' || (rawMem && String(rawMem).trim() !== '-' && String(rawMem).trim() !== '0' && String(rawMem).trim().toLowerCase() !== 'false')) ? 'Member' : '';
                 return {
                     ...m,
                     EmployeeID: String(m.EmployeeID || m.id || ''),
@@ -1046,7 +1048,7 @@ class StateManager {
             const rawGrp = (m.Group !== undefined && m.Group !== null) ? String(m.Group).trim() : (m.department !== undefined && m.department !== null ? String(m.department).trim() : '');
             const cleanGroup = (rawGrp.toLowerCase() === 'team a') ? '' : rawGrp;
             const rawMem = (m.Member !== undefined && m.Member !== null) ? m.Member : (m.member !== undefined && m.member !== null ? m.member : '');
-            const memberStatus = (String(rawMem).trim().toLowerCase() === 'member' || (rawMem && String(rawMem).trim() !== '-' && String(rawMem).trim() !== '0' && String(rawMem).trim().toLowerCase() !== 'false')) ? 'Member' : '';
+            const memberStatus = (String(rawMem).trim().toLowerCase() === 'member' || String(rawMem).trim().toLowerCase() === 'mamber' || (rawMem && String(rawMem).trim() !== '-' && String(rawMem).trim() !== '0' && String(rawMem).trim().toLowerCase() !== 'false')) ? 'Member' : '';
             return {
                 ...cleanM,
                 EmployeeID: String(m.EmployeeID || m.id || ''),
@@ -1253,7 +1255,7 @@ class StateManager {
             const cleanGroup = (group.toLowerCase() === 'team a') ? '' : group;
 
             const rawMem = item.Member !== undefined && item.Member !== null ? item.Member : (item.member !== undefined && item.member !== null ? item.member : '');
-            const memberStatus = (String(rawMem).trim().toLowerCase() === 'member' || (rawMem && String(rawMem).trim() !== '-' && String(rawMem).trim() !== '0' && String(rawMem).trim().toLowerCase() !== 'false')) ? 'Member' : '';
+            const memberStatus = (String(rawMem).trim().toLowerCase() === 'member' || String(rawMem).trim().toLowerCase() === 'mamber' || (rawMem && String(rawMem).trim() !== '-' && String(rawMem).trim() !== '0' && String(rawMem).trim().toLowerCase() !== 'false')) ? 'Member' : '';
 
             if (empId && empName) {
                 importedEmpIds.add(empId);
@@ -1827,6 +1829,15 @@ class StateManager {
 
     applyCloudPlayers(cloudPlayers) {
         if (!Array.isArray(cloudPlayers) || cloudPlayers.length === 0) return;
+        let deletedIds = new Set();
+        try {
+            const rawDel = localStorage.getItem('crsdg_deleted_player_ids');
+            if (rawDel) {
+                const arr = JSON.parse(rawDel);
+                if (Array.isArray(arr)) deletedIds = new Set(arr);
+            }
+        } catch (e) {}
+
         const valid = cloudPlayers.map(p => ({
             id: String(p.id || '').trim(),
             orderNo: parseInt(p.orderNo, 10) || 1,
@@ -1836,34 +1847,59 @@ class StateManager {
             photo: p.teamPhoto || p.photo || '',
             voteAmount: parseFloat(p.voteAmount || 0) || 0,
             voterCount: parseInt(p.voterCount || 0, 10) || 0,
-            voteStatus: p.voteStatus || 'closed',
+            voteStatus: p.voteStatus || 'open',
             members: Array.isArray(p.members) ? p.members : [],
             updatedAt: p.updatedAt || new Date().toISOString()
-        })).filter(p => p.id && p.teamName);
-        if (valid.length === 0) return;
-
-        const current = this.getPlayers();
-        const currentMap = new Map();
-        current.forEach(p => currentMap.set(p.id, p));
-
-        const merged = valid.map(cp => {
-            const local = currentMap.get(cp.id);
-            if (!local) return cp;
-            const localTime = new Date(local.updatedAt || 0).getTime();
-            const cloudTime = new Date(cp.updatedAt || 0).getTime();
-            // ป้องกัน race condition: ถ้าสถานะในเครื่องเพิ่งถูกคลิกแก้ไขใหม่กว่า snapshot เก่าจาก Cloud
-            // ให้ยึดสถานะในเครื่องไว้ ไม่ให้ Cloud ย้อนกลับไปเป็นสถานะเดิม
-            if (localTime > cloudTime && local.voteStatus) {
-                return {
-                    ...cp,
-                    voteStatus: local.voteStatus,
-                    voteAmount: local.voteAmount,
-                    voterCount: local.voterCount,
-                    updatedAt: local.updatedAt
-                };
+        })).filter(p => {
+            if (!p.id || !p.teamName) return false;
+            // สกัดกั้นและลบข้อมูล Demo เก่าออกจาก Cloud อย่างถาวร
+            if (this.isDemoCompetitionTeam(p)) {
+                if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.deletePlayer === 'function') {
+                    window.FirebaseSync.deletePlayer(p.id).catch(() => {});
+                }
+                return false;
             }
-            return cp;
+            if (deletedIds.has(p.id)) {
+                if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.deletePlayer === 'function') {
+                    window.FirebaseSync.deletePlayer(p.id).catch(() => {});
+                }
+                return false;
+            }
+            return true;
         });
+
+        // 1. เริ่มต้นจากข้อมูลทีมในเครื่อง (Local) ทั้งหมดที่ผ่านการกรอง Demo ออกแล้ว
+        const current = this.getPlayers().filter(p => !this.isDemoCompetitionTeam(p));
+        const resultMap = new Map();
+        current.forEach(p => {
+            if (p && p.id && !deletedIds.has(p.id) && !this.isDemoCompetitionTeam(p)) {
+                resultMap.set(p.id, p);
+            }
+        });
+
+        // 2. ผสานข้อมูลจาก Cloud แบบ Two-Way Preserving
+        valid.forEach(cp => {
+            const local = resultMap.get(cp.id);
+            if (!local) {
+                resultMap.set(cp.id, cp);
+            } else {
+                const localTime = new Date(local.updatedAt || 0).getTime();
+                const cloudTime = new Date(cp.updatedAt || 0).getTime();
+                if (localTime >= cloudTime) {
+                    resultMap.set(cp.id, local);
+                    if (!this.isDemoCompetitionTeam(local)) {
+                        if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.savePlayer === 'function') {
+                            window.FirebaseSync.savePlayer(local).catch(() => {});
+                        }
+                    }
+                } else {
+                    resultMap.set(cp.id, cp);
+                }
+            }
+        });
+
+        // 3. เรียงลำดับตาม orderNo
+        const merged = Array.from(resultMap.values()).sort((a, b) => (parseInt(a.orderNo, 10) || 0) - (parseInt(b.orderNo, 10) || 0));
 
         try {
             localStorage.setItem(STORAGE_KEYS.PLAYER, JSON.stringify(merged));
@@ -1976,15 +2012,33 @@ class StateManager {
         this.broadcast({ type: 'GAME_VOTE_STATUS_UPDATED', isOpen: this.isGameVoteOpen() });
     }
 
-    applyCloudUserInvestments(cloudUserInv) {
+    applyCloudUserInvestments(cloudUserInv, replace = false) {
         if (!cloudUserInv || typeof cloudUserInv !== 'object') return;
         try {
-            const keys = Object.keys(cloudUserInv);
-            if (keys.length > 0) {
-                const current = this.getAllUserInvestments();
-                const merged = { ...current, ...cloudUserInv };
-                // บันทึกเงินลงทุนรวมจาก crsdg_vote ลงใน localStorage
-                localStorage.setItem('crsdg_all_user_investments', JSON.stringify(merged));
+            const normalizedCloud = {};
+            Object.keys(cloudUserInv).forEach(k => {
+                const cleanKey = String(k).trim().toLowerCase();
+                if (cleanKey && cloudUserInv[k] && typeof cloudUserInv[k] === 'object') {
+                    normalizedCloud[cleanKey] = cloudUserInv[k];
+                }
+            });
+
+            const keys = Object.keys(normalizedCloud);
+            if (replace || keys.length > 0) {
+                const merged = replace
+                    ? normalizedCloud
+                    : { ...this.getAllUserInvestments(), ...normalizedCloud };
+                this._cachedUserInvestments = merged;
+
+                // Debounce disk write to prevent localStorage freezing under high concurrent submissions
+                if (this._saveUserInvTimer) clearTimeout(this._saveUserInvTimer);
+                this._saveUserInvTimer = setTimeout(() => {
+                    this._saveUserInvTimer = null;
+                    try {
+                        localStorage.setItem('crsdg_all_user_investments', JSON.stringify(merged));
+                    } catch (e) {}
+                }, 200);
+
                 this.recalculatePlayerTeamVoteTotals(true);
                 this.broadcast({ type: 'INVESTMENTS_UPDATED', investments: merged, reset: false });
                 this.broadcast({ type: 'PLAYERS_UPDATED', players: this.getPlayers() });
@@ -2219,12 +2273,20 @@ class StateManager {
     }
 
     getAllUserInvestments() {
+        if (this._cachedUserInvestments !== null) {
+            return this._cachedUserInvestments;
+        }
         try {
             const raw = localStorage.getItem('crsdg_all_user_investments');
-            if (raw) return JSON.parse(raw);
-            return {};
+            if (raw) {
+                this._cachedUserInvestments = JSON.parse(raw);
+                return this._cachedUserInvestments;
+            }
+            this._cachedUserInvestments = {};
+            return this._cachedUserInvestments;
         } catch {
-            return {};
+            this._cachedUserInvestments = {};
+            return this._cachedUserInvestments;
         }
     }
 
@@ -2314,6 +2376,7 @@ class StateManager {
             delete userInv[teamId];
         }
         all[cleanEmpId] = userInv;
+        this._cachedUserInvestments = all;
 
         try {
             localStorage.setItem('crsdg_all_user_investments', JSON.stringify(all));
@@ -2329,9 +2392,6 @@ class StateManager {
             window.FirebaseSync.saveUserInvestmentToCloud(cleanEmpId, userInv).catch(() => {});
         }
 
-        // Debounce ซิงค์สรุปยอดของ crsdg_player ไปยัง Cloud Firestore เพื่อให้ Dashboard อื่นๆ ได้รับข้อมูลล่าสุด
-        this.debounceSyncPlayersToCloud();
-
         this.broadcast({
             type: 'INVESTMENTS_UPDATED',
             empId: cleanEmpId,
@@ -2346,6 +2406,88 @@ class StateManager {
             userInvestments: userInv,
             totalInvested: newTotal,
             remainingBudget: maxBudget - newTotal
+        };
+    }
+
+    async submitUserInvestments(empId, investmentsMap) {
+        if (!this.isVoteOpen()) {
+            return { success: false, message: 'ระบบปิดรับการลงทุนแล้ว ไม่สามารถแก้ไขเงินทุนได้' };
+        }
+        if (!empId) {
+            return { success: false, message: 'ข้อมูลพนักงานไม่ถูกต้อง' };
+        }
+
+        const cleanEmpId = String(empId).trim().toLowerCase();
+        const maxBudget = this.getVoteBudget();
+        const all = this.getAllUserInvestments();
+        const cleanedInvestments = {};
+        let total = 0;
+
+        if (investmentsMap && typeof investmentsMap === 'object') {
+            Object.keys(investmentsMap).forEach(tId => {
+                const amt = Math.max(0, Math.round(parseFloat(investmentsMap[tId]) || 0));
+                if (amt > 0) {
+                    cleanedInvestments[tId] = amt;
+                    total += amt;
+                }
+            });
+        }
+
+        if (total > maxBudget) {
+            return {
+                success: false,
+                message: `งบประมาณรวมเกินกำหนด (${total.toLocaleString()} / ${maxBudget.toLocaleString()} บาท)`,
+                maxBudget: maxBudget,
+                total: total
+            };
+        }
+
+        all[cleanEmpId] = cleanedInvestments;
+        this._cachedUserInvestments = all;
+
+        try {
+            localStorage.setItem('crsdg_all_user_investments', JSON.stringify(all));
+        } catch (e) {
+            console.warn('Error saving user investments:', e);
+        }
+
+        // คำนวณสรุปยอดรวมของแต่ละทีมในเครื่อง
+        this.recalculatePlayerTeamVoteTotals(true);
+
+        // Broadcast การเปลี่ยนแปลงไปยังทุกหน้าต่างในเครื่องเดียวกันแบบ realtime
+        this.broadcast({
+            type: 'INVESTMENTS_UPDATED',
+            empId: cleanEmpId,
+            userInvestments: cleanedInvestments,
+            totalInvested: total,
+            remainingBudget: Math.max(0, maxBudget - total)
+        });
+
+        // บันทึกไปยัง Firebase Firestore crsdg_investments/{cleanEmpId} และรอผลเพื่อความแม่นยำ 100% เมื่อมีผู้ใช้งานพร้อมกัน 300 คน
+        let cloudOk = true;
+        if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.saveUserInvestmentToCloud === 'function') {
+            try {
+                cloudOk = await window.FirebaseSync.saveUserInvestmentToCloud(cleanEmpId, cleanedInvestments);
+            } catch (err) {
+                console.warn('[State] saveUserInvestmentToCloud notice:', err);
+                cloudOk = false;
+            }
+        }
+
+        if (!cloudOk) {
+            return {
+                success: false,
+                cloudSynced: false,
+                message: 'ไม่สามารถส่งข้อมูลไปยังเซิร์ฟเวอร์ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วกดบันทึกใหม่อีกครั้ง'
+            };
+        }
+
+        return {
+            success: true,
+            cloudSynced: true,
+            userInvestments: cleanedInvestments,
+            totalInvested: total,
+            remainingBudget: Math.max(0, maxBudget - total)
         };
     }
 
@@ -2462,6 +2604,32 @@ class StateManager {
         return { success: false, message: 'ไม่พบทีมที่ต้องการ' };
     }
 
+    openAllTeamVotes() {
+        const players = this.getPlayers();
+        const nowIso = new Date().toISOString();
+        const updated = players.map(p => ({
+            ...p,
+            voteStatus: 'open',
+            updatedAt: nowIso
+        }));
+        this.savePlayers(updated);
+        if (!this.isVoteOpen()) {
+            this.setVoteOpen(true);
+        }
+        if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.syncAllPlayers === 'function') {
+            window.FirebaseSync.syncAllPlayers(updated).catch(() => {});
+        }
+        this.broadcast({
+            type: 'ALL_TEAMS_VOTE_OPENED',
+            players: updated
+        });
+        this.broadcast({
+            type: 'PLAYERS_UPDATED',
+            players: updated
+        });
+        return { success: true, count: updated.length };
+    }
+
     closeAllTeamVotes() {
         const players = this.getPlayers();
         const nowIso = new Date().toISOString();
@@ -2478,6 +2646,10 @@ class StateManager {
             type: 'ALL_TEAMS_VOTE_CLOSED',
             players: updated
         });
+        this.broadcast({
+            type: 'PLAYERS_UPDATED',
+            players: updated
+        });
         return { success: true, count: updated.length };
     }
 
@@ -2491,8 +2663,8 @@ class StateManager {
             const parsed = JSON.parse(raw);
             if (!Array.isArray(parsed) || parsed.length === 0) return [];
 
-            // กรองข้อมูล Demo เก่าออก
-            const clean = parsed.filter(p => !p.id || (!p.id.startsWith('team_player_1') && !p.id.startsWith('team_player_2') && !p.id.startsWith('team_player_3')));
+            // กรองข้อมูล Demo เก่าออกทั้งหมดอย่างถาวร
+            const clean = parsed.filter(p => !this.isDemoCompetitionTeam(p));
 
             const allMembers = this.getMembers();
             const memberMap = new Map();
@@ -2554,7 +2726,8 @@ class StateManager {
     }
 
     savePlayers(players) {
-        const normalized = players.map((p, idx) => {
+        const nonDemo = (players || []).filter(p => !this.isDemoCompetitionTeam(p));
+        const normalized = nonDemo.map((p, idx) => {
             const teamPhoto = String(p.teamPhoto || p.photo || '').trim();
             // ไม่เก็บ base64 ขนาดยักษ์ซ้ำซ้อนใน members เนื่องจากดึงจาก crsdg_member ผ่าน employeeId อยู่แล้ว
             const sanitizedMembers = (p.members || []).map(m => {
@@ -2618,6 +2791,7 @@ class StateManager {
 
     resetAllPlayerVotes() {
         const nowTs = Date.now();
+        this._cachedUserInvestments = {};
         try {
             localStorage.setItem('crsdg_last_reset_votes_ts', String(nowTs));
             localStorage.setItem('crsdg_all_user_investments', '{}');
@@ -2629,7 +2803,7 @@ class StateManager {
             ...p,
             voteAmount: 0,
             voterCount: 0,
-            voteStatus: 'closed',
+            voteStatus: (p.voteStatus === 'closed') ? 'closed' : 'open',
             updatedAt: new Date().toISOString()
         }));
         this.savePlayers(updated);
@@ -2659,7 +2833,7 @@ class StateManager {
             photo: teamPhoto,
             voteAmount: parseFloat(teamData.voteAmount || 0) || 0,
             voterCount: parseInt(teamData.voterCount || 0, 10) || 0,
-            voteStatus: teamData.voteStatus || 'closed',
+            voteStatus: teamData.voteStatus || 'open',
             members: (teamData.members || []).map(m => {
                 const pStr = String(m.photo || '').trim();
                 return {
@@ -2719,6 +2893,15 @@ class StateManager {
         if (players.length === beforeLen) {
             return { success: false, message: 'ไม่พบรายการที่ต้องการลบ' };
         }
+        try {
+            const rawDel = localStorage.getItem('crsdg_deleted_player_ids');
+            const delList = rawDel ? JSON.parse(rawDel) : [];
+            if (!delList.includes(id)) {
+                delList.push(id);
+                localStorage.setItem('crsdg_deleted_player_ids', JSON.stringify(delList));
+            }
+        } catch (e) {}
+
         this.savePlayers(players);
         if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.deletePlayer === 'function') {
             window.FirebaseSync.deletePlayer(id);

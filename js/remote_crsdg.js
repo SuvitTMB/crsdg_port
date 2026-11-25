@@ -75,18 +75,20 @@
         }
 
         // 3. Cloud Firestore Real-time Sync (Cross-device, remote on iPad/mobile to server game.html)
-        try {
-            const cleanMsg = JSON.parse(JSON.stringify(msg));
-            if (window.FirebaseSync && typeof window.FirebaseSync.saveVoteSettings === 'function') {
-                window.FirebaseSync.saveVoteSettings({
-                    game_remote_cmd: cleanMsg
-                }).catch(err => console.warn('[GameRemote] Cloud save notice:', err));
-            } else if (typeof firebase !== 'undefined' && firebase.firestore) {
-                firebase.firestore().collection('crsdg_vote').doc('settings').set({
-                    game_remote_cmd: cleanMsg
-                }, { merge: true }).catch(err => console.warn('[GameRemote] Direct set notice:', err));
-            }
-        } catch (e) {}
+        if (action !== 'PING') {
+            try {
+                const cleanMsg = JSON.parse(JSON.stringify(msg));
+                if (window.FirebaseSync && typeof window.FirebaseSync.saveVoteSettings === 'function') {
+                    window.FirebaseSync.saveVoteSettings({
+                        game_remote_cmd: cleanMsg
+                    }).catch(err => console.warn('[GameRemote] Cloud save notice:', err));
+                } else if (typeof firebase !== 'undefined' && firebase.firestore) {
+                    firebase.firestore().collection('crsdg_vote').doc('settings').set({
+                        game_remote_cmd: cleanMsg
+                    }, { merge: true }).catch(err => console.warn('[GameRemote] Direct set notice:', err));
+                }
+            } catch (e) {}
+        }
 
         // Network Command Dispatch for custom backend server (if explicitly configured)
         if (window.__USE_LOCAL_API_SERVER__ && isNetworkSyncEnabled()) {
@@ -98,14 +100,24 @@
         }
     }
 
-    // Request full state from game.html
+    // Request full state from game.html (throttled to at most once per 2s)
+    let lastRequestStateSentTs = 0;
     function requestGameState() {
-        sendCommand('REQUEST_STATE', {});
+        const now = Date.now();
+        if (now - lastRequestStateSentTs < 2000) return;
+        lastRequestStateSentTs = now;
+        sendCommand('REQUEST_STATE', {}, false);
     }
 
     // Handle incoming messages from game.html
     function handleIncomingMessage(data) {
         if (!data) return;
+        if (data.type === 'GAME_SCREEN_CLOSED' || (data.state && data.state.isClosed)) {
+            lastHeartbeatTime = 0;
+            latestGameState = { isClosed: true, isGameStarted: false, stage: 'closed' };
+            updateConnectionStatus(false);
+            return;
+        }
         if (data.type === 'GAME_STATE_UPDATE' && data.state) {
             lastHeartbeatTime = Date.now();
             latestGameState = data.state;
@@ -123,9 +135,20 @@
     }
 
     window.addEventListener('storage', (e) => {
-        if (e.key === 'crsdg_game_state_sync' && e.newValue) {
+        if (e.key === 'crsdg_game_state_sync') {
+            if (!e.newValue) {
+                lastHeartbeatTime = 0;
+                updateConnectionStatus(false);
+                return;
+            }
             try {
                 const state = JSON.parse(e.newValue);
+                if (state.isClosed) {
+                    lastHeartbeatTime = 0;
+                    latestGameState = { isClosed: true, isGameStarted: false, stage: 'closed' };
+                    updateConnectionStatus(false);
+                    return;
+                }
                 lastHeartbeatTime = Date.now();
                 latestGameState = state;
                 updateConnectionStatus(true);
@@ -143,8 +166,19 @@
 
     function handleCloudGameState(cloudState) {
         if (!cloudState) return;
+
+        // เมื่อหน้าจอหลักส่งสถานะปิดจอมาชัดเจน
+        if (cloudState.isClosed === true) {
+            lastHeartbeatTime = 0;
+            latestGameState = { isClosed: true, isGameStarted: false, stage: 'closed' };
+            updateConnectionStatus(false);
+            return;
+        }
+
         const bTime = cloudState.broadcastTime || cloudState.timestamp || 0;
-        if (bTime && bTime <= lastProcessedBroadcastTime) {
+        if (bTime && bTime <= lastProcessedBroadcastTime && latestGameState && !latestGameState.isClosed) {
+            // อัปเดตเฉพาะ Heartbeat ประจำรอบ (ตามเวลารีโมต)
+            lastHeartbeatTime = Date.now();
             return;
         }
         if (bTime) lastProcessedBroadcastTime = bTime;
@@ -153,7 +187,8 @@
         const fullState = {
             allTeams: getDatabaseTeams(),
             allQuizzes: getDatabaseQuizzes(),
-            ...cloudState
+            ...cloudState,
+            isClosed: false
         };
 
         lastHeartbeatTime = Date.now();
@@ -227,17 +262,37 @@
         const txt = document.getElementById('remoteConnText');
         const bannerIcon = document.getElementById('connBannerIcon');
         const bannerText = document.getElementById('connBannerText');
+        const introIcon = document.getElementById('introModalIcon');
+        const introBadge = document.getElementById('introModalBadge');
+        const btnStart = document.getElementById('btnRemoteStartComp');
+        const btnOpenGame = document.getElementById('btnModalOpenGame');
+        const introSubhint = document.getElementById('introModalSubhint');
+        const introModal = document.getElementById('remoteStartIntroModal');
 
         if (isConnected) {
             if (badge) badge.className = 'remote-conn-status is-connected';
             if (txt) txt.textContent = 'ออนไลน์ (Online)';
             if (bannerIcon) bannerIcon.textContent = '🟢';
             if (bannerText) bannerText.innerHTML = 'เชื่อมต่อหน้าจอหลัก <strong>game.html</strong> เรียบร้อย (Real-time Sync)';
+            if (introIcon) introIcon.textContent = '🎮';
+            if (introBadge) introBadge.textContent = '4 ต่อ 4 CRSDG GAME';
+            if (btnStart) btnStart.style.display = 'inline-flex';
+            if (btnOpenGame) btnOpenGame.style.display = 'none';
+            if (introSubhint) introSubhint.innerHTML = '💡 หน้าจอหลักพร้อมแล้ว — กดปุ่มด้านบนเพื่อเริ่มการแข่งขัน';
         } else {
             if (badge) badge.className = 'remote-conn-status is-disconnected';
-            if (txt) txt.textContent = 'รอเชื่อมต่อจอ...';
-            if (bannerIcon) bannerIcon.textContent = '🟡';
-            if (bannerText) bannerText.innerHTML = 'เชื่อมต่อตารางข้อมูลในระบบแล้ว • <em>กำลังรอเชื่อมต่อจอหลัก</em>';
+            if (txt) txt.textContent = 'จอหลักปิดอยู่';
+            if (bannerIcon) bannerIcon.textContent = '🔴';
+            if (bannerText) bannerText.innerHTML = 'หน้าจอหลัก (game.html) ปิดอยู่ • กรุณาคลิก <strong>"เปิดจอหลัก"</strong> ด้านบน';
+            if (introIcon) introIcon.textContent = '🖥️';
+            if (introBadge) introBadge.textContent = 'หน้าจอหลัก game.html ปิดอยู่';
+            if (btnStart) btnStart.style.display = 'none';
+            if (btnOpenGame) btnOpenGame.style.display = 'inline-flex';
+            if (introSubhint) introSubhint.innerHTML = '⚠️ กรุณาคลิกปุ่มเพื่อเปิดหน้าจอหลัก <strong>game.html</strong> หรือเปิดหน้าจอบนคอมพิวเตอร์';
+
+            // เมื่อหน้าจอหลักปิดอยู่ ให้ disabled ทั้ง 3 แถว และแสดง modal แจ้งเตือนอย่างชัดเจน ไม่ให้สลับไปมา
+            disableAllThreeColumns();
+            if (introModal) introModal.style.display = 'flex';
         }
     }
 
@@ -259,10 +314,10 @@
         });
     }
 
-    // Switch tabs on remote
-    function switchTab(tabName, isManual = true) {
-        // หากเกมยังไม่เริ่มต้น ห้ามสลับแถวและให้คงสถานะ disabled ทั้ง 3 แถวไว้ พร้อมแสดง lightbox
-        const isGameNotStarted = (!latestGameState || latestGameState.stage === 'home' || latestGameState.stage === 'intro' || !latestGameState.isGameStarted);
+    // Switch tabs on remote (พร้อม Two-way Synchronization สั่งให้หน้า game.html สลับตามอย่างสมบูรณ์)
+    function switchTab(tabName, isManual = true, syncGame = true) {
+        // หากเกมยังไม่เริ่มต้น หรือจอหลักปิดอยู่ ห้ามสลับแถวและให้คงสถานะ disabled ทั้ง 3 แถวไว้ พร้อมแสดง lightbox
+        const isGameNotStarted = (!latestGameState || latestGameState.isClosed || latestGameState.stage === 'home' || latestGameState.stage === 'intro' || !latestGameState.isGameStarted);
         if (isGameNotStarted && tabName !== 'arena_force') {
             disableAllThreeColumns();
             const introModal = document.getElementById('remoteStartIntroModal');
@@ -273,6 +328,27 @@
         if (tabName === 'arena_force') tabName = 'arena';
         currentSelectedTab = tabName;
         if (isManual) isUserManuallySwitchedTab = true;
+
+        // สั่งให้หน้าจอหลัก game.html สลับตามเมื่อผู้ใช้คลิกสลับแถวบนรีโมต (Strict Two-Way Sync)
+        if (isManual && syncGame && latestGameState && latestGameState.isGameStarted && !latestGameState.isClosed) {
+            if (tabName === 'arena') {
+                if (latestGameState.stage === 'home') {
+                    sendCommand('CLICK_START_COMPETITION', {}, true);
+                } else if (latestGameState.stage !== 'arena') {
+                    sendCommand('BACK_TO_ARENA', {}, true);
+                }
+            } else if (tabName === 'quiz') {
+                if (latestGameState.stage === 'arena') {
+                    sendCommand('GO_TO_QUIZ_SELECT', {}, true);
+                } else if (latestGameState.stage === 'game') {
+                    sendCommand('BACK_TO_QUIZ_SELECT', {}, true);
+                }
+            } else if (tabName === 'game') {
+                if (latestGameState.stage === 'quiz_select' && latestGameState.selectedQuizId) {
+                    sendCommand('START_QUIZ_GAME', {}, true);
+                }
+            }
+        }
 
         document.querySelectorAll('.stage-tab-btn').forEach(btn => {
             if (btn.getAttribute('data-tab') === tabName) {
@@ -323,6 +399,15 @@
     function renderRemoteUI(state) {
         if (!state) return;
 
+        // เมื่อหน้า game ถูกปิดอยู่
+        if (state.isClosed) {
+            updateConnectionStatus(false);
+            disableAllThreeColumns();
+            const introModal = document.getElementById('remoteStartIntroModal');
+            if (introModal) introModal.style.display = 'flex';
+            return;
+        }
+
         // เมื่อหน้า game ยังอยู่ในหน้าแรกและยังไม่ได้เริ่มทำการแข่งขัน ให้ disabled แถวทั้ง 3 แถว และแสดง lightbox เริ่มการแข่งขัน
         const isGameNotStarted = (state.stage === 'home' || state.stage === 'intro' || !state.isGameStarted);
         const introModal = document.getElementById('remoteStartIntroModal');
@@ -330,21 +415,22 @@
         if (isGameNotStarted) {
             if (introModal) introModal.style.display = 'flex';
             disableAllThreeColumns();
+            previousStage = state.stage;
             return;
         } else {
             if (introModal) introModal.style.display = 'none';
         }
 
         // Auto-switch tab to match stage:
-        // เมื่อจอหลักเข้าสู่โหมดการแข่งขัน ('game') ให้สลับมายังแท็บกระดานแข่งขันทันที
+        // เมื่อจอหลักเปลี่ยนหน้า ให้รีโมตสลับตามอัตโนมัติอย่างแม่นยำ
         if (state.stage !== previousStage) {
             isUserManuallySwitchedTab = false;
             if (state.stage === 'game') {
-                switchTab('game', false);
+                switchTab('game', false, false);
             } else if (state.stage === 'quiz_select') {
-                switchTab('quiz', false);
+                switchTab('quiz', false, false);
             } else if (state.stage === 'arena') {
-                switchTab('arena', false);
+                switchTab('arena', false, false);
             }
             previousStage = state.stage;
         }
@@ -953,6 +1039,40 @@
     window.remoteController = {
         // Navigation & Stage
         switchTab: switchTab,
+        restartGameHome: () => {
+            triggerHaptic(40);
+            // สั่งให้หน้าจอ game.html รีเซ็ตและกลับสู่หน้าเริ่มต้น
+            sendCommand('RESTART_GAME_HOME', {}, true);
+
+            // รีเซ็ตสถานะภายในของรีโมตให้สอดคล้องกันทันที
+            if (latestGameState) {
+                latestGameState.stage = 'home';
+                latestGameState.isGameStarted = false;
+                latestGameState.blueScore = 0;
+                latestGameState.orangeScore = 0;
+                latestGameState.bankScore = 0;
+                latestGameState.strikes = [false, false, false];
+                latestGameState.isStealPhase = false;
+                latestGameState.currentQuiz = null;
+                latestGameState.selectedQuizId = null;
+                latestGameState.selectedTeamALeft = null;
+                latestGameState.selectedTeamBRight = null;
+                if (latestGameState.modals) {
+                    Object.keys(latestGameState.modals).forEach(k => { latestGameState.modals[k] = false; });
+                }
+            } else {
+                latestGameState = { stage: 'home', isGameStarted: false };
+            }
+            previousStage = 'home';
+            currentSelectedTab = 'arena';
+            isUserManuallySwitchedTab = false;
+
+            // ล็อคทั้ง 3 คอลัมน์ และแสดง lightbox เริ่มการแข่งขัน
+            disableAllThreeColumns();
+            const introModal = document.getElementById('remoteStartIntroModal');
+            if (introModal) introModal.style.display = 'flex';
+            renderRemoteUI(latestGameState);
+        },
         clickStartCompetition: () => {
             // สั่งให้หน้า game ทำการกดปุ่มเริ่มการแข่งขัน
             sendCommand('CLICK_START_COMPETITION', {}, true);
@@ -1238,14 +1358,15 @@
         }
     };
 
-    // Heartbeat check every 2.5s
+    // Heartbeat check every 3s
     setInterval(() => {
         const now = Date.now();
-        if (now - lastHeartbeatTime > 5500) {
+        // หากไม่ได้รับสัญญาณจากจอหลักเกิน 12 วินาที จึงจะแสดงสถานะออฟไลน์
+        if (lastHeartbeatTime > 0 && now - lastHeartbeatTime > 12000) {
             updateConnectionStatus(false);
             requestGameState();
         }
-    }, 2500);
+    }, 3000);
 
     // Synchronize Fullscreen button and icon on remote_crsdg
     function updateLocalFullscreenUI() {
@@ -1287,13 +1408,16 @@
         renderArenaPanel(latestGameState);
         renderQuizPanel(latestGameState);
 
-        // Try reading cached state from localStorage first
+        // Try reading cached state from localStorage only if fresh (< 8s) and not closed
         try {
             const raw = localStorage.getItem('crsdg_game_state_sync');
             if (raw) {
                 const cached = JSON.parse(raw);
-                latestGameState = cached;
-                renderRemoteUI(cached);
+                const now = Date.now();
+                if (!cached.isClosed && cached.timestamp && (now - cached.timestamp < 8000)) {
+                    latestGameState = cached;
+                    renderRemoteUI(cached);
+                }
             }
         } catch (e) {}
 

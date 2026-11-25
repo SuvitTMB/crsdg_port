@@ -2622,8 +2622,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (currentSortColumn === 'member') {
-                    const memA = (a.Member === 'Member' || a.member === 'Member') ? 'Member' : '';
-                    const memB = (b.Member === 'Member' || b.member === 'Member') ? 'Member' : '';
+                    const memA = (a.Member === 'Member' || a.member === 'Member' || String(a.Member || a.member || '').trim().toLowerCase() === 'member' || String(a.Member || a.member || '').trim().toLowerCase() === 'mamber') ? 'Member' : '';
+                    const memB = (b.Member === 'Member' || b.member === 'Member' || String(b.Member || b.member || '').trim().toLowerCase() === 'member' || String(b.Member || b.member || '').trim().toLowerCase() === 'mamber') ? 'Member' : '';
                     const cmp = memA.localeCompare(memB);
                     return currentSortDirection === 'asc' ? cmp : -cmp;
                 }
@@ -2792,7 +2792,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </span>
                     </td>
                     <td class="col-td-member" style="text-align: center;">
-                        ${(m.Member === 'Member' || m.member === 'Member' || String(m.Member || m.member || '').trim().toLowerCase() === 'member')
+                        ${(m.Member === 'Member' || m.member === 'Member' || String(m.Member || m.member || '').trim().toLowerCase() === 'member' || String(m.Member || m.member || '').trim().toLowerCase() === 'mamber')
                             ? `<span class="badge badge-success" style="font-size: 0.72rem; padding: 2px 8px; font-weight: 500; border-radius: 9999px;">Member</span>`
                             : `<span class="empty-cell-dash">-</span>`}
                     </td>
@@ -3025,14 +3025,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const foundId = row.findIndex(c => c.includes('employeeid') || c.includes('empid') || c.includes('รหัส'));
             const foundName = row.findIndex(c => c.includes('empname') || c.includes('name') || c.includes('ชื่อ'));
             const foundGroup = row.findIndex(c => c.includes('group') || c.includes('team') || c.includes('กลุ่ม') || c.includes('ฝ่าย') || c.includes('ทีม'));
-            const foundMember = row.findIndex(c => c === 'member' || c.includes('member') || c.includes('สมาชิก'));
+            const foundMember = row.findIndex((c, idx) => 
+                idx !== foundId && idx !== foundName &&
+                (c === 'member' || c === 'mamber' || c.includes('member') || c.includes('mamber') || c.includes('สมาชิก') || c.includes('สถานะ') || c.includes('role'))
+            );
 
             if (foundId !== -1 && foundName !== -1) {
                 headerRowIdx = r;
                 colEmpId = foundId;
                 colEmpName = foundName;
                 if (foundGroup !== -1) colGroup = foundGroup;
-                if (foundMember !== -1) colMember = foundMember;
+                if (foundMember !== -1) {
+                    colMember = foundMember;
+                } else if (rawRows[r] && rawRows[r].length > 3) {
+                    const fallbackCol = [0, 1, 2, 3].find(idx => idx !== colEmpId && idx !== colEmpName && idx !== colGroup);
+                    if (fallbackCol !== undefined && rawRows[r][fallbackCol] !== undefined) {
+                        colMember = fallbackCol;
+                    }
+                }
                 break;
             }
         }
@@ -3050,7 +3060,14 @@ document.addEventListener('DOMContentLoaded', () => {
             let memberStatus = '';
             if (colMember !== -1 && row[colMember] !== undefined && row[colMember] !== null) {
                 const rawMem = String(row[colMember]).trim();
-                if (rawMem.toLowerCase() === 'member' || (rawMem && rawMem !== '-' && rawMem !== '0' && rawMem.toLowerCase() !== 'false' && rawMem.toLowerCase() !== 'no')) {
+                const lowerMem = rawMem.toLowerCase();
+                if (lowerMem === 'member' || 
+                    lowerMem === 'mamber' || 
+                    lowerMem === 'yes' || 
+                    lowerMem === 'true' || 
+                    lowerMem === '1' || 
+                    lowerMem === 'สมาชิก' ||
+                    (rawMem && rawMem !== '-' && rawMem !== '0' && lowerMem !== 'false' && lowerMem !== 'no')) {
                     memberStatus = 'Member';
                 }
             }
@@ -3060,7 +3077,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     EmployeeID: id,
                     EmpName: name,
                     Group: group,
-                    Member: memberStatus
+                    Member: memberStatus,
+                    member: memberStatus
                 });
             }
         }
@@ -3290,7 +3308,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'EmployeeID': m.EmployeeID || m.id,
                 'EmpName': m.EmpName || m.name,
                 'Group': m.Group || m.department || 'Team A',
-                'Member': (m.Member === 'Member' || m.member === 'Member' || String(m.Member || m.member || '').trim().toLowerCase() === 'member') ? 'Member' : '',
+                'Member': (m.Member === 'Member' || m.member === 'Member' || String(m.Member || m.member || '').trim().toLowerCase() === 'member' || String(m.Member || m.member || '').trim().toLowerCase() === 'mamber') ? 'Member' : '',
                 'ทีมแข่งขัน': memberTeamMap.get(m.EmployeeID || m.id) || '-',
                 'ลงทะเบียน': (m.registered === true && m.registeredAt) ? formatThaiDateTime(m.registeredAt) : (m.registered === true ? 'ลงทะเบียนแล้ว' : 'ยังไม่ลงทะเบียน'),
                 'เลือกทีม': m.chosenTeam || '-',
@@ -3331,12 +3349,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     const id = parts[0];
                     const name = parts[1];
                     const grp = parts[2] || 'Team A';
+                    let memberStatus = '';
+                    if (parts[3] !== undefined && parts[3] !== null) {
+                        const rawMem = String(parts[3]).trim().toLowerCase();
+                        if (rawMem === 'member' || rawMem === 'mamber' || rawMem === '1' || rawMem === 'yes' || rawMem === 'true' || rawMem === 'สมาชิก') {
+                            memberStatus = 'Member';
+                        }
+                    }
 
                     if (id && name) {
                         newMembers.push({
                             EmployeeID: id,
                             EmpName: name,
-                            Group: grp
+                            Group: grp,
+                            Member: memberStatus,
+                            member: memberStatus
                         });
                     }
                 }
@@ -3852,7 +3879,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Set Member Status Select
         if (editMemberStatusSelect) {
-            const isMem = (member.Member === 'Member' || member.member === 'Member' || String(member.Member || member.member || '').trim().toLowerCase() === 'member');
+            const isMem = (member.Member === 'Member' || member.member === 'Member' || String(member.Member || member.member || '').trim().toLowerCase() === 'member' || String(member.Member || member.member || '').trim().toLowerCase() === 'mamber');
             editMemberStatusSelect.value = isMem ? 'Member' : '';
         }
 
@@ -5255,7 +5282,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderParticipants();
             renderStats();
         }
-        if (e.key === 'crsdg_all_user_investments' || e.key === 'crsdg_player' || e.key === 'crsdg_vote_open' || e.key === 'crsdg_vote_budget') {
+        if (e.key === 'crsdg_player' || e.key === 'crsdg_vote_open' || e.key === 'crsdg_vote_budget') {
             renderPlayers();
             renderStats();
         }
@@ -5567,14 +5594,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderPlayers() {
         if (!playerTableBodyEl) return;
 
-        const teamsList = (typeof state.getPlayers === 'function') ? state.getPlayers() : [];
+        const rawTeamsList = (typeof state.getPlayers === 'function') ? state.getPlayers() : [];
+        const teamsList = rawTeamsList.filter(t => {
+            if (!t || !t.id) return false;
+            if (typeof state.isDemoCompetitionTeam === 'function' && state.isDemoCompetitionTeam(t)) return false;
+            return true;
+        });
         const members = state.getMembers();
 
         // 1. Update Top Stats & Process Live Team Investment Totals
         const totalTeams = teamsList.length;
         let totalCaptainsCount = 0;
 
-        // ประมวลผลยอดเงินลงทุนและจำนวนผู้ให้เงินตามข้อมูลจริงที่เข้ามาในระบบแบบ Real-time
+        // ประมวลผลยอดเงินลงทุนและจำนวนผู้ให้เงินตามข้อมูลที่ Submit บันทึกเข้ามาในระบบ
         const allUserInv = (typeof state.getAllUserInvestments === 'function') ? state.getAllUserInvestments() : {};
         const teamAmounts = {};
         const teamVoters = {};
@@ -5605,7 +5637,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // ผู้ให้เงินรวม: ไม่นับซ้ำ (Distinct Unique Investors)
         const totalDistinctVoters = (typeof state.getDistinctInvestorCount === 'function')
             ? state.getDistinctInvestorCount()
-            : totalVoters;
+            : Object.keys(teamVoters).length;
 
         if (playerTotalCountEl) playerTotalCountEl.textContent = registeredMembersCount.toLocaleString();
         if (playerCaptainCountEl) playerCaptainCountEl.textContent = totalCaptainsCount.toLocaleString();
@@ -5743,8 +5775,9 @@ document.addEventListener('DOMContentLoaded', () => {
             ? state.getDistinctInvestorCount(filteredTeamIds)
             : filtered.reduce((sum, t) => sum + (parseInt(t.voterCount, 10) || 0), 0);
 
+        const totalTeamMembersCount = filtered.reduce((sum, t) => sum + (Array.isArray(t.members) ? t.members.length : 0), 0);
         if (compFooterCountEl) compFooterCountEl.textContent = filtered.length;
-        if (compFooterMembersEl) compFooterMembersEl.textContent = registeredMembersCount.toLocaleString();
+        if (compFooterMembersEl) compFooterMembersEl.textContent = totalTeamMembersCount.toLocaleString();
         if (compFooterMoneyEl) compFooterMoneyEl.textContent = filteredMoney.toLocaleString('th-TH') + ' บาท';
         if (compFooterVotersEl) compFooterVotersEl.textContent = filteredDistinctVoters.toLocaleString();
 
@@ -6319,8 +6352,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const voteStatus = playerVoteStatusEl ? playerVoteStatusEl.value : 'open';
             const members = currentEditingTeamMembers;
 
+            let saveRes = null;
             if (editId) {
-                state.updatePlayer(editId, {
+                saveRes = state.updatePlayer(editId, {
                     orderNo,
                     teamName,
                     description,
@@ -6332,7 +6366,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     members
                 });
             } else {
-                state.addPlayer({
+                saveRes = state.addPlayer({
                     orderNo,
                     teamName,
                     description,
@@ -6343,6 +6377,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     voteStatus,
                     members
                 });
+            }
+
+            // บันทึกตรงไปยัง Cloud Firestore (crsdg_player/{id}) ทันทีแบบ Atomic ป้องกันข้อมูลสูญหายหรือถูกดึงของเก่ามาทับ
+            if (saveRes && saveRes.player && typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.savePlayer === 'function') {
+                window.FirebaseSync.savePlayer(saveRes.player).catch(err => console.warn('[Admin] Direct savePlayer notice:', err));
             }
 
             // Optional Server file sync if running over HTTP
@@ -6426,6 +6465,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     const ws = XLSX.utils.json_to_sheet(rows);
                     XLSX.utils.book_append_sheet(wb, ws, 'crsdg_player');
                     XLSX.writeFile(wb, `CRSDG_Player_Teams_${new Date().toISOString().slice(0, 10)}.xlsx`);
+                }
+            });
+        }
+
+        // Manual Refresh Button for crsdg_player / Investment Portfolio
+        const btnRefreshPlayersData = document.getElementById('btnRefreshPlayersData');
+        if (btnRefreshPlayersData) {
+            btnRefreshPlayersData.addEventListener('click', async () => {
+                if (sound) sound.playClick();
+                btnRefreshPlayersData.disabled = true;
+                showToast('🔄 กำลังดึงข้อมูลพอร์ตลงทุนล่าสุดจาก Cloud...');
+                try {
+                    if (window.FirebaseSync && typeof window.FirebaseSync.fetchUserInvestmentsFromCloud === 'function') {
+                        await window.FirebaseSync.fetchUserInvestmentsFromCloud();
+                    }
+                    if (window.FirebaseSync && typeof window.FirebaseSync.fetchPlayersFromCloud === 'function') {
+                        await window.FirebaseSync.fetchPlayersFromCloud();
+                    }
+                    renderPlayers();
+                    if (typeof updateVoteDrawView === 'function') updateVoteDrawView();
+                    showToast('✅ รีเฟรชข้อมูลพอร์ตลงทุนเรียบร้อยแล้ว');
+                } catch (err) {
+                    console.warn('[Admin] Refresh players notice:', err);
+                    showToast('⚠️ ไม่สามารถรีเฟรชข้อมูลได้');
+                } finally {
+                    btnRefreshPlayersData.disabled = false;
                 }
             });
         }
@@ -6553,7 +6618,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const nextOpen = !state.isVoteOpen();
                 state.setVoteOpen(nextOpen);
                 if (!nextOpen) {
-                    // เมื่อสั่งปิดการลงทุนให้ปุ่มด้านล่างปรับสถานะเป็น ปิดโหวต ทั้งหมด
+                    // เมื่อสั่งปิดการลงทุน ให้ปิดโหวตทุกทีม
                     if (typeof state.closeAllTeamVotes === 'function') {
                         state.closeAllTeamVotes();
                     } else {
@@ -6561,10 +6626,55 @@ document.addEventListener('DOMContentLoaded', () => {
                         const updated = players.map(p => ({ ...p, voteStatus: 'closed' }));
                         state.savePlayers(updated);
                     }
+                    showToast('🔴 ปิดระบบการลงทุน และปิดรับโหวตทุกทีมแล้ว');
+                } else {
+                    // เมื่อสั่งเปิดการลงทุน ให้เปิดรับโหวตทุกทีมพร้อมกันทันที ไม่ให้ติดล็อก
+                    if (typeof state.openAllTeamVotes === 'function') {
+                        state.openAllTeamVotes();
+                    } else {
+                        const players = state.getPlayers();
+                        const updated = players.map(p => ({ ...p, voteStatus: 'open' }));
+                        state.savePlayers(updated);
+                    }
+                    showToast('🟢 เปิดระบบการลงทุน และเปิดรับโหวตทุกทีมพร้อมกันแล้ว');
                 }
                 renderPlayers();
                 renderVoteDashboard();
-                showToast(nextOpen ? '🟢 เปิดการลงทุนเรียบร้อยแล้ว' : '🔴 ปิดการลงทุน และปิดโหวตทีมทั้งหมดแล้ว');
+                if (sound) sound.playClick();
+            });
+        }
+
+        const btnBatchOpenAllTeams = document.getElementById('btnBatchOpenAllTeams');
+        if (btnBatchOpenAllTeams) {
+            btnBatchOpenAllTeams.addEventListener('click', () => {
+                if (typeof state.openAllTeamVotes === 'function') {
+                    state.openAllTeamVotes();
+                } else {
+                    const players = state.getPlayers();
+                    const updated = players.map(p => ({ ...p, voteStatus: 'open' }));
+                    state.savePlayers(updated);
+                    if (typeof state.setVoteOpen === 'function') state.setVoteOpen(true);
+                }
+                renderPlayers();
+                renderVoteDashboard();
+                showToast('🔓 เปิดรับการโหวต/ลงทุนของทุกทีมในระบบเรียบร้อยแล้ว');
+                if (sound) (sound.playSuccess ? sound.playSuccess() : sound.playClick());
+            });
+        }
+
+        const btnBatchCloseAllTeams = document.getElementById('btnBatchCloseAllTeams');
+        if (btnBatchCloseAllTeams) {
+            btnBatchCloseAllTeams.addEventListener('click', () => {
+                if (typeof state.closeAllTeamVotes === 'function') {
+                    state.closeAllTeamVotes();
+                } else {
+                    const players = state.getPlayers();
+                    const updated = players.map(p => ({ ...p, voteStatus: 'closed' }));
+                    state.savePlayers(updated);
+                }
+                renderPlayers();
+                renderVoteDashboard();
+                showToast('🔒 ปิดรับการโหวต/ลงทุนของทุกทีมในระบบเรียบร้อยแล้ว');
                 if (sound) sound.playClick();
             });
         }
@@ -7083,7 +7193,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Subscribe to state broadcasts
     state.subscribe((event) => {
-        if (event.type === 'MEMBERS_UPDATED' || event.type === 'PARTICIPANTS_UPDATED' || event.type === 'TEAMS_UPDATED' || event.type === 'PRIZES_UPDATED' || event.type === 'WINNERS_UPDATED' || event.type === 'WINNER_RECORDED' || event.type === 'WINNERS_RESET' || event.type === 'WINNER_DELETED' || event.type === 'VOTE_STATUS_UPDATED' || event.type === 'STORAGE_UPDATED' || event.type === 'PLAYERS_UPDATED' || event.type === 'EVALUATIONS_UPDATED' || event.type === 'TEAM_VOTE_STATUS_UPDATED' || event.type === 'INVESTMENTS_UPDATED') {
+        if (event.type === 'MEMBERS_UPDATED' || event.type === 'PARTICIPANTS_UPDATED' || event.type === 'TEAMS_UPDATED' || event.type === 'PRIZES_UPDATED' || event.type === 'WINNERS_UPDATED' || event.type === 'WINNER_RECORDED' || event.type === 'WINNERS_RESET' || event.type === 'WINNER_DELETED' || event.type === 'VOTE_STATUS_UPDATED' || event.type === 'STORAGE_UPDATED' || event.type === 'PLAYERS_UPDATED' || event.type === 'EVALUATIONS_UPDATED' || event.type === 'TEAM_VOTE_STATUS_UPDATED') {
             renderAll();
         }
     });
