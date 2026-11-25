@@ -27,7 +27,15 @@
         <header class="remote-top-bar">
             <div class="top-bar-left">
                 <div class="remote-brand">
-                    <span class="remote-brand-title">🎮 CRSDG GAME REMOTE</span>
+                    <div class="remote-brand-title-wrap">
+                        <span class="remote-brand-title">🎮 CRSDG GAME REMOTE</span>
+                        <button type="button" class="btn-restart-game-brand" id="btnRestartGameBrand"
+                            onclick="remoteController.restartGameHome()"
+                            title="เริ่มเกมใหม่ (กลับไปหน้าเริ่มต้นเกมใหม่)">
+                            <span class="restart-icon">🔄</span>
+                            <span class="restart-label">เริ่มเกมใหม่</span>
+                        </button>
+                    </div>
                     <span class="remote-brand-sub">รีโมตควบคุมจอแข่งขัน 4 ต่อ 4</span>
                 </div>
                 <div class="remote-conn-status is-disconnected" id="remoteConnStatus"
@@ -554,17 +562,24 @@
     <div class="remote-modal-backdrop" id="remoteStartIntroModal" style="display: flex;">
         <div class="remote-intro-modal-card">
             <div class="intro-modal-icon-wrap">
-                <span class="intro-modal-icon">🎮</span>
+                <span class="intro-modal-icon" id="introModalIcon">🎮</span>
             </div>
-            <div class="intro-modal-badge">4 ต่อ 4 CRSDG GAME</div>
-            <button type="button" class="btn-intro-enter-arena btn-start-comp-orange" id="btnRemoteStartComp"
-                onclick="remoteController.clickStartCompetition()">
-                <svg class="start-btn-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor;">
-                    <path d="M8 5v14l11-7z" />
-                </svg>
-                <span>เริ่มการแข่งขัน</span>
-            </button>
-            <div class="intro-modal-subhint">
+            <div class="intro-modal-badge" id="introModalBadge">4 ต่อ 4 CRSDG GAME</div>
+            <div id="introModalBtnGroup" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                <button type="button" class="btn-intro-enter-arena btn-start-comp-orange" id="btnRemoteStartComp"
+                    onclick="remoteController.clickStartCompetition()">
+                    <svg class="start-btn-icon" viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: currentColor;">
+                        <path d="M8 5v14l11-7z" />
+                    </svg>
+                    <span>เริ่มการแข่งขัน</span>
+                </button>
+                <button type="button" class="btn-intro-enter-arena" id="btnModalOpenGame"
+                    onclick="remoteController.openMainScreen()" style="display: none; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border-color: #38bdf8; box-shadow: 0 4px 20px rgba(2, 132, 199, 0.45);">
+                    <span style="font-size: 1.25rem;">🖥️</span>
+                    <span>เปิดหน้าจอหลัก (game.html)</span>
+                </button>
+            </div>
+            <div class="intro-modal-subhint" id="introModalSubhint">
                 💡 กดปุ่มด้านบนเพื่อเริ่มการแข่งขัน
             </div>
         </div>

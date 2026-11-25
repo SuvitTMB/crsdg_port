@@ -568,6 +568,10 @@
                             </div>
                             <div class="card-header-actions">
                                 <span class="badge-count" id="playerTableBadge">พบ 0 รายการ</span>
+                                <button type="button" class="btn-secondary btn-sm" id="btnRefreshPlayersData"
+                                    title="รีเฟรชข้อมูลพอร์ตลงทุนและยอดเงินล่าสุดจาก Cloud">
+                                    🔄 รีเฟรชข้อมูลพอร์ต
+                                </button>
                                 <button type="button" class="btn-secondary btn-sm" id="btnExportPlayersExcel"
                                     title="ส่งออกตาราง crsdg_player เป็นไฟล์ Excel">
                                     📤 ส่งออก Excel
@@ -607,10 +611,20 @@
                                     </button>
                                 </div>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 <button type="button" class="btn-invest-master-toggle is-open"
-                                    id="btnToggleCompVoteOpen" title="คลิกเพื่อสลับเปิด/ปิดการลงทุน">
+                                    id="btnToggleCompVoteOpen" title="คลิกเพื่อสลับเปิด/ปิดระบบการลงทุนหลัก">
                                     🟢 เปิดการลงทุน
+                                </button>
+                                <button type="button" class="btn-sm" id="btnBatchOpenAllTeams"
+                                    style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #34d399; font-weight: 600; padding: 6px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px;"
+                                    title="เปิดรับการโหวต/ลงทุนของทุกทีมในตารางพร้อมกันทันที">
+                                    🔓 เปิดโหวตทุกทีม
+                                </button>
+                                <button type="button" class="btn-sm" id="btnBatchCloseAllTeams"
+                                    style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #f87171; font-weight: 600; padding: 6px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px;"
+                                    title="ปิดรับการโหวต/ลงทุนของทุกทีมในตารางพร้อมกันทันที">
+                                    🔒 ปิดโหวตทุกทีม
                                 </button>
                             </div>
                         </div>
@@ -715,7 +729,7 @@
                                             <span class="label-subtext">(กรอกชื่อทีมเองได้อิสระ)</span>
                                         </label>
                                         <input type="text" id="playerTeamName" class="form-input"
-                                            placeholder="พิมพ์ชื่อทีมแข่งขัน เช่น IT Dragons..." required>
+                                            placeholder="พิมพ์ชื่อทีมแข่งขัน เช่น Ask-to Act AI..." required>
                                     </div>
                                 </div>
 
@@ -1746,7 +1760,7 @@
             <div class="lightbox-body-content">
                 <p class="modal-instruction-text">
                     กรุณาเลือกไฟล์ Excel เพื่อนำเข้าข้อมูลพนักงานลงในตาราง <code
-                        class="table-name-badge">crsdg_member</code> ระบบจะอ่านข้อมูล 3 คอลัมน์หลักตามรูปแบบ:
+                        class="table-name-badge">crsdg_member</code> ระบบจะอ่านข้อมูลตามรูปแบบ (รองรับ 4 คอลัมน์ หรือ 3 คอลัมน์เดิม):
                 </p>
 
                 <!-- Structure Chips -->
@@ -1754,6 +1768,7 @@
                     <span class="structure-chip chip-col-a">คอลัมน์ A: EmployeeID</span>
                     <span class="structure-chip chip-col-b">คอลัมน์ B: EmpName</span>
                     <span class="structure-chip chip-col-c">คอลัมน์ C: Group</span>
+                    <span class="structure-chip chip-col-d">คอลัมน์ D: Member</span>
                 </div>
 
                 <!-- Dropzone / Browse Box inside Lightbox -->

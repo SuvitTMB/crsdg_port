@@ -30,7 +30,11 @@
                         <span
                             style="color: #38bdf8; background: #1e3a8a; padding: 2px 8px; border-radius: 6px;">นักลงทุน
                             AI</span>
-                        <span class="live-pill"><span class="live-pulse-dot"></span> ถ่ายทอดสด Real-time</span>
+                        <span class="live-pill" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);"><span style="display:inline-block; margin-right:4px;">📊</span> สรุปผลพอร์ต AI</span>
+                        <span class="realtime-live-badge" id="realtimeLiveBadge" title="ตรวจสอบและเชื่อมโยงผลการลงทุนแบบ Realtime">
+                            <span class="realtime-dot"></span>
+                            <span>Real-time Live</span>
+                        </span>
                     </h1>
                     <p class="brand-sub">แดชบอร์ดติดตามการจัดสรรพอร์ตงบประมาณและดัชนีความลำเอียงเวที AI Pitching</p>
                 </div>
@@ -156,362 +160,402 @@
         </section>
 
         <!-- ========================================================
-             ROW 3: กล่องแสดงผล 2 แถว กว้างแถวละ 50% เปรียบเทียบการลงทุนของทีมต่างๆ
-             (โดยปุ่มจะแสดง ทีมที่ 1-ทีมสุดท้าย ไม่ต้องแสดงชื่อทีม)
+             ROW 3: ส่วนแสดงข้อมูลพอร์ตการลงทุนของทีมที่เลือก (Single Team Focus Dashboard)
+             - แถบปุ่มเลือกทีมด้านบน (ทีมที่ 1 - ทีมสุดท้าย) ไม่แสดงชื่อทีม
+             - จัดระเบียบหน้าเพจแบ่ง 2 ฝั่งซ้าย-ขวาอย่างสวยงามและสมดุล:
+               * ฝั่งซ้าย: ข้อมูลทีม, การ์ดสถานะ, ตัวเลขสถิติ 2 กล่อง (ขนาดตัวเลข 40px), และดัชนี 3 วงแหวน (Gauges)
+               * ฝั่งขวา: กล่องที่มาของเงินทุน สรุปตาม Group (ย้ายมาไว้ทางขวามือตามคำขอ)
              ======================================================== -->
-        <main class="showport-compare-grid">
-            <!-- ====================================================
-                 COLUMN 1 (50% ซ้าย): ทีมเปรียบเทียบชุดที่ 1
-                 ==================================================== -->
-            <section class="compare-col compare-col-1 theme-normal-default" id="compareCol1">
-                <!-- แถบปุ่มเลือกทีม (ทีมที่ 1 - ทีมสุดท้าย) ไม่แสดงชื่อทีม -->
-                <div class="team-picker-card">
-                    <div class="team-picker-header">
-                        <div class="team-picker-title">
-                            <span class="col-indicator-badge" id="colIndicatorBadge1">ทีมเปรียบเทียบที่ 1</span>
-                        </div>
-                        <div class="team-picker-meta" id="teamPickerMetaCol1">กำลังโหลด...</div>
+        <main class="showport-single-dashboard">
+            <!-- แถบปุ่มเลือกทีม (ทีมที่ 1 - ทีมสุดท้าย) ไม่แสดงชื่อทีม -->
+            <div class="team-picker-card">
+                <div class="team-picker-header">
+                    <div class="team-picker-title">
+                        <span class="col-indicator-badge">🎯 เลือกทีมแข่งขัน</span>
+                        <span class="team-picker-sub">คลิกปุ่มทีมเพื่อดูพอร์ตการจัดสรรเงินลงทุนและที่มาของเงินทุน</span>
                     </div>
-                    <div class="team-picker-btns" id="teamButtonsCol1">
-                        <!-- Populated dynamically with ทีมที่ 1, ทีมที่ 2... by JS -->
-                    </div>
+                    <div class="team-picker-meta" id="teamPickerMeta">กำลังโหลด...</div>
                 </div>
+                <div class="team-picker-btns" id="teamButtonsContainer">
+                    <!-- Populated dynamically with ทีมที่ 1, ทีมที่ 2... by JS -->
+                </div>
+            </div>
 
-                <!-- การ์ดข้อมูลทีม: รูปภาพ, ชื่อทีม, และหัวหน้าทีม (ไม่มีรายละเอียดกิจกรรม และไม่มีแถวสมาชิก) -->
-                <div class="team-hero-box">
-                    <div class="team-hero-top-row">
-                        <span class="team-ep-pill" id="dispTeamEpPillCol1">EP.1</span>
-                        <button type="button" class="team-status-pill open" id="dispTeamStatusPillCol1" onclick="window.toggleTeamVoteFromShowport(1)" title="คลิกเพื่อสลับเปิด/ปิดการลงทุน (ส่งคำสั่งไปยังฝั่ง index ทันที)">🟢 เปิดรับการลงทุน</button>
-                    </div>
-                    <div class="team-hero-center">
-                        <div class="team-hero-photo-wrap" id="dispTeamPhotoWrapCol1">
-                            <span class="team-hero-photo-fallback">🛡️</span>
+            <!-- กล่องคอนเทนต์หลัก 2 คอลัมน์ (ซ้าย: สรุปผลทีม + ดัชนี / ขวา: ที่มาของเงินทุน) -->
+            <div class="showport-team-content-grid">
+                <!-- คอลัมน์ซ้าย: ข้อมูลทีม, กล่องตัวเลขขนาด 40px และ Gauges -->
+                <div class="dashboard-left-col">
+                    <!-- การ์ดข้อมูลทีม: รูปภาพ, ชื่อทีม, และหัวหน้าทีม -->
+                    <div class="team-hero-box">
+                        <div class="team-hero-top-row">
+                            <span class="team-ep-pill" id="dispTeamEpPill">EP.1</span>
+                            <button type="button" class="team-status-pill open" id="dispTeamStatusPill" onclick="window.toggleTeamVoteFromShowport()" title="คลิกเพื่อสลับเปิด/ปิดการลงทุน (ส่งคำสั่งไปยังหน้าหลักทันที)">🟢 เปิดรับการลงทุน</button>
                         </div>
-                        <div class="team-hero-meta">
-                            <h2 class="team-hero-title" id="dispTeamTitleCol1" title="ชื่อทีมแข่งขัน">ทีมที่ 1</h2>
-                            <!-- กล่องหัวหน้าทีม (ใต้ชื่อทีม) -->
-                            <div class="team-captain-card" id="dispTeamCaptainBoxCol1">
-                                <!-- Populated dynamically by JS -->
+                        <div class="team-hero-center">
+                            <div class="team-hero-photo-wrap" id="dispTeamPhotoWrap">
+                                <span class="team-hero-photo-fallback">🛡️</span>
+                            </div>
+                            <div class="team-hero-meta">
+                                <h2 class="team-hero-title" id="dispTeamTitle" title="ชื่อทีมแข่งขัน">ทีมที่ 1</h2>
+                                <!-- กล่องหัวหน้าทีม (ใต้ชื่อทีม) -->
+                                <div class="team-captain-card" id="dispTeamCaptainBox">
+                                    <!-- Populated dynamically by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- แถวที่ 2: จำนวนผู้ลงทุน (Font 40px) และ จำนวนเงินลงทุน (Font 40px) -->
+                    <div class="team-stats-2grid">
+                        <!-- กล่องผู้ลงทุน (Font 40px) -->
+                        <div class="team-stat-tile tile-voters">
+                            <div class="stat-tile-symbol">👥</div>
+                            <div class="stat-tile-info">
+                                <div class="stat-tile-heading">จำนวนผู้ลงทุน</div>
+                                <div class="stat-tile-value" id="dispTeamVotersCount">0 คน</div>
+                                <div class="stat-tile-sub">นักลงทุนที่ร่วมสนับสนุนทีมนี้</div>
+                            </div>
+                        </div>
+
+                        <!-- กล่องเงินลงทุน (Font 40px) -->
+                        <div class="team-stat-tile tile-fund">
+                            <div class="stat-tile-symbol">💰</div>
+                            <div class="stat-tile-info">
+                                <div class="stat-tile-heading">จำนวนเงินลงทุน</div>
+                                <div class="stat-tile-value" id="dispTeamFundAmount">0 บาท</div>
+                                <div class="stat-tile-sub">ยอดเงินทุนรวมที่ได้รับในพอร์ต</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- แถวที่ 3: ดัชนีวิเคราะห์ความลำเอียงและสัดส่วนพอร์ต (3 Rings) -->
+                    <div class="gauges-card-section">
+                        <div class="gauges-section-title">
+                            <span>📊</span>
+                            <span>ดัชนีวิเคราะห์ความลำเอียงและสัดส่วนพอร์ต</span>
+                        </div>
+                        <div class="gauges-3grid">
+                            <!-- ดัชนีลำเอียง (Amber Ring) -->
+                            <div class="gauge-col-card">
+                                <div class="gauge-circle-wrap circle-amber" id="gaugeCircleBias">
+                                    <div class="gauge-inner-core text-amber" id="gaugeValBias">0.0%</div>
+                                </div>
+                                <div class="gauge-title-text">ดัชนีลำเอียง</div>
+                                <div class="gauge-sub-text" id="gaugeSubBias">0 บาท</div>
+                            </div>
+
+                            <!-- ดัชนีเงินลงทุน (Blue Ring) -->
+                            <div class="gauge-col-card">
+                                <div class="gauge-circle-wrap circle-blue" id="gaugeCircleFund">
+                                    <div class="gauge-inner-core text-blue" id="gaugeValFund">0.0%</div>
+                                </div>
+                                <div class="gauge-title-text">ดัชนีเงินลงทุน</div>
+                                <div class="gauge-sub-text" id="gaugeSubFund">เทียบรวม 0</div>
+                            </div>
+
+                            <!-- ดัชนีผู้ลงทุน (Purple Ring) -->
+                            <div class="gauge-col-card">
+                                <div class="gauge-circle-wrap circle-purple" id="gaugeCircleVoters">
+                                    <div class="gauge-inner-core text-purple" id="gaugeValVoters">0.0%</div>
+                                </div>
+                                <div class="gauge-title-text">ดัชนีผู้ลงทุน</div>
+                                <div class="gauge-sub-text" id="gaugeSubVoters">จากรวม 0 คน</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- แถวที่ 2: จำนวนผู้ลงทุน และ จำนวนเงินลงทุน (ตามรูป) -->
-                <div class="team-stats-2grid">
-                    <!-- กล่องผู้ลงทุน -->
-                    <div class="team-stat-tile tile-voters">
-                        <div class="stat-tile-symbol">👥</div>
-                        <div class="stat-tile-info">
-                            <div class="stat-tile-heading">จำนวนผู้ลงทุน</div>
-                            <div class="stat-tile-value" id="dispTeamVotersCountCol1">0 คน</div>
-                            <div class="stat-tile-sub">นักลงทุนที่ร่วมสนับสนุนทีมนี้</div>
-                        </div>
-                    </div>
-
-                    <!-- กล่องเงินลงทุน -->
-                    <div class="team-stat-tile tile-fund">
-                        <div class="stat-tile-symbol">💰</div>
-                        <div class="stat-tile-info">
-                            <div class="stat-tile-heading">จำนวนเงินลงทุน</div>
-                            <div class="stat-tile-value" id="dispTeamFundAmountCol1">0 บาท</div>
-                            <div class="stat-tile-sub">ยอดเงินทุนรวมที่ได้รับในพอร์ต</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- แถวที่ 3: ดัชนีวิเคราะห์ความลำเอียงและสัดส่วนพอร์ต (ตามรูปที่ 2) -->
-                <div class="gauges-card-section">
-                    <div class="gauges-section-title">
-                        <span>📊</span>
-                        <span>ดัชนีวิเคราะห์ความลำเอียงและสัดส่วนพอร์ต</span>
-                    </div>
-                    <div class="gauges-3grid">
-                        <!-- ดัชนีลำเอียง (Amber Ring) -->
-                        <div class="gauge-col-card">
-                            <div class="gauge-circle-wrap circle-amber" id="gaugeCircleBiasCol1">
-                                <div class="gauge-inner-core text-amber" id="gaugeValBiasCol1">0.0%</div>
+                <!-- คอลัมน์ขวา: ส่วนแสดงที่มาของเงินทุน ย้ายมาไว้ทางขวามือตามคำขอ -->
+                <div class="dashboard-right-col">
+                    <div class="fund-source-card-section right-panel-fund-source">
+                        <div class="fund-source-header">
+                            <div class="fund-source-title">
+                                <span>🏢</span>
+                                <span>ที่มาของเงินทุน</span>
                             </div>
-                            <div class="gauge-title-text">ดัชนีลำเอียง</div>
-                            <div class="gauge-sub-text" id="gaugeSubBiasCol1">0 บาท</div>
+                            <span class="fund-source-count-badge" id="dispFundSourceCount">0 กลุ่ม</span>
                         </div>
-
-                        <!-- ดัชนีเงินลงทุน (Blue Ring) -->
-                        <div class="gauge-col-card">
-                            <div class="gauge-circle-wrap circle-blue" id="gaugeCircleFundCol1">
-                                <div class="gauge-inner-core text-blue" id="gaugeValFundCol1">0.0%</div>
-                            </div>
-                            <div class="gauge-title-text">ดัชนีเงินลงทุน</div>
-                            <div class="gauge-sub-text" id="gaugeSubFundCol1">เทียบรวม 0</div>
-                        </div>
-
-                        <!-- ดัชนีผู้ลงทุน (Purple Ring) -->
-                        <div class="gauge-col-card">
-                            <div class="gauge-circle-wrap circle-purple" id="gaugeCircleVotersCol1">
-                                <div class="gauge-inner-core text-purple" id="gaugeValVotersCol1">0.0%</div>
-                            </div>
-                            <div class="gauge-title-text">ดัชนีผู้ลงทุน</div>
-                            <div class="gauge-sub-text" id="gaugeSubVotersCol1">จากรวม 0 คน</div>
+                        <p class="fund-source-desc-hint">สัดส่วนเงินทุนแยกตามสังกัด (Group) เรียงลำดับจากยอดสูงสุดไปต่ำสุด</p>
+                        <div class="fund-source-list right-panel-list" id="dispFundSourceList">
+                            <!-- Populated dynamically by JS (เรียงจากมากไปน้อย) -->
                         </div>
                     </div>
                 </div>
-
-                <!-- แถวที่ 4: ส่วนแสดงที่มาของเงินทุน สรุปตาม Group (มากไปน้อย) -->
-                <div class="fund-source-card-section">
-                    <div class="fund-source-header">
-                        <div class="fund-source-title">
-                            <span>🏢</span>
-                            <span>ที่มาของเงินทุน</span>
-                        </div>
-                        <span class="fund-source-count-badge" id="dispFundSourceCountCol1">0 กลุ่ม</span>
-                    </div>
-                    <div class="fund-source-list" id="dispFundSourceListCol1">
-                        <!-- Populated dynamically by JS (เรียงจากมากไปน้อย) -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- ====================================================
-                 COLUMN 2 (50% ขวา): ทีมเปรียบเทียบชุดที่ 2
-                 (ทำเหมือนแถวที่ 1 ทุกอย่าง เมื่อกดปุ่มทีมของแต่ละปุ่มให้แสดงผลตามทีมนั้น)
-                 ==================================================== -->
-            <section class="compare-col compare-col-2 theme-normal-default" id="compareCol2">
-                <!-- แถบปุ่มเลือกทีม (ทีมที่ 1 - ทีมสุดท้าย) ไม่แสดงชื่อทีม -->
-                <div class="team-picker-card">
-                    <div class="team-picker-header">
-                        <div class="team-picker-title">
-                            <span class="col-indicator-badge" id="colIndicatorBadge2">ทีมเปรียบเทียบที่ 2</span>
-                        </div>
-                        <div class="team-picker-meta" id="teamPickerMetaCol2">กำลังโหลด...</div>
-                    </div>
-                    <div class="team-picker-btns" id="teamButtonsCol2">
-                        <!-- Populated dynamically with ทีมที่ 1, ทีมที่ 2... by JS -->
-                    </div>
-                </div>
-
-                <!-- การ์ดข้อมูลทีม: รูปภาพ, ชื่อทีม, และหัวหน้าทีม (ไม่มีรายละเอียดกิจกรรม และไม่มีแถวสมาชิก) -->
-                <div class="team-hero-box">
-                    <div class="team-hero-top-row">
-                        <span class="team-ep-pill" id="dispTeamEpPillCol2">EP.2</span>
-                        <button type="button" class="team-status-pill open" id="dispTeamStatusPillCol2" onclick="window.toggleTeamVoteFromShowport(2)" title="คลิกเพื่อสลับเปิด/ปิดการลงทุน (ส่งคำสั่งไปยังฝั่ง index ทันที)">🟢 เปิดรับการลงทุน</button>
-                    </div>
-                    <div class="team-hero-center">
-                        <div class="team-hero-photo-wrap" id="dispTeamPhotoWrapCol2">
-                            <span class="team-hero-photo-fallback">🛡️</span>
-                        </div>
-                        <div class="team-hero-meta">
-                            <h2 class="team-hero-title" id="dispTeamTitleCol2" title="ชื่อทีมแข่งขัน">ทีมที่ 2</h2>
-                            <!-- กล่องหัวหน้าทีม (ใต้ชื่อทีม) -->
-                            <div class="team-captain-card" id="dispTeamCaptainBoxCol2">
-                                <!-- Populated dynamically by JS -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- แถวที่ 2: จำนวนผู้ลงทุน และ จำนวนเงินลงทุน (ตามรูป) -->
-                <div class="team-stats-2grid">
-                    <!-- กล่องผู้ลงทุน -->
-                    <div class="team-stat-tile tile-voters">
-                        <div class="stat-tile-symbol">👥</div>
-                        <div class="stat-tile-info">
-                            <div class="stat-tile-heading">จำนวนผู้ลงทุน</div>
-                            <div class="stat-tile-value" id="dispTeamVotersCountCol2">0 คน</div>
-                            <div class="stat-tile-sub">นักลงทุนที่ร่วมสนับสนุนทีมนี้</div>
-                        </div>
-                    </div>
-
-                    <!-- กล่องเงินลงทุน -->
-                    <div class="team-stat-tile tile-fund">
-                        <div class="stat-tile-symbol">💰</div>
-                        <div class="stat-tile-info">
-                            <div class="stat-tile-heading">จำนวนเงินลงทุน</div>
-                            <div class="stat-tile-value" id="dispTeamFundAmountCol2">0 บาท</div>
-                            <div class="stat-tile-sub">ยอดเงินทุนรวมที่ได้รับในพอร์ต</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- แถวที่ 3: ดัชนีวิเคราะห์ความลำเอียงและสัดส่วนพอร์ต (ตามรูปที่ 2) -->
-                <div class="gauges-card-section">
-                    <div class="gauges-section-title">
-                        <span>📊</span>
-                        <span>ดัชนีวิเคราะห์ความลำเอียงและสัดส่วนพอร์ต</span>
-                    </div>
-                    <div class="gauges-3grid">
-                        <!-- ดัชนีลำเอียง (Amber Ring) -->
-                        <div class="gauge-col-card">
-                            <div class="gauge-circle-wrap circle-amber" id="gaugeCircleBiasCol2">
-                                <div class="gauge-inner-core text-amber" id="gaugeValBiasCol2">0.0%</div>
-                            </div>
-                            <div class="gauge-title-text">ดัชนีลำเอียง</div>
-                            <div class="gauge-sub-text" id="gaugeSubBiasCol2">0 บาท</div>
-                        </div>
-
-                        <!-- ดัชนีเงินลงทุน (Blue Ring) -->
-                        <div class="gauge-col-card">
-                            <div class="gauge-circle-wrap circle-blue" id="gaugeCircleFundCol2">
-                                <div class="gauge-inner-core text-blue" id="gaugeValFundCol2">0.0%</div>
-                            </div>
-                            <div class="gauge-title-text">ดัชนีเงินลงทุน</div>
-                            <div class="gauge-sub-text" id="gaugeSubFundCol2">เทียบรวม 0</div>
-                        </div>
-
-                        <!-- ดัชนีผู้ลงทุน (Purple Ring) -->
-                        <div class="gauge-col-card">
-                            <div class="gauge-circle-wrap circle-purple" id="gaugeCircleVotersCol2">
-                                <div class="gauge-inner-core text-purple" id="gaugeValVotersCol2">0.0%</div>
-                            </div>
-                            <div class="gauge-title-text">ดัชนีผู้ลงทุน</div>
-                            <div class="gauge-sub-text" id="gaugeSubVotersCol2">จากรวม 0 คน</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- แถวที่ 4: ส่วนแสดงที่มาของเงินทุน สรุปตาม Group (มากไปน้อย) -->
-                <div class="fund-source-card-section">
-                    <div class="fund-source-header">
-                        <div class="fund-source-title">
-                            <span>🏢</span>
-                            <span>ที่มาของเงินทุน</span>
-                        </div>
-                        <span class="fund-source-count-badge" id="dispFundSourceCountCol2">0 กลุ่ม</span>
-                    </div>
-                    <div class="fund-source-list" id="dispFundSourceListCol2">
-                        <!-- Populated dynamically by JS (เรียงจากมากไปน้อย) -->
-                    </div>
-                </div>
-            </section>
+            </div>
         </main>
     </div>
 
     <!-- ========================================================
-         LIGHTBOX: กล่องประกาศผลพอร์ตการลงทุน (ขนาด 90% x 90%)
+         LIGHTBOX: ยืนยันการปิดระบบการลงทุน AI ก่อนประกาศผล
          ======================================================== -->
-    <div class="announce-modal-backdrop" id="announceResultModal" style="display: none;">
-        <div class="announce-modal-card" role="dialog" aria-modal="true" aria-labelledby="announceModalTitle">
-            <!-- Modal Header -->
-            <div class="announce-modal-header">
-                <div class="announce-header-left">
-                    <div class="announce-trophy-badge">🏆</div>
-                    <div class="announce-title-wrap">
-                        <div class="announce-title-row">
-                            <h2 class="announce-modal-title" id="announceModalTitle">ประกาศผลการจัดสรรพอร์ตการลงทุน AI Showcase</h2>
-                            <span class="announce-closed-badge">🔒 ปิดระบบการลงทุนแล้ว</span>
-                        </div>
-                        <p class="announce-modal-sub">จัดอันดับผลพอร์ตการลงทุนเวที AI Pitching </p>
-                    </div>
-                </div>
-                <button type="button" class="btn-close-announce" id="btnCloseAnnounceModal" title="ปิดหน้าต่างประกาศผล">
-                    ✕
-                </button>
+    <div class="confirm-modal-backdrop" id="confirmCloseInvestmentModal" style="display: none;">
+        <div class="confirm-modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+            <div class="confirm-modal-icon-wrap">
+                <span class="confirm-modal-icon">🔒</span>
             </div>
-
-            <!-- กล่องด้านบน: สรุปผล 5 กล่อง (จำนวนนักลงทุน, จำนวนผู้ลงทุนไม่นับซ้ำ, จำนวนเงินทุนทั้งหมด, จำนวนเงินที่ลงทุน, สัดส่วนการลงทุน) -->
-            <section class="announce-kpi-grid" id="announceKpiGrid">
-                <!-- กล่องที่ 1: จำนวนนักลงทุน -->
-                <div class="announce-kpi-card card-kpi-blue">
-                    <div class="announce-kpi-icon">👥</div>
-                    <div class="announce-kpi-content">
-                        <div class="announce-kpi-label">จำนวนนักลงทุน</div>
-                        <div class="announce-kpi-val-row">
-                            <span class="announce-kpi-val" id="announceKpiTotalEligible">0</span>
-                            <span class="announce-kpi-unit">ท่าน</span>
-                        </div>
-                        <div class="announce-kpi-hint">(ผู้มีสิทธิ์ในระบบ)</div>
-                    </div>
-                </div>
-
-                <!-- กล่องที่ 2: จำนวนผู้ลงทุน (ไม่นับซ้ำ) -->
-                <div class="announce-kpi-card card-kpi-purple">
-                    <div class="announce-kpi-icon">👤</div>
-                    <div class="announce-kpi-content">
-                        <div class="announce-kpi-label">จำนวนผู้ลงทุน (ไม่นับซ้ำ)</div>
-                        <div class="announce-kpi-val-row">
-                            <span class="announce-kpi-val" id="announceKpiActiveVoters">0</span>
-                            <span class="announce-kpi-unit">ท่าน</span>
-                        </div>
-                        <div class="announce-kpi-hint">(ผู้ใช้สิทธิ์ลงทุนจริง)</div>
-                    </div>
-                </div>
-
-                <!-- กล่องที่ 3: จำนวนเงินทุนทั้งหมด -->
-                <div class="announce-kpi-card card-kpi-gold">
-                    <div class="announce-kpi-icon">💰</div>
-                    <div class="announce-kpi-content">
-                        <div class="announce-kpi-label">จำนวนเงินทุนทั้งหมด</div>
-                        <div class="announce-kpi-val-row">
-                            <span class="announce-kpi-val" id="announceKpiTotalBudget">0</span>
-                            <span class="announce-kpi-unit">บาท</span>
-                        </div>
-                        <div class="announce-kpi-hint">(งบประมาณรวมทั้งระบบ)</div>
-                    </div>
-                </div>
-
-                <!-- กล่องที่ 4: จำนวนเงินที่ลงทุน -->
-                <div class="announce-kpi-card card-kpi-amber">
-                    <div class="announce-kpi-icon">💵</div>
-                    <div class="announce-kpi-content">
-                        <div class="announce-kpi-label">จำนวนเงินที่ลงทุน</div>
-                        <div class="announce-kpi-val-row">
-                            <span class="announce-kpi-val" id="announceKpiTotalInvested">0</span>
-                            <span class="announce-kpi-unit">บาท</span>
-                        </div>
-                        <div class="announce-kpi-hint">(ยอดเงินที่ลงทุนในพอร์ต)</div>
-                    </div>
-                </div>
-
-                <!-- กล่องที่ 5: สัดส่วนการลงทุน -->
-                <div class="announce-kpi-card card-kpi-emerald">
-                    <div class="announce-kpi-icon">📈</div>
-                    <div class="announce-kpi-content">
-                        <div class="announce-kpi-label">สัดส่วนการลงทุน</div>
-                        <div class="announce-kpi-val-row">
-                            <span class="announce-kpi-val" id="announceKpiInvestedPct">0.0%</span>
-                        </div>
-                        <div class="announce-kpi-hint">(เทียบกับเงินทุนทั้งหมด)</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ส่วนด้านล่าง: กล่องข้อความ Group อยู่ทางด้านซ้ายของกราฟ และ ส่วนกราฟด้านขวา -->
-            <div class="announce-modal-body-split">
-                <!-- กล่องข้อความ Group ทางด้านซ้าย -->
-                <aside class="announce-group-side-box" id="announceGroupSideBox">
-                    <div class="announce-group-box-header">
-                        <div class="announce-group-box-title">
-                            <span>🏢</span>
-                            <span>ที่มาเงินทุนแยกตาม Group</span>
-                        </div>
-                        <span class="announce-group-count-pill" id="announceGroupCountPill">0 กลุ่ม</span>
-                    </div>
-                    <p class="announce-group-box-sub">สีจำแนกสัดส่วนเงินทุนในแท่งกราฟ</p>
-                    <div class="announce-group-items-list" id="announceGroupItemsList">
-                        <!-- Populated dynamically by JS -->
-                    </div>
-                </aside>
-
-                <!-- ส่วนแสดงผลกราฟทางด้านขวา (ขยายความกว้างเต็มพื้นที่) -->
-                <main class="announce-chart-main-stage">
-                    <div class="announce-chart-header-row">
-                        <div class="announce-chart-title-tag">
-                            <span>📊</span>
-                            <span>กราฟแท่งพอร์ตการลงทุน AI</span>
-                        </div>
-                        <div class="announce-line-legend-tag">
-                            <span class="legend-line-indicator"></span>
-                            <span>จำนวนพนักงาน (คน)</span>
-                        </div>
-                    </div>
-                    <div class="announce-chart-container" id="announceChartContainer">
-                        <!-- High-Resolution Vector Chart injected dynamically by JS -->
-                    </div>
-                </main>
+            <h3 class="confirm-modal-title" id="confirmModalTitle">ยืนยันการปิดรับการลงทุน AI</h3>
+            <p class="confirm-modal-desc">
+                คุณต้องการยืนยัน <strong>ปิดรับการลงทุนของทุกทีมทั้งหมด</strong><br>
+                และเปิดหน้าต่างสรุปผลการแข่งขัน ใช่หรือไม่?
+            </p>
+            <div class="confirm-modal-subhint">
+                ⚠️ เมื่อยืนยันแล้ว ระบบจะล็อกพอร์ตการลงทุนของผู้ใช้งานทุกคนทันที
+            </div>
+            <div class="confirm-modal-actions">
+                <button type="button" class="btn-confirm-cancel" id="btnCancelCloseInvestment">
+                    ยกเลิก
+                </button>
+                <button type="button" class="btn-confirm-accept" id="btnConfirmCloseInvestment">
+                    ยืนยันปิดการลงทุน
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Scripts: Firebase, State, Audio, and ShowPort Controller -->
+    <!-- ========================================================
+         LIGHTBOX / FULL-PAGE: หน้าต่างประกาศผลพอร์ตการลงทุน (เต็มหน้าเพจ 100vw x 100vh)
+         ======================================================== -->
+    <div class="announce-modal-backdrop" id="announceResultModal" style="display: none;">
+        <div class="announce-modal-card" role="dialog" aria-modal="true" aria-labelledby="announceModalTitle">
+            
+            <!-- STAGE 1: สรุปผลการเข้าร่วมกิจกรรม (Activity Participation Summary) -->
+            <div class="announce-stage" id="announceStageSummary">
+                <!-- Modal Header -->
+                <div class="announce-modal-header">
+                    <div class="announce-header-left">
+                        <div class="announce-trophy-badge">📊</div>
+                        <div class="announce-title-wrap">
+                            <div class="announce-title-row">
+                                <h2 class="announce-modal-title" id="announceModalTitle">สรุปผลการเข้าร่วมกิจกรรมและจัดสรรพอร์ตการลงทุน AI Showcase</h2>
+                                <span class="announce-closed-badge">🔒 ปิดระบบการลงทุนแล้ว</span>
+                            </div>
+                            <p class="announce-modal-sub">ภาพรวมสถิติการจัดสรรเงินลงทุนและงบประมาณเวที AI Pitching</p>
+                        </div>
+                    </div>
+                    <div class="announce-header-actions">
+                        <!-- ปุ่มจุดพลุเฉลิมฉลอง (คลิกเพื่อจุดพลุเพิ่ม) -->
+                        <button type="button" class="btn-fireworks" id="btnTriggerFireworks" title="จุดพลุเฉลิมฉลอง (คลิกเพื่อจุดพลุเพิ่ม)">
+                            <span class="btn-fireworks-icon">🎆</span>
+                            <span class="btn-fireworks-text">จุดพลุ</span>
+                            <span class="btn-fireworks-sparkle">✨</span>
+                        </button>
+                        <button type="button" class="btn-close-announce" id="btnCloseAnnounceModal" title="ปิดหน้าต่างประกาศผล">
+                            ✕
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ส่วนเนื้อหาหลักแบบแยกซ้าย-ขวา (Body Split View)
+                     ซ้าย = สรุปภาพรวม 5 กล่อง KPI + แถบงบประมาณ
+                     ขวา = แถบแคปซูลแสดงอันดับทีม สไตล์รูปที่ 2 (ชื่อทีม, ผู้ลงทุน, เงินลงทุน, สัดส่วน %) -->
+                <div class="announce-modal-body-split">
+                    <!-- ด้านซ้าย: 5 กล่องสรุปผล KPI -->
+                    <aside class="announce-summary-side-col" id="announceSummarySideCol">
+                        <div class="announce-side-header">
+                            <div class="announce-side-title">
+                                <span>📋</span>
+                                <span>สรุปภาพรวมการลงทุน</span>
+                            </div>
+                        </div>
+
+                        <div class="announce-kpi-vertical-list">
+                            <!-- กล่องที่ 1 (ใหม่): สมาชิกทั้งหมด -->
+                            <div class="announce-kpi-card card-kpi-indigo">
+                                <div class="announce-kpi-icon">👥</div>
+                                <div class="announce-kpi-content">
+                                    <div class="announce-kpi-label">สมาชิกทั้งหมด</div>
+                                    <div class="announce-kpi-val-row">
+                                        <span class="announce-kpi-val" id="announceKpiTotalMembers">0</span>
+                                        <span class="announce-kpi-unit">คน</span>
+                                    </div>
+                                    <div class="announce-kpi-hint" id="announceKpiTotalMembersHint">(พนักงานทั้งหมดในระบบ)</div>
+                                </div>
+                            </div>
+
+                            <!-- กล่องที่ 2: จำนวนผู้ร่วมกิจกรรม (สัดส่วนคิดจากสมาชิกทั้งหมดเทียบกับผู้ลงทะเบียน) -->
+                            <div class="announce-kpi-card card-kpi-blue">
+                                <div class="announce-kpi-icon">🎯</div>
+                                <div class="announce-kpi-content">
+                                    <div class="announce-kpi-label">จำนวนผู้ร่วมกิจกรรม</div>
+                                    <div class="announce-kpi-val-row">
+                                        <span class="announce-kpi-val" id="announceKpiActiveVoters">0</span>
+                                        <span class="announce-kpi-unit">คน</span>
+                                    </div>
+                                    <div class="announce-kpi-hint" id="announceKpiActiveHint">(ลงทะเบียน 0 จากสมาชิก 0 คน คิดเป็น 0.0%)</div>
+                                </div>
+                            </div>
+
+                            <!-- กล่องที่ 3: เงินลงทุนรวม -->
+                            <div class="announce-kpi-card card-kpi-gold">
+                                <div class="announce-kpi-icon">💰</div>
+                                <div class="announce-kpi-content">
+                                    <div class="announce-kpi-label">เงินลงทุนรวม</div>
+                                    <div class="announce-kpi-val-row">
+                                        <span class="announce-kpi-val" id="announceKpiTotalInvested">0</span>
+                                        <span class="announce-kpi-unit">บาท</span>
+                                    </div>
+                                    <div class="announce-kpi-hint">(ยอดเงินที่จัดสรรจริงในพอร์ต)</div>
+                                </div>
+                            </div>
+
+                            <!-- กล่องที่ 4: จำนวนเงินลงทุนทั้งหมด (บาท) -->
+                            <div class="announce-kpi-card card-kpi-emerald">
+                                <div class="announce-kpi-icon">📈</div>
+                                <div class="announce-kpi-content">
+                                    <div class="announce-kpi-label">จำนวนเงินลงทุนทั้งหมด (บาท)</div>
+                                    <div class="announce-kpi-val-row">
+                                        <span class="announce-kpi-val" id="announceKpiInvestedAmount">0</span>
+                                        <span class="announce-kpi-unit">บาท</span>
+                                    </div>
+                                    <div class="announce-kpi-hint" id="announceKpiInvestedHint">(คิดเป็น 0.0% จากงบทั้งหมด 0 บาท)</div>
+                                </div>
+                            </div>
+
+                            <!-- กล่องที่ 5: จำนวนเงินคงเหลือ (บาท) -->
+                            <div class="announce-kpi-card card-kpi-amber">
+                                <div class="announce-kpi-icon">⏳</div>
+                                <div class="announce-kpi-content">
+                                    <div class="announce-kpi-label">จำนวนเงินคงเหลือ (บาท)</div>
+                                    <div class="announce-kpi-val-row">
+                                        <span class="announce-kpi-val" id="announceKpiRemainingAmount">0</span>
+                                        <span class="announce-kpi-unit">บาท</span>
+                                    </div>
+                                    <div class="announce-kpi-hint" id="announceKpiRemainingHint">(คิดเป็น 0.0% จากงบทั้งหมด 0 บาท)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- แถบเปรียบเทียบสัดส่วนงบประมาณ: เงินลงทุนทั้งหมด vs เงินคงเหลือ -->
+                        <div class="announce-budget-dual-bar-container-side">
+                            <div class="announce-budget-dual-bar-labels">
+                                <span class="dual-bar-label-left">
+                                    <span class="dual-dot-invested"></span>
+                                    <span>ลงทุน: <strong id="dualBarInvestedLabel">0 บาท (0.0%)</strong></span>
+                                </span>
+                                <span class="dual-bar-label-right">
+                                    <span>คงเหลือ: <strong id="dualBarRemainingLabel">0 บาท (0.0%)</strong></span>
+                                    <span class="dual-dot-remaining"></span>
+                                </span>
+                            </div>
+                            <div class="announce-budget-dual-bar-track">
+                                <div class="dual-bar-fill-invested" id="dualBarFillInvested" style="width: 0%;"></div>
+                                <div class="dual-bar-fill-remaining" id="dualBarFillRemaining" style="width: 100%;"></div>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- ด้านขวา: แท่นประกาศผลรางวัลผู้ชนะเลิศ อันดับที่ 3, 2, 1 -->
+                    <main class="announce-capsule-leaderboard-stage announce-podium-stage" id="announcePodiumStage">
+                        <div class="announce-capsule-table-header announce-podium-header">
+                            <div class="capsule-col-team-header">
+                                <span>🏆</span>
+                                <span>แท่นประกาศผลรางวัลผู้ชนะเลิศ (อันดับ 3, 2, 1)</span>
+                            </div>
+                            <div class="podium-reveal-actions">
+                                <button type="button" class="btn-start-reveal" id="btnStartRankReveal" title="เริ่มเปิดผลการแข่งขันตามลำดับ 3 → 2 → 1">
+                                    <span class="btn-reveal-icon">🎬</span>
+                                    <span class="btn-reveal-text">เริ่มประกาศผล</span>
+                                </button>
+                                <button type="button" class="btn-skip-reveal" id="btnSkipRankReveal" title="แสดงผลทั้งหมดทันที" style="display: none;">
+                                    <span>⚡ แสดงทั้งหมด</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- แท่นประกาศผล Podium Top 3 (อันดับ 2 ซ้าย, อันดับ 1 กลาง, อันดับ 3 ขวา) -->
+                        <div class="announce-podium-body" id="announcePodiumContainer">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </main>
+                </div>
+            </div>
+
+            <!-- STAGE 2: ประกาศผลการแข่งขัน (Competition Winner Announcement) -->
+            <div class="announce-stage" id="announceStageWinners" style="display: none;">
+                <!-- Stage 2 Header -->
+                <div class="announce-modal-header winners-header">
+                    <div class="announce-header-left">
+                        <div class="announce-trophy-badge gold-glow">🏆</div>
+                        <div class="announce-title-wrap">
+                            <div class="announce-title-row">
+                                <h2 class="announce-modal-title gold-title">ประกาศผลการแข่งขัน AI Showcase เวที AI Pitching</h2>
+                                <span class="announce-winner-tag">🎉 OFFICIAL RESULTS</span>
+                            </div>
+                            <p class="announce-modal-sub">สรุปผลอันดับทีมที่ชนะการลงทุนและตารางอันดับผลการแข่งขันทั้งหมด</p>
+                        </div>
+                    </div>
+                    <div class="announce-header-actions">
+                        <button type="button" class="btn-back-to-summary" id="btnBackToSummary">
+                            ← ดูสรุปผลการเข้าร่วมกิจกรรม
+                        </button>
+                        <button type="button" class="btn-close-announce" id="btnCloseAnnounceWinners" title="ปิดหน้าต่าง">
+                            ✕
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stage 2 Body (Scrollable full height) -->
+                <div class="announce-winners-body">
+                    <!-- ส่วนโพเดียม 3 อันดับแรก (Podium Top 3) -->
+                    <div class="podium-section-header">
+                        <span class="podium-star">👑</span>
+                        <h3 class="podium-section-title">ทำเนียบทีมชนะเลิศ 3 อันดับแรก (Top 3 Winners)</h3>
+                        <span class="podium-star">👑</span>
+                    </div>
+
+                    <div class="podium-wrapper" id="podiumTop3Container">
+                        <!-- Populated dynamically by JS: Rank 2 (Left), Rank 1 (Center), Rank 3 (Right) -->
+                    </div>
+
+                    <!-- ส่วนตารางอันดับที่ 4-6 -->
+                    <div class="table-section-header">
+                        <span class="table-icon">📋</span>
+                        <h3 class="table-section-title">ตารางสรุปผลการแข่งขัน (อันดับที่ 4 - 6)</h3>
+                    </div>
+
+                    <div class="winners-table-card">
+                        <table class="winners-table" id="winnersTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 10%; text-align: center;">อันดับ</th>
+                                    <th style="width: 32%;">ทีมแข่งขัน</th>
+                                    <th style="width: 26%;">หัวหน้าทีม / ผู้นำเสนอ</th>
+                                    <th style="width: 14%; text-align: center;">จำนวนผู้ลงทุน</th>
+                                    <th style="width: 18%; text-align: right;">เงินลงทุนรวม</th>
+                                </tr>
+                            </thead>
+                            <tbody id="winnersTableBody">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGHTBOX: หน้าต่างแนะนำทีมผู้ชนะแต่ละอันดับ (อันดับ 3 -> 2 -> 1)
+         แสดงรายละเอียดทีม + จุดพลุ ก่อนปิดและนำข้อมูลขึ้นแท่นประกาศผล
+         ======================================================== -->
+    <div class="winner-spotlight-backdrop" id="winnerSpotlightModal" style="display: none;">
+        <div class="winner-spotlight-card" id="winnerSpotlightCard" role="dialog" aria-modal="true">
+            <!-- Populated dynamically by JS -->
+        </div>
+    </div>
+
+    <!-- Canvas for Fireworks and Confetti -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Scripts: Confetti, Firebase, State, Audio, and ShowPort Controller -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script>
+        // เก็บตัวอ้างอิง Canvas Confetti ไว้ก่อนที่ js/confetti.js จะทับ
+        if (typeof window.confetti === 'function') {
+            window.canvasConfetti = window.confetti;
+        }
+    </script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -520,6 +564,7 @@
     <script src="js/firebase-sync.js"></script>
     <script src="js/state.js"></script>
     <script src="js/audio.js"></script>
+    <script src="js/confetti.js"></script>
     <script src="js/showport.js"></script>
 </body>
 

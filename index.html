@@ -63,7 +63,8 @@
          ด้านขวา: รูปพนักงาน + icon logout
          ======================================================== -->
     <header class="app-fixed-top-bar" id="appFixedTopBar" style="display: none;">
-      <div class="topbar-brand-area">
+      <div class="topbar-brand-area" onclick="window.switchHomeTab && window.switchHomeTab('home')"
+        style="cursor: pointer;" title="แตะเพื่อกลับหน้าหลัก">
         <img src="./images/logo@.png" alt="CRSDG Logo" class="topbar-logo">
         <div class="topbar-brand-text">
           <span class="topbar-title">CRSDG AI Showcase</span>
@@ -191,7 +192,8 @@
         <!-- Top Back to Home Button -->
         <div class="photo-top-bar">
           <button type="button" class="btn-back-home-photo" id="btnBackToHomeFromPhoto">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
             <span>กลับหน้าแรก</span>
@@ -320,7 +322,7 @@
       </section>
 
       <!-- ========================================================
-           VIEW 3: HOME PORTAL (แท็บหน้าหลัก, คุณและทีม, โหวต AI, เกม 4 ต่อ 4, ข้อมูลคุณ)
+           VIEW 3: HOME PORTAL (แท็บหน้าหลัก, คุณและทีม, นักลงทุน AI, ข้อมูลคุณ)
            ======================================================== -->
       <div id="homePortalView" class="home-portal-view" style="display: none;">
 
@@ -330,7 +332,8 @@
         <section id="tabPaneHome" class="home-tab-pane is-active">
           <!-- Hero Brand Logo (แทนกล่องสวัสดี) -->
           <div class="home-brand-logo-wrap">
-            <img src="./images/logo@.png" alt="CRSDG AI Showcase & New Year Celebration" class="header-logo animate-float">
+            <img src="./images/logo@.png" alt="CRSDG AI Showcase & New Year Celebration"
+              class="header-logo animate-float">
           </div>
 
           <!-- Quick Navigation 4 Boxes (Line-Art SVG Icons) -->
@@ -363,21 +366,6 @@
                 <span class="quick-desc">จัดสรรเงินลงทุน AI</span>
               </div>
             </div>
-            <div class="quick-pill-card" id="quickPillGame">
-              <div class="quick-icon-wrap" style="background: rgba(168, 85, 247, 0.14); color: #9333ea;">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="6" width="20" height="12" rx="4"></rect>
-                  <path d="M6 12h4m-2-2v4"></path>
-                  <line x1="15" y1="11" x2="15.01" y2="11" stroke-width="3"></line>
-                  <line x1="18" y1="13" x2="18.01" y2="13" stroke-width="3"></line>
-                </svg>
-              </div>
-              <div class="quick-text-wrap">
-                <span class="quick-title">เกม 4 ต่อ 4</span>
-                <span class="quick-desc">คะแนนสดบนเวที</span>
-              </div>
-            </div>
             <div class="quick-pill-card" id="quickPillProfile">
               <div class="quick-icon-wrap" style="background: rgba(16, 185, 129, 0.14); color: #10b981;">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
@@ -392,7 +380,7 @@
               </div>
             </div>
 
-            <!-- กล่องที่ 5: QR Code เพื่อสแกน (คลิกเพื่อแสดง lightbox QR Code) -->
+            <!-- กล่องที่ 4: QR Code เพื่อสแกน (คลิกเพื่อแสดง lightbox QR Code) -->
             <div class="quick-pill-card" id="quickPillQr" onclick="window.openQrLightbox()" role="button" tabindex="0">
               <div class="quick-icon-wrap" style="background: rgba(14, 165, 233, 0.14); color: #0284c7;">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
@@ -411,22 +399,6 @@
                 <span class="quick-desc">บอกเพื่อนสแกน</span>
               </div>
             </div>
-
-            <!-- กล่องที่ 6: ประเมินผลกิจกรรม (คลิกเพื่อเปิดแบบประเมินผล) -->
-            <div class="quick-pill-card" id="quickPillEval" onclick="window.openEvalLightbox()" role="button"
-              tabindex="0">
-              <div class="quick-icon-wrap" style="background: rgba(236, 72, 153, 0.14); color: #db2777;">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M9 11l3 3L22 4"></path>
-                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                </svg>
-              </div>
-              <div class="quick-text-wrap">
-                <span class="quick-title">ประเมินผล</span>
-                <span class="quick-desc">แบบประเมิน</span>
-              </div>
-            </div>
           </div>
 
           <!-- Event Schedule Section (กำหนดการกิจกรรมตามภาพแนบ CRSDG AI Showcase & New Year Celebration) -->
@@ -440,18 +412,7 @@
                     <h3 class="agenda-main-title">CRSDG AI Showcase</h3>
                   </div>
                   <div class="agenda-sub-meta">
-                    <span class="agenda-date-location">26 Nov'26 | สโมสรทหาร วิภาวดี-รังสิต</span>
-                  </div>
-                </div>
-
-                <div class="agenda-mc-info-wrap">
-                  <div class="agenda-mc-card">
-                    <span class="mc-card-role">Afternoon MC:</span>
-                    <strong class="mc-card-names">Mark &amp; Ying</strong>
-                  </div>
-                  <div class="agenda-brand-logo">
-                    <span class="ttb-logo-badge"><span class="ttb-t1">t</span><span class="ttb-t2">t</span><span
-                        class="ttb-b">b</span></span>
+                    <span class="agenda-date-location">26 Nov’26 | สโมสรทหาร วิภาวดี-รังสิต</span>
                   </div>
                 </div>
               </div>
@@ -462,191 +423,95 @@
                   <thead>
                     <tr>
                       <th class="th-time">Time</th>
-                      <th class="th-duration">Duration</th>
                       <th class="th-topic">Topic</th>
-                      <th class="th-presenter">Presenter</th>
                     </tr>
                   </thead>
                   <tbody>
                     <!-- Row 1: Registration -->
                     <tr>
-                      <td class="td-time">13.30 - 13.50</td>
-                      <td class="td-duration">20 นาที</td>
+                      <td class="td-time">13.30 – 13.50</td>
                       <td class="td-topic"><strong class="topic-title-bold">Registration</strong></td>
-                      <td class="td-presenter">-</td>
                     </tr>
 
-                    <!-- Row 2: Opening/ MC Greeting -->
+                    <!-- Row 2: MC Opening Greeting -->
                     <tr>
-                      <td class="td-time">13.50 - 14.00</td>
-                      <td class="td-duration">10 นาที</td>
-                      <td class="td-topic"><strong class="topic-title-bold">Opening/ MC Greeting</strong></td>
-                      <td class="td-presenter"><span class="presenter-tag-pill">MC</span></td>
+                      <td class="td-time">13.50 – 14.00</td>
+                      <td class="td-topic"><strong class="topic-title-bold">MC Opening Greeting</strong></td>
                     </tr>
 
                     <!-- Row 3: CRSDG Opening -->
                     <tr>
-                      <td class="td-time">14.00 - 14.30</td>
-                      <td class="td-duration">30 นาที</td>
+                      <td class="td-time">14.00 – 14.30</td>
                       <td class="td-topic"><strong class="topic-title-bold">CRSDG Opening</strong></td>
-                      <td class="td-presenter"><strong class="presenter-lead-name">Natthawan</strong></td>
                     </tr>
 
                     <!-- Row 4: Introduction to AI Showcase -->
                     <tr>
-                      <td class="td-time">14.30 - 14.40</td>
-                      <td class="td-duration">10 นาที</td>
+                      <td class="td-time">14.30 – 14.40</td>
                       <td class="td-topic"><strong class="topic-title-bold">Introduction to AI Showcase</strong></td>
-                      <td class="td-presenter"><span class="presenter-tag-pill">MC</span></td>
                     </tr>
 
-                    <!-- Group 1: Segment & Mkt -->
+                    <!-- Group 14.40 - 15.50 (Teams 1 - 4) -->
                     <tr class="row-group-head">
-                      <td class="td-time">14.40 - 14.50</td>
-                      <td class="td-duration">10 นาที</td>
-                      <td class="td-topic">
-                        <div class="topic-with-group">
-                          <span class="group-segment-pill">Segment &amp; Mkt</span>
-                          <span class="topic-text"><strong class="topic-title-bold">EP.1 MR. Agent : Marketing Launch Guard</strong></span>
-                        </div>
-                      </td>
-                      <td class="td-presenter">Kamolwan (Golf) &amp; Panida (Pean)</td>
+                      <td class="td-time td-time-grouped" rowspan="4">14.40 – 15.50</td>
+                      <td class="td-topic"><strong class="topic-title-bold">Team 1</strong> MR. Agent : Marketing Launch Guard</td>
                     </tr>
                     <tr>
-                      <td class="td-time">14.50 - 15.00</td>
-                      <td class="td-duration">10 นาที</td>
-                      <td class="td-topic">
-                        <div class="topic-with-group">
-                          <span class="group-segment-ghost"></span>
-                          <span class="topic-text"><strong class="topic-title-bold">EP.2 Citizen Analyst Transformation</strong></span>
-                        </div>
-                      </td>
-                      <td class="td-presenter">Parischaya (Tik)</td>
-                    </tr>
-                    <tr class="row-wrapup">
-                      <td class="td-time">15.00 - 15.15</td>
-                      <td class="td-duration">15 นาที</td>
-                      <td class="td-topic">
-                        <div class="topic-with-group">
-                          <span class="group-segment-ghost"></span>
-                          <span class="topic-text topic-italic">On-ground &amp; wrap-up score</span>
-                        </div>
-                      </td>
-                      <td class="td-presenter">P' Orn (Representative) &amp; MC</td>
-                    </tr>
-
-                    <!-- Group 2: Sales Mgmt. -->
-                    <tr class="row-group-head">
-                      <td class="td-time">15.15 - 15.25</td>
-                      <td class="td-duration">10 นาที</td>
-                      <td class="td-topic">
-                        <div class="topic-with-group">
-                          <span class="group-segment-pill sales-pill">Sales Mgmt.</span>
-                          <span class="topic-text"><strong class="topic-title-bold">EP.3 ttb wealth Advisory 360 Pro</strong></span>
-                        </div>
-                      </td>
-                      <td class="td-presenter">Palarp (Peng) &amp; Nattapong (Arty)</td>
+                      <td class="td-topic"><strong class="topic-title-bold">Team 2</strong> From Marketer to AI-Powered Business Transformer</td>
                     </tr>
                     <tr>
-                      <td class="td-time">15.25 - 15.35</td>
-                      <td class="td-duration">10 นาที</td>
-                      <td class="td-topic">
-                        <div class="topic-with-group">
-                          <span class="group-segment-ghost"></span>
-                          <span class="topic-text"><strong class="topic-title-bold">EP.4 KPI Analysis Dashboard</strong></span>
-                        </div>
-                      </td>
-                      <td class="td-presenter">Sedtasenee (Art) &amp; Kitsana (Ake) &amp; Hunsa (Sa)</td>
+                      <td class="td-topic"><strong class="topic-title-bold">Team 3</strong> ttb wealth Advisory 360 Pro</td>
                     </tr>
-                    <tr class="row-wrapup">
-                      <td class="td-time">15.35 - 15.50</td>
-                      <td class="td-duration">15 นาที</td>
-                      <td class="td-topic">
-                        <div class="topic-with-group">
-                          <span class="group-segment-ghost"></span>
-                          <span class="topic-text topic-italic">On-ground &amp; wrap-up score</span>
-                        </div>
-                      </td>
-                      <td class="td-presenter">P' Ole &amp; MC</td>
+                    <tr>
+                      <td class="td-topic"><strong class="topic-title-bold">Team 4</strong> KPI Analysis Dashboard</td>
                     </tr>
 
                     <!-- Break 1 -->
                     <tr class="row-break-line">
-                      <td class="td-time">15.50 - 16.05</td>
-                      <td class="td-duration">15 นาที</td>
-                      <td class="td-topic" colspan="2">
-                        <span class="break-notice-text">☕ --- Break ---</span>
+                      <td class="td-time">15.50 – 16.05</td>
+                      <td class="td-topic td-break-topic">
+                        <span class="break-notice-text">--- Break ---</span>
                       </td>
                     </tr>
 
-                    <!-- Group 3: RCI -->
+                    <!-- Group 16.05 - 16.45 (Teams 5 - 6) -->
                     <tr class="row-group-head">
-                      <td class="td-time">16.05 - 16.15</td>
-                      <td class="td-duration">10 นาที</td>
-                      <td class="td-topic">
-                        <div class="topic-with-group">
-                          <span class="group-segment-pill rci-pill">RCI</span>
-                          <span class="topic-text"><strong class="topic-title-bold">EP.5 How AI could Understand Customers</strong></span>
-                        </div>
-                      </td>
-                      <td class="td-presenter">Katanyoo (Arc)</td>
+                      <td class="td-time td-time-grouped" rowspan="2">16.05 – 16.45</td>
+                      <td class="td-topic"><strong class="topic-title-bold">Team 5</strong> How AI could Understand Customers</td>
                     </tr>
                     <tr>
-                      <td class="td-time">16.15 - 16.25</td>
-                      <td class="td-duration">10 นาที</td>
-                      <td class="td-topic">
-                        <div class="topic-with-group">
-                          <span class="group-segment-ghost"></span>
-                          <span class="topic-text"><strong class="topic-title-bold">EP.6 Ask-to-Act AI</strong></span>
-                        </div>
-                      </td>
-                      <td class="td-presenter">Jarupa (Ching Ching)</td>
-                    </tr>
-                    <tr class="row-wrapup">
-                      <td class="td-time">16.25 - 16.40</td>
-                      <td class="td-duration">15 นาที</td>
-                      <td class="td-topic">
-                        <div class="topic-with-group">
-                          <span class="group-segment-ghost"></span>
-                          <span class="topic-text topic-italic">On-ground &amp; wrap-up score</span>
-                        </div>
-                      </td>
-                      <td class="td-presenter">P' Mike &amp; MC</td>
+                      <td class="td-topic"><strong class="topic-title-bold">Team 6</strong> Ask-to-Act AI</td>
                     </tr>
 
-                    <!-- Game AHA 6 Questions -->
+                    <!-- Game AHA – AI Showcase Questions -->
                     <tr>
-                      <td class="td-time">16.40 - 16.55</td>
-                      <td class="td-duration">15 นาที</td>
-                      <td class="td-topic"><strong class="topic-title-bold">Game AHA 6 Questions</strong></td>
-                      <td class="td-presenter"><span class="presenter-tag-pill">MC</span></td>
+                      <td class="td-time">16.45 – 16.55</td>
+                      <td class="td-topic">Game AHA – AI Showcase Questions</td>
                     </tr>
 
-                    <!-- Closing Speech -->
+                    <!-- ประกาศผล + มอบรางวัล -->
+                    <tr class="row-awards-line">
+                      <td class="td-time">16.55 – 17.00</td>
+                      <td class="td-topic">ประกาศผล + มอบรางวัล</td>
+                    </tr>
+
+                    <!-- Closing Speech & Group Photo -->
                     <tr>
-                      <td class="td-time">16.55 - 17.05</td>
-                      <td class="td-duration">10 นาที</td>
-                      <td class="td-topic"><strong class="topic-title-bold">Closing Speech</strong></td>
-                      <td class="td-presenter"><strong class="presenter-lead-name">K. Natthawan</strong></td>
+                      <td class="td-time">17.00 – 17.10</td>
+                      <td class="td-topic"><strong class="topic-title-bold">Closing Speech &amp; Group Photo</strong></td>
                     </tr>
 
-                    <!-- Setup Break -->
-                    <tr class="row-break-line">
-                      <td class="td-time">17.05 - 18.05</td>
-                      <td class="td-duration">60 นาที</td>
-                      <td class="td-topic" colspan="2">
-                        <span class="break-notice-text">🔄 --- Break (แยกย้ายเปลี่ยนชุดตาม Dress Code ของงาน MR. &amp; MRS.) ---</span>
-                      </td>
+                    <!-- Break 2 -->
+                    <tr>
+                      <td class="td-time">17.10 – 18.10</td>
+                      <td class="td-topic">--- Break (แยกย้ายเปลี่ยนชุดตาม Dress Code ของงาน MR. &amp; MRS.) ---</td>
                     </tr>
 
                     <!-- Dinner Party -->
-                    <tr class="row-dinner-party">
-                      <td class="td-time td-time-dinner">18.05 - 22.00</td>
-                      <td class="td-duration">-</td>
-                      <td class="td-topic" colspan="2">
-                        <div class="dinner-highlight-box">
-                          <strong class="dinner-title">🍽️ Dinner Party</strong>
-                        </div>
+                    <tr class="row-dinner-party" style="background: #eef6ff; color: #0f172a;">
+                      <td class="td-time" style="color: #0f172a; font-weight: 500;">18.10 – 22.00</td>
+                      <td class="td-topic" style="color: #0f172a; font-weight: 700; font-size: 0.95rem;">
+                        Dinner Party
                       </td>
                     </tr>
                   </tbody>
@@ -708,55 +573,7 @@
         </section>
 
         <!-- ----------------------------------------------------
-             TAB 4: เกม 4 ต่อ 4 (4 vs 4 GAME)
-             ---------------------------------------------------- -->
-        <section id="tabPaneGame" class="home-tab-pane" style="display: none;">
-          <div class="tab-header-banner">
-            <h3 class="tab-header-title">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round"
-                style="display: inline-block; vertical-align: -3px; margin-right: 6px;">
-                <rect x="2" y="6" width="20" height="12" rx="4"></rect>
-                <path d="M6 12h4m-2-2v4"></path>
-                <line x1="15" y1="11" x2="15.01" y2="11" stroke-width="3"></line>
-                <line x1="18" y1="13" x2="18.01" y2="13" stroke-width="3"></line>
-              </svg>
-              <span>การแข่งขันเกม 4 ต่อ 4</span>
-            </h3>
-            <p class="tab-header-sub">ผลการแข่งขันและคะแนนสะสมแบบ Real-time</p>
-          </div>
-
-          <!-- Live Scoreboard Widget -->
-          <div class="glass-card live-game-widget" id="liveGameWidget">
-            <!-- Rendered dynamically from crsdg_game_state_sync -->
-          </div>
-
-          <!-- 4v4 Game Voting Section (ระบบการโหวต ทีมที่คุณคิดว่าเป็นผู้ชนะ) -->
-          <div class="glass-card game-vote-card" id="gameVoteCard">
-            <div class="game-vote-header">
-              <div class="game-vote-title-row">
-                <div class="game-vote-icon-badge">🗳️</div>
-                <div class="game-vote-title-text-group">
-                  <h4 class="game-vote-title">ระบบโหวต เกม 4 ต่อ 4</h4>
-                  <p class="game-vote-subtitle">ร่วมทายผลทีมชนะเลิศเกม 4 ต่อ 4 (โหวตได้ 1 ทีม)</p>
-                </div>
-              </div>
-
-              <!-- Real-time Status Notice -->
-              <div class="game-vote-status-banner" id="gameVoteStatusBanner">
-                <!-- Rendered dynamically by JS -->
-              </div>
-            </div>
-
-            <!-- List of All Competing Teams with Vote Button at the end -->
-            <div class="game-vote-teams-list" id="gameVoteTeamsList">
-              <!-- Rendered dynamically by JS -->
-            </div>
-          </div>
-        </section>
-
-        <!-- ----------------------------------------------------
-             TAB 5: ข้อมูลคุณ (YOUR PROFILE)
+             TAB 4: ข้อมูลคุณ (YOUR PROFILE)
              ---------------------------------------------------- -->
         <section id="tabPaneProfile" class="home-tab-pane" style="display: none;">
           <div class="tab-header-banner">
@@ -823,75 +640,61 @@
           </div>
         </section>
 
-        <!-- Bottom Spacer for Fixed Nav Bar -->
-        <div class="portal-bottom-spacer" aria-hidden="true"></div>
       </div>
+
+      <!-- ========================================================
+           FIXED BOTTOM BAR (แท็บเมนูด้านล่าง)
+           ======================================================== -->
+      <nav class="app-fixed-bottom-bar" id="appFixedBottomBar" style="display: none !important;">
+        <button type="button" class="bottom-nav-item is-active" data-tab="home" id="btnNavHome">
+          <div class="nav-icon-wrap">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+          </div>
+          <span class="nav-label">หน้าหลัก</span>
+        </button>
+
+        <button type="button" class="bottom-nav-item" data-tab="team" id="btnNavTeam">
+          <div class="nav-icon-wrap">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <span class="nav-label">คุณและทีม</span>
+        </button>
+
+        <button type="button" class="bottom-nav-item" data-tab="vote" id="btnNavVote">
+          <div class="nav-icon-wrap">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+          </div>
+          <span class="nav-label">นักลงทุน AI</span>
+        </button>
+
+        <button type="button" class="bottom-nav-item" data-tab="profile" id="btnNavProfile">
+          <div class="nav-icon-wrap">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <span class="nav-label">ข้อมูลคุณ</span>
+        </button>
+      </nav>
 
     </div>
 
-    <!-- ========================================================
-         FIXED BOTTOM BAR (แท็บ 5 เมนู: หน้าหลัก, คุณและทีม, โหวต AI, เกม 4 ต่อ 4, ข้อมูลคุณ)
-         ======================================================== -->
-    <nav class="app-fixed-bottom-bar" id="appFixedBottomBar" style="display: none;">
-      <button type="button" class="bottom-nav-item is-active" data-tab="home" id="btnNavHome">
-        <div class="nav-icon-wrap">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-          </svg>
-        </div>
-        <span class="nav-label">หน้าหลัก</span>
-      </button>
-
-      <button type="button" class="bottom-nav-item" data-tab="team" id="btnNavTeam">
-        <div class="nav-icon-wrap">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-          </svg>
-        </div>
-        <span class="nav-label">คุณและทีม</span>
-      </button>
-
-      <button type="button" class="bottom-nav-item" data-tab="vote" id="btnNavVote">
-        <div class="nav-icon-wrap">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-          </svg>
-        </div>
-        <span class="nav-label">นักลงทุน AI</span>
-      </button>
-
-      <button type="button" class="bottom-nav-item" data-tab="game" id="btnNavGame">
-        <div class="nav-icon-wrap">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="6" width="20" height="12" rx="4"></rect>
-            <path d="M6 12h4m-2-2v4"></path>
-            <line x1="15" y1="11" x2="15.01" y2="11" stroke-width="3"></line>
-            <line x1="18" y1="13" x2="18.01" y2="13" stroke-width="3"></line>
-          </svg>
-        </div>
-        <span class="nav-label">เกม 4 ต่อ 4</span>
-      </button>
-
-      <button type="button" class="bottom-nav-item" data-tab="profile" id="btnNavProfile">
-        <div class="nav-icon-wrap">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </div>
-        <span class="nav-label">ข้อมูลคุณ</span>
-      </button>
-    </nav>
     <div class="modal-backdrop" id="successModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="modal-card">
         <div class="modal-badge-wrapper">
@@ -943,13 +746,15 @@
     </div>
 
     <!-- User System Alert Lightbox Modal -->
-    <div class="modal-backdrop user-alert-backdrop" id="userAlertModal" role="dialog" aria-modal="true" style="display: none;">
+    <div class="modal-backdrop user-alert-backdrop" id="userAlertModal" role="dialog" aria-modal="true"
+      style="display: none;">
       <div class="alert-modal-card">
         <div class="alert-badge-wrap" id="userAlertBadge">⚠️</div>
         <h3 id="userAlertTitle" class="alert-modal-title">แจ้งเตือนระบบ</h3>
         <p id="userAlertMessage" class="alert-modal-message"></p>
         <div class="alert-modal-actions" id="userAlertActions">
-          <button type="button" class="alert-modal-btn alert-modal-btn-cancel" id="btnCancelUserAlert" style="display: none;">
+          <button type="button" class="alert-modal-btn alert-modal-btn-cancel" id="btnCancelUserAlert"
+            style="display: none;">
             ยกเลิก
           </button>
           <button type="button" class="alert-modal-btn alert-modal-btn-confirm" id="btnConfirmUserAlert">
@@ -1158,225 +963,6 @@
         <button type="button" class="btn-close-team-modal" onclick="window.closeQrLightbox()">
           ✕ ปิดหน้าต่าง
         </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================
-       MODAL: FULLSCREEN EVENT EVALUATION (แบบประเมินผลกิจกรรม เต็มหน้าจอ)
-       ======================================================== -->
-  <div class="eval-fullscreen-backdrop" id="evalLightboxModal" role="dialog" aria-modal="true" style="display: none;">
-    <div class="eval-fullscreen-container">
-      <!-- Fullscreen Header with Brand & Close Button -->
-      <header class="eval-fullscreen-header">
-        <div class="eval-header-title-wrap">
-          <div class="eval-badge-pill">⭐ EVENT EVALUATION</div>
-          <h2 class="eval-header-title">แบบประเมินผลกิจกรรม CRSDG New Year 2027</h2>
-          <p class="eval-header-sub">ร่วมประเมินและสะท้อนความคิดเห็นเพื่อพัฒนาการจัดงานในครั้งถัดไป</p>
-        </div>
-        <button type="button" class="btn-eval-fullscreen-close" onclick="window.closeEvalLightbox()"
-          title="ปิดหน้าต่างแบบประเมิน">
-          ✕
-        </button>
-      </header>
-
-      <!-- Scrollable Fullscreen Body -->
-      <div class="eval-fullscreen-scroll-body" id="evalFormBody">
-        <div class="eval-fullscreen-content-inner">
-          <!-- Respondent Identification Card -->
-          <div class="eval-card eval-respondent-card">
-            <div class="respondent-avatar-badge" id="evalRespondentAvatar">👤</div>
-            <div class="respondent-details">
-              <div class="respondent-name-line">
-                <span class="respondent-label">ผู้ร่วมประเมิน:</span>
-                <strong class="respondent-name" id="evalRespondentName">ผู้ร่วมกิจกรรม</strong>
-                <span class="respondent-verified-tag">✓ ยืนยันสิทธิ์ในระบบ</span>
-              </div>
-              <div class="respondent-sub-line">
-                สังกัด: <strong id="evalRespondentDept">-</strong>
-              </div>
-            </div>
-          </div>
-
-          <form id="eventEvaluationForm" onsubmit="window.handleEvalFormSubmit(event)">
-            <!-- ข้อ 1: ความพึงพอใจในภาพรวมการจัดงาน (Interactive Star Rating) -->
-            <div class="eval-card eval-q-card-prominent">
-              <div class="eval-card-header">
-                <span class="eval-q-num">1</span>
-                <div>
-                  <h4 class="eval-card-title">ความพึงพอใจในภาพรวมของกิจกรรม <span class="eval-req">*</span></h4>
-                  <p class="eval-card-desc">โปรดแตะเพื่อให้คะแนนดาว (1 - 5 ดาว)</p>
-                </div>
-              </div>
-              <div class="eval-stars-interactive-wrap">
-                <div class="eval-stars-interactive" id="evalStarContainer">
-                  <span class="star-btn" data-star="1" onclick="window.setEvalStar(1)">★</span>
-                  <span class="star-btn" data-star="2" onclick="window.setEvalStar(2)">★</span>
-                  <span class="star-btn" data-star="3" onclick="window.setEvalStar(3)">★</span>
-                  <span class="star-btn" data-star="4" onclick="window.setEvalStar(4)">★</span>
-                  <span class="star-btn" data-star="5" onclick="window.setEvalStar(5)">★</span>
-                </div>
-                <input type="hidden" id="evalScoreOverall" value="">
-                <div class="eval-score-text-badge" id="evalScoreText" style="color: #94a3b8;">กรุณาแตะเพื่อให้คะแนนดาว
-                  (1 - 5 ดาว)</div>
-              </div>
-            </div>
-
-            <!-- ข้อ 2: การประเมินในแต่ละกิจกรรม 4 ด้าน -->
-            <div class="eval-card">
-              <div class="eval-card-header">
-                <span class="eval-q-num">2</span>
-                <div>
-                  <h4 class="eval-card-title">การประเมินในแต่ละกิจกรรมย่อย <span class="eval-req">*</span></h4>
-                  <p class="eval-card-desc">ประเมินความพึงพอใจในแต่ละมิติของการจัดงาน</p>
-                </div>
-              </div>
-
-              <div class="eval-sub-questions-list">
-                <div class="eval-sub-q-box">
-                  <div class="sub-q-header">
-                    <span class="sub-q-icon">💡</span>
-                    <span class="sub-q-title">2.1 เวที AI Pitching & ระบบพอร์ตลงทุน</span>
-                  </div>
-                  <div class="eval-pill-group" data-q="eval_pitch">
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'ดีเยี่ยม')">ดีเยี่ยม</button>
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'ดีมาก')">ดีมาก</button>
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'ปานกลาง')">ปานกลาง</button>
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'ควรปรับปรุง')">ควรปรับปรุง</button>
-                  </div>
-                </div>
-
-                <div class="eval-sub-q-box">
-                  <div class="sub-q-header">
-                    <span class="sub-q-icon">🎮</span>
-                    <span class="sub-q-title">2.2 การแข่งขันเกมบนเวที "4 ต่อ 4 CRSDG Game"</span>
-                  </div>
-                  <div class="eval-pill-group" data-q="eval_game">
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'สนุกมากที่สุด')">สนุกมากที่สุด</button>
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'สนุกมาก')">สนุกมาก</button>
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'ปานกลาง')">ปานกลาง</button>
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'ควรปรับปรุง')">ควรปรับปรุง</button>
-                  </div>
-                </div>
-
-                <div class="eval-sub-q-box">
-                  <div class="sub-q-header">
-                    <span class="sub-q-icon">🍱</span>
-                    <span class="sub-q-title">2.3 อาหาร เครื่องดื่ม และการดูแลต้อนรับ (Buffet & Hospitality)</span>
-                  </div>
-                  <div class="eval-pill-group" data-q="eval_food">
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'ประทับใจมาก')">ประทับใจมาก</button>
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'ดี')">ดี</button>
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'ปานกลาง')">ปานกลาง</button>
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'ควรปรับปรุง')">ควรปรับปรุง</button>
-                  </div>
-                </div>
-
-                <div class="eval-sub-q-box">
-                  <div class="sub-q-header">
-                    <span class="sub-q-icon">📱</span>
-                    <span class="sub-q-title">2.4 ระบบเว็บแอปพลิเคชัน & กิจกรรมดิจิทัล</span>
-                  </div>
-                  <div class="eval-pill-group" data-q="eval_app">
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'ใช้งานง่ายมาก')">ใช้งานง่ายมาก</button>
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'สะดวกดี')">สะดวกดี</button>
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'ปานกลาง')">ปานกลาง</button>
-                    <button type="button" class="eval-option-pill"
-                      onclick="window.selectEvalOption(this, 'ควรปรับปรุง')">ควรปรับปรุง</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- ข้อ 3: สิ่งที่คุณประทับใจมากที่สุดในงาน (เลือกได้หลายข้อ) -->
-            <div class="eval-card">
-              <div class="eval-card-header">
-                <span class="eval-q-num">3</span>
-                <div>
-                  <h4 class="eval-card-title">สิ่งที่คุณประทับใจมากที่สุดในงาน <span
-                      class="eval-hint">(แตะเลือกได้หลายข้อ)</span></h4>
-                  <p class="eval-card-desc">ไฮไลต์และโมเมนต์ที่โดนใจคุณในงาน CRSDG 2027</p>
-                </div>
-              </div>
-              <div class="eval-tags-container">
-                <button type="button" class="eval-tag-chip" onclick="window.toggleEvalTag(this)">💡 นวัตกรรมและไอเดีย
-                  AI</button>
-                <button type="button" class="eval-tag-chip" onclick="window.toggleEvalTag(this)">💰 ระบบพอร์ตลงทุน
-                  Real-time</button>
-                <button type="button" class="eval-tag-chip" onclick="window.toggleEvalTag(this)">🎮 เกมเวที 4 ต่อ 4
-                  สนุกสนาน</button>
-                <button type="button" class="eval-tag-chip" onclick="window.toggleEvalTag(this)">🎁
-                  รางวัลและของขวัญโดนใจ</button>
-                <button type="button" class="eval-tag-chip" onclick="window.toggleEvalTag(this)">🍱
-                  อาหารและเครื่องดื่มอร่อย</button>
-                <button type="button" class="eval-tag-chip" onclick="window.toggleEvalTag(this)">🤝
-                  บรรยากาศอบอุ่นและความสามัคคี</button>
-              </div>
-            </div>
-
-            <!-- ข้อ 4: ข้อเสนอแนะเพิ่มเติม -->
-            <div class="eval-card">
-              <div class="eval-card-header">
-                <span class="eval-q-num">4</span>
-                <div>
-                  <h4 class="eval-card-title">ข้อคิดเห็นหรือข้อเสนอแนะเพิ่มเติมเพื่อการพัฒนา</h4>
-                  <p class="eval-card-desc">มุมมองและคำแนะนำของท่านมีความหมายอย่างยิ่งต่อทีมงาน</p>
-                </div>
-              </div>
-              <textarea id="evalFeedbackText" class="eval-textarea" rows="4"
-                placeholder="พิมพ์ความคิดเห็น ข้อเสนอแนะ หรือความประทับใจเพิ่มเติมได้ที่นี่..."></textarea>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="eval-fullscreen-actions">
-              <button type="submit" class="btn-submit-eval-primary">
-                <span>✓ ส่งแบบประเมินผลกิจกรรม</span>
-              </button>
-              <button type="button" class="btn-cancel-eval-link" onclick="window.closeEvalLightbox()">
-                ยกเลิก / ปิดหน้าต่าง
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Success Screen (แสดงเมื่อส่งผลแล้ว เต็มหน้าจอสวยงาม) -->
-      <div class="eval-fullscreen-success" id="evalSuccessView" style="display: none;">
-        <div class="success-content-card">
-          <div class="success-big-icon">🎉</div>
-          <h2 class="success-title">ส่งแบบประเมินผลเรียบร้อยแล้ว</h2>
-          <p class="success-desc">
-            ขอขอบพระคุณทุกความคิดเห็นและคะแนนความพึงพอใจของท่าน<br>
-            ทีมงานและฝ่ายบริหารจะนำข้อมูลทุกส่วนไปพัฒนาเพื่อจัดกิจกรรมให้ดียิ่งขึ้นไป
-          </p>
-          <div class="success-meta-pill" id="successRespondentBadge">
-            ✓ บันทึกผลสำเร็จสำหรับ: ผู้ร่วมกิจกรรม
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 18px;">
-            <button type="button" class="btn-primary btn-success-finish" onclick="window.closeEvalLightbox()">
-              ✓ เสร็จสิ้น / กลับสู่หน้าหลัก
-            </button>
-            <button type="button" class="btn-secondary" onclick="window.reopenEvalForm()"
-              style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #cbd5e1; font-size: 0.85rem; padding: 10px 16px; border-radius: 12px; cursor: pointer;">
-              ✏️ ทำแบบประเมินใหม่ / แก้ไขคำตอบ
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   </div>
